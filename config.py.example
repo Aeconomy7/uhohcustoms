@@ -1,0 +1,6 @@
+# Should be renamed to config.py after filling out
+RIOT_API_KEY="<your_api_key>"
+REGION="na1"
+USERS = {
+	"example_user": "example_passw0rd1!"
+}

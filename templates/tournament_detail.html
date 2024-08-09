@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Tournament Details</title>
+</head>
+<body>
+	<h1>Tournament Details (ID: {{ tournament_id }})</h1>
+	<h2>Match History:</h2>
+	<ul>
+	{% for match in match_history %}
+		<li>{{ match }}</li>
+	{% endfor %}
+	</ul>
+</body>
+</html>
