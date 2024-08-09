@@ -9,12 +9,12 @@ from config import RIOT_API_KEY, REGION, USERS
 app = Flask(__name__)
 app.secret_key = "sc00by_rocks"  # Change this to a secure key
 
-auth = HTTPBasicAuth()
+#auth = HTTPBasicAuth()
 
 ###########
 # GLOBALS #
 ###########
-active_tournament_id = None
+active_tournament_id = "test"
 
 
 #####################
@@ -31,13 +31,15 @@ def get_headers():
 # ROUTES #
 ##########
 @app.route('/')
-@auth.login_required
+#@auth.login_required
 def index():
+	global active_tournament_id
+
 	return render_template('index.html')
 
 
 @app.route('/create_tournament', methods=['GET', 'POST'])
-@auth.login_required
+#@auth.login_required
 def create_tournament():
 	global active_tournament_id
 
@@ -86,7 +88,7 @@ def create_tournament():
 
 
 @app.route('/track_tournament/<tournament_id>', methods=['GET', 'POST'])
-@auth.login_required
+#@auth.login_required
 def track_tournament(tournament_id):
 	if request.method == 'POST':
 		# Step 3: Create a tournament code
@@ -120,7 +122,7 @@ def track_tournament(tournament_id):
 
 
 @app.route('/tournament_detail/<tournament_id>')
-@auth.login_required
+#@auth.login_required
 def tournament_detail(tournament_id):
 	# Example of retrieving match history or additional details about the tournament
 	# Replace with actual logic as needed
@@ -128,7 +130,7 @@ def tournament_detail(tournament_id):
 	return render_template('tournament_detail.html', tournament_id=tournament_id, match_history=match_history)
 
 @app.route('/end_tournament', methods=['POST'])
-@auth.login_required
+#@auth.login_required
 def end_tournament():
 	global active_tournament_id
 

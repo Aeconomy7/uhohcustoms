@@ -10,9 +10,9 @@
 	{% if active_tournament_id %}
 		<p>Active Tournament ID: {{ active_tournament_id }}</p>
 		<a href="{{ url_for('track_tournament', tournament_id=active_tournament_id) }}">Track Current Tournament</a>
-		<!--<form action="{{ url_for('end_tournament') }}" method="post" style="display:inline;">
+		<form action="{{ url_for('end_tournament') }}" method="post" style="display:inline;">
 			<button type="submit">End Current Tournament</button>
-		</form>-->
+		</form>
 	{% else %}
 		<a href="{{ url_for('create_tournament') }}">Create a Tournament</a>
 	{% endif %}
