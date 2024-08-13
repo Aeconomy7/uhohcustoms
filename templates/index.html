@@ -2,19 +2,18 @@
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
-	<title>UH OH CUSSMS!</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>UH OH CUSSMS</title>
+	<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"></head>
 </head>
 <body>
 	<h1>UH OH CUSSMS! WE IN IT NOW!</h1>
 
-	{% if active_tournament_id %}
-		<p>Active Tournament ID: {{ active_tournament_id }}</p>
-		<a href="{{ url_for('track_tournament', tournament_id=active_tournament_id) }}">Track Current Tournament</a>
-		<form action="{{ url_for('end_tournament') }}" method="post" style="display:inline;">
-			<button type="submit">End Current Tournament</button>
-		</form>
+	{% if active_match_id %}
+		<p>Active Game ID: {{ active_match_id }}</p>
+		<a href="{{ url_for('live_game', match_id=active_match_id) }}">Track Live Game</a>
 	{% else %}
-		<a href="{{ url_for('create_tournament') }}">Create a Tournament</a>
+		<a href="{{ url_for('customs_history') }}">Customs History</a>
 	{% endif %}
 </body>
 </html>

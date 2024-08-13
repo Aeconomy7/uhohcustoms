@@ -1,6 +1,16 @@
-# Should be renamed to config.py after filling out
-RIOT_API_KEY="<your_api_key>"
+from werkzeug.security import generate_password_hash
+
+RIOT_API_KEY="<riot_api_key>"
 REGION="na1"
+FLASK_SECRET_KEY="<flask_secret_key>"
+SECRET_HEADER="<secret_agent_header>"
 USERS = {
-	"example_user": "example_passw0rd1!"
+	"user": {
+		"password": generate_password_hash("<user_pass_here>"),
+		"role": "user"
+	},
+	"admin": {
+		"password": generate_password_hash("<admin_pass_here>"),
+		"role": "admin"
+	}
 }

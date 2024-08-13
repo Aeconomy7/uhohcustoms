@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>UH OH CUSSMS</title>
+	<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"></head>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.js"></script>
+	<script type="text/javascript">
+		document.addEventListener("DOMContentLoaded", function() {
+			var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+			socket.on('new_event', function(event) {
+				var eventsList = document.getElementById('events');
+				var newEvent = document.createElement('li');
+				newEvent.textContent = JSON.stringify(event);
+				eventsList.appendChild(newEvent);
+			});
+		});
+	</script>
+</head>
+<body>
+	<h1>LIVE GAME EVENTS</h1>
+	<ul id="events">
+<!--		{% for event in events %}
+			<li>{{ event }}</li>
+		{% endfor %}-->
+	</ul>
+</body>
+</html>
