@@ -14,7 +14,7 @@ class CustomsDbHandler:
 			return
 
 		# Create tables if not exist
-		self.__create_history_table()
+		self.__create_game_history_table()
 		print("[+] Successfully initiated Customs database!")
 
 		# Close connection
@@ -41,16 +41,24 @@ class CustomsDbHandler:
 
 		return conn
 
-	def __create_history_table(self):
+	def __create_player_table(self):
+		sql_query = """ CREATE TABLE IF NOT EXISTS player_info (
+				id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+				summoner_name TEXT NOT NULL,
+				summoner_tag TEXT NOT NULL,
+				puuid TEXT NOT NULL,
+				wins INTEGER DEFAULT 0,
+				loses INTEGER DEFAULT 0,
+				kills INTEGER DEFAULT 0,
+				deaths INTEGER DEFAULT 0,
+				assists INTEGER DEFAULT 0
+			);"""
+
+	def __create_game_history_table(self):
 		sql_query = """ CREATE TABLE IF NOT EXISTS customs_history (
 				id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-				match_id TEXT NOT NULL,
-				tournament_id TEXT NOT NULL,
 				game_id TEXT NOT NULL,
-				winning_team TEXT NOT NULL,
-				losing_team TEXT NOT NULL,
-				metadata TEXT NOT NULL,
-				game_date TIMESTAMP NOT NULL
+				game_data TEXT NOT NULL
 			);"""
 
 		try:

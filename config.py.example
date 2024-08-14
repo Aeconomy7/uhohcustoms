@@ -1,16 +1,27 @@
 from werkzeug.security import generate_password_hash
 
-RIOT_API_KEY="<riot_api_key>"
-REGION="na1"
-FLASK_SECRET_KEY="<flask_secret_key>"
-SECRET_HEADER="<secret_agent_header>"
+# NETWORK INFO
+LOCAL_HOST		= "127.0.0.1"
+LOCAL_PORT		= 2999
+LC_EVENT_URL		= f"https://{LOCAL_HOST}:{LOCAL_PORT}/liveclientdata"
+
+CUSTOMS_HOST		= "127.0.0.1"
+CUSTOMS_PORT		= 8000
+CUSTOMS_EVENT_CALLBACK	= f"http://{CUSTOMS_HOST}:{CUSTOMS_PORT}/event_callback"
+
+REGION			= "AMERICAS"
+
+# SECRETS
+RIOT_API_KEY		= "RGAPI-XXXX"
+FLASK_SECRET_KEY	= "<flask_secret_key>"
+SECRET_HEADER		= "<secret_header>"
 USERS = {
 	"user": {
-		"password": generate_password_hash("<user_pass_here>"),
+		"password": generate_password_hash("<user_password>"),
 		"role": "user"
 	},
 	"admin": {
-		"password": generate_password_hash("<admin_pass_here>"),
+		"password": generate_password_hash("<admin_password>"),
 		"role": "admin"
 	}
 }
