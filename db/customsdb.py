@@ -51,7 +51,8 @@ class CustomsDbHandler:
 				loses INTEGER DEFAULT 0,
 				kills INTEGER DEFAULT 0,
 				deaths INTEGER DEFAULT 0,
-				assists INTEGER DEFAULT 0
+				assists INTEGER DEFAULT 0,
+				flashes INTEGER DEFAULT 0
 			);"""
 
 	def __create_game_history_table(self):

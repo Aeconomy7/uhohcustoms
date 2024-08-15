@@ -24,11 +24,6 @@ body, html {
 	background-repeat: repeat;
 }
 
-#exchange-rate {
-/*	background-image: url("../img/px_bg_inverted.png");
-	background-repeat: repeat;*/
-}
-
 #main-container {
 	display: flex;
 	width: 100%;
@@ -74,55 +69,6 @@ body, html {
 	background-repeat: repeat;
 	color: white;
 }
-
-#balance {
-	padding: 10px;
-	margin-bottom: 10px;
-	border: 2px solid black;
-	background-image: url("../img/px_bg_inverted.png");
-	background-repeat: repeat;
- 	visibility: hidden;
-}
-
-#transactions-list {
-	overflow-y: auto;
-	flex-grow: 1;
-	/*max-height: 80vh;*/
-}
-
-.transaction {
-	border: 1px solid #ccc;
-	padding: 10px;
-	margin: 5px 0;
-	border-radius: 5px;
-	background-image: url("../img/px_bg_inverted.png");
-	background-repeat: repeat;
-}
-
-#graph-container {
-	width: 80%;
-	height: 95%;
-}
-
-#cy {
-	height: 80%;
-	margin: 20px;
-	border: 2px solid black;
-	background-image: url("../img/px_bg_inverted.png");
-	background-repeat: repeat;
-}
-
-#amount {
-	font-family: OCR A Std, monospace;
-	border: 2px solid black;
-	margin: 20px;
-	padding: 10px;
-	font-size: 16px;
-	color: black;
-	background-image: url("../img/px_bg_inverted.png");
-	background-repeat: repeat;
-}
-
 
 .highlight {
 	font-weight: bold;
