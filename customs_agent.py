@@ -4,7 +4,9 @@ import time
 import socket
 import sys
 import io
+import json
 from config import LOCAL_HOST, LOCAL_PORT, LC_EVENT_URL, CUSTOMS_HOST, CUSTOMS_PORT, CUSTOMS_EVENT_CALLBACK, RIOT_API_KEY, SECRET_HEADER
+
 
 ################### GLOBALS ###################
 CUSTOMS_SERVER_STATUS = False # tracks if uhohcustoms is online, True if it is, False if it isnt
@@ -12,6 +14,7 @@ LC_PROXIES = None
 WEB_PROXIES = None
 #LC_PROXIES = { "http": "http://127.0.0.1:8080", "https": "http://127.0.0.1:8080" }
 #WEB_PROXIES = { "http": "http://127.0.0.1:8080", "https": "http://127.0.0.1:8080" }
+
 
 ################### NETWORK STUFF ###################
 def wait_for_port(host, port):
@@ -22,11 +25,14 @@ def wait_for_port(host, port):
 	print(f"[+] Port {port} is now open, commence game!")
 	return
 
+
 def is_port_open(host, port):
 	with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+		#print(f"[?] Trying {host}:{port} ...")
 		sock.settimeout(1)  # Set a timeout for the connection attempt
 		result = sock.connect_ex((host, port))
 		return result == 0  # Return True if the port is open
+
 
 ################### LIVE CLIENT API ###################
 def handle_event(event):
@@ -37,13 +43,19 @@ def handle_event(event):
 def handle_GameStart(event):
 	print("Handling Game Start event")
 	return f"[+] {event['EventName']}: {event['EventID']} @ {str(datetime.timedelta(seconds=round(event['EventTime'])))}: " + str(event)
+    
+
+def handle_MinionsSpawning(event):
+	print("Handling Minion Spawn event")
+	return f"[+] {event['EventName']}: {event['EventID']} @ {str(datetime.timedelta(seconds=round(event['EventTime'])))}: " + str(event)
+
 
 def handle_ChampionKill(event):
 	print("Handling Champion Kill event")
 	return f"[+] {event['EventName']}: {event['EventID']} @ {str(datetime.timedelta(seconds=round(event['EventTime'])))}: " + str(event)
 
 
-def handle_MultiKill(event):
+def handle_Multikill(event):
 	print("Handling Multi Kill event")
 	if(event['KillStreak'] == 2):
 		return f"[+] {event['EventName']} Double Kill: {event['EventID']} @ {str(datetime.timedelta(seconds=round(event['EventTime'])))}: " + str(event)
@@ -56,9 +68,15 @@ def handle_MultiKill(event):
 	else:
 		return f"[+] {event['EventName']} UNKNOWN MULTI KILL: {event['EventID']} @ {str(datetime.timedelta(seconds=round(event['EventTime'])))}: " + str(event) 
 
+
 def handle_Ace(event):
 	print("Handling Multi Kill event")
 	return f"[+] {event['EventName']} ACE: {event['EventID']} @ {str(datetime.timedelta(seconds=round(event['EventTime'])))}: " + str(event)
+    
+    
+def handle_FirstBrick(event):
+	print("Handling First Brick event")
+	return f"[+] {event['EventName']}: {event['EventID']} @ {str(datetime.timedelta(seconds=round(event['EventTime'])))}: " + str(event)
 
 
 def handle_TurretKilled(event):
@@ -118,10 +136,12 @@ def handle_UnknownEvent(event):
 # Dictionary to map event names to handler functions
 event_switch = {
 	'GameStart': handle_GameStart,
+	'MinionsSpawning': handle_MinionsSpawning,
 	'ChampionKill': handle_ChampionKill,
-	'MultiKill': handle_MultiKill,
+	'Multikill': handle_Multikill,
 	'Ace': handle_Ace,
-	'TurretKilled': handle_TurretKilled,
+	'FirstBrick': handle_FirstBrick,
+    'TurretKilled': handle_TurretKilled,
 	'InhibKilled': handle_InhibKilled,
 	'DragonKill': handle_DragonKill,
 	'BaronKill': handle_BaronKill,
@@ -135,22 +155,57 @@ event_switch = {
 
 
 def execute_game():
+	# Global variable declarations
 	global CUSTOMS_SERVER_STATUS
 
+	# Function variables
+	players = []
+	event_id = 0
+	file_path = f"./{str(int(time.time()))}_game.txt"
+
+	# Request variables
 	headers = {
 		"Content-Type": "application/json",
 		"X-Agent-Secret": SECRET_HEADER
 	}
-	event_id = 0
-	file_path = f"./{str(int(time.time()))}_game.txt"
+	
 	with open(file_path, 'x', encoding='utf-8') as file:
-		try:
-			gamedata_response = requests.get(LC_EVENT_URL + "/allgamedata", verify=False, timeout=2, proxies=LC_PROXIES)
-			gamedata_response.raise_for_status()
-		except requests.exceptions.Timeout:
-			print(f"[!] Gamedata request timed out.")
-		except requests.exceptions.RequestException as e:
-			print(f"[!] Request failed: {e}")
+		# Get game data to fetch players
+		while True:
+			try:
+				gamedata_response = requests.get(LC_EVENT_URL + "/allgamedata", verify=False, timeout=2, proxies=LC_PROXIES)
+				gamedata_response.raise_for_status()
+				
+				gamedata = gamedata_response.json()
+				print(f"[?] Players in game and their champs:")
+				
+				for player in gamedata['allPlayers']:
+					print("[?] player: " + str(player))
+					players.append(json.dumps(player))
+					player_info = "{" + player['riotId'] + ":" + player['championName'] + ",team:" + player['team'] + "}"
+					print("[?] player_info: " + player_info)
+					file.write(player_info + '\n')
+					if CUSTOMS_SERVER_STATUS == True:
+						try:
+							callback_response = requests.post(CUSTOMS_EVENT_CALLBACK, json=player_info, headers=headers, verify=False, timeout=2, proxies=WEB_PROXIES)
+							callback_response.raise_for_status()
+						except requests.exceptions.Timeout:
+							print(f"[!] Callback request timed out.")
+							continue
+						except requests.exceptions.RequestException as e:
+							print(f"[!] Request failed: {e}")
+							continue
+				break
+
+			except requests.exceptions.Timeout:
+				print(f"[!] Gamedata request timed out.")
+				time.sleep(1)
+				continue
+			except requests.exceptions.RequestException as e:
+				print(f"[!] Gamedata Request failed: {e}")
+				time.sleep(1)
+				continue
+
 		while True:
 			try:
 				response = requests.get(LC_EVENT_URL + "/eventdata?eventID=" + str(event_id), verify=False, timeout=2, proxies=LC_PROXIES)
