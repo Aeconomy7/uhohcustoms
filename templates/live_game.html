@@ -10,21 +10,67 @@
 		document.addEventListener("DOMContentLoaded", function() {
 			var socket = io.connect('http://' + document.domain + ':' + location.port);
 
-			socket.on('new_event', function(event) {
-				var eventsList = document.getElementById('events');
-				var newEvent = document.createElement('li');
-				newEvent.textContent = JSON.stringify(event);
-				eventsList.appendChild(newEvent);
+			socket.on('event_data', function(event) {
+				const eventTable = document.querySelector("#events tbody");
+
+				console.log(event);
+
+				//var eventsList = document.getElementById('events');
+				//var newEvent = document.createElement('li');
+				//newEvent.textContent = JSON.stringify(event);
+				//eventsList.appendChild(newEvent);
+			});
+
+			socket.on('player_data', function(event) {
+				const teamOrderTable = document.querySelector("#team-order tbody");
+				const teamChaorTable = document.querySelector("#team-chaos tbody");
+
+				console.log(event);
 			});
 		});
 	</script>
 </head>
 <body>
-	<h1>LIVE GAME EVENTS</h1>
-	<ul id="events">
-<!--		{% for event in events %}
-			<li>{{ event }}</li>
-		{% endfor %}-->
-	</ul>
+	<div id="header" class="funcolor">
+		<h1>LIVE GAME EVENTS</h1>
+	</div>
+	<div id="main-container">
+		<div id="left-panel">
+			<div id="teams">
+				<div id="team-order">
+					<table>
+						<thead>
+							<tr>
+								<th class="champion">CHAMP</th>
+								<th class="player-name">PLAYER</th>
+								<th class="kda">KILLS</th>
+								<th class="kda">DEATHS</th>
+								<th class="kda">ASSISTS</th>
+							</tr>
+						</thead>
+						<tbody>
+						</tbody>
+					</table>				
+				</div>
+				<div id="team-chaos">
+					<table>
+						<tbody>
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+		<div id="right-panel">
+			<table id="events">
+				<thead>
+					<tr>
+						<th class="event-no">EVENT #</th>
+						<th class="game-time">GAME TIME</th>
+						<th class="event-info">INFO</th>
+					</tr>
+				</thead>
+			</table>
+		</div>
+	</div>
 </body>
 </html>

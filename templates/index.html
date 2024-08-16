@@ -7,7 +7,10 @@
 	<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"></head>
 </head>
 <body>
-	<h1>UH OH CUSSMS! WE IN IT NOW!</h1>
+	<div id="header" class="funcolor">
+		<h1>UH OH CUSSMS</h1>
+		<h2>WE IN IT NOW!</h2>
+	</div>
 
 	{% if active_match_id %}
 		<p>Active Game ID: {{ active_match_id }}</p>

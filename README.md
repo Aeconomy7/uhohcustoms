@@ -19,6 +19,7 @@ A flask based web application to archive League of Legends customs
 	```sh
 	cp config.py.example config.py
 	vi config.py
+	```
 
 	Example config.py
 	```python
@@ -48,7 +49,8 @@ A flask based web application to archive League of Legends customs
 	                "password": generate_password_hash("<admin_password>"),
 	                "role": "admin"
 	        }
-	}	
+	}
+	```	
 
 5. Run the application via WSGI
 	```sh
