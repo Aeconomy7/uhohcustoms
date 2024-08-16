@@ -38,48 +38,66 @@ def is_port_open(host, port):
 ################### LIVE CLIENT API ###################
 def handle_event(event):
 	event_handler = event_switch.get(event['EventName'], handle_UnknownEvent)
-	return(event_handler(event))
+	id, name, time, message = event_handler(event))
+	return id, name, time, message
 
 
 def handle_GameStart(event):
-	print("Handling Game Start event")
-	return f"[+] {event['EventName']}: {event['EventID']} @ {str(datetime.timedelta(seconds=round(event['EventTime'])))}: " + str(event)
-    
+	print("[+] Handling Game Start event")
+	message = f"The game has started! May the best team win."
+	return event['EventID'], event['EventName'], str(datetime.timedelta(seconds=round(event['EventTime']))), message
+
 
 def handle_MinionsSpawning(event):
-	print("Handling Minion Spawn event")
-	return f"[+] {event['EventName']}: {event['EventID']} @ {str(datetime.timedelta(seconds=round(event['EventTime'])))}: " + str(event)
+	print("[+] Handling Minion Spawn event")
+	message = f"The minions have began their relentless march, be ready!"
+	return event['EventID'], event['EventName'], str(datetime.timedelta(seconds=round(event['EventTime']))), message
 
 
 def handle_ChampionKill(event):
-	print("Handling Champion Kill event")
-	return f"[+] {event['EventName']}: {event['EventID']} @ {str(datetime.timedelta(seconds=round(event['EventTime'])))}: " + str(event)
+	print("[+] Handling Champion Kill event")
+	if not event['Assisters']:
+		message = f"{event['KillerName']} has slain {event['VictimName']}!"
+	else:
+		message = f"{event['KillerName']} has slain {event['VictimName']}. Assisters: "
+		for assister in event['Assisters']:
+			message = message + f"{assister} "
+	return event['EventID'], event['EventName'], str(datetime.timedelta(seconds=round(event['EventTime']))), message
 
 
 def handle_Multikill(event):
-	print("Handling Multi Kill event")
+	print("[+] Handling Multi Kill event")
+	message = f""
 	if(event['KillStreak'] == 2):
-		return f"[+] {event['EventName']} Double Kill: {event['EventID']} @ {str(datetime.timedelta(seconds=round(event['EventTime'])))}: " + str(event)
+		message = f"{event['KillerName']} got a Double Kill! Wow!"
 	elif(event['KillStreak'] == 3):
-		return f"[+] {event['EventName']} Triple Kill: {event['EventID']} @ {str(datetime.timedelta(seconds=round(event['EventTime'])))}: " + str(event)
+		message = f"{event['KillerName']} got a Triple Kill! Holy Shiz!!"
 	elif(event['KillStreak'] == 4):
-		return f"[+] {event['EventName']} QUADRA KILL: {event['EventID']} @ {str(datetime.timedelta(seconds=round(event['EventTime'])))}: " + str(event)
+		message = f"{event['KillerName']} got a QUADRA KILL! WHAT THE FRICK!"
 	elif(event['KillStreak'] == 5):
-		return f"[+] {event['EventName']} PENTAKILLLLLLLL: {event['EventID']} @ {str(datetime.timedelta(seconds=round(event['EventTime'])))}: " + str(event)
+		message = f"{event['KillerName']} GOT A PENTAKILLLLL PAPA JOHNS! I HAVE LOST MY MARBLES, THIS IS CUSTOMS HISTORY!!!!!"
 	else:
-		return f"[+] {event['EventName']} UNKNOWN MULTI KILL: {event['EventID']} @ {str(datetime.timedelta(seconds=round(event['EventTime'])))}: " + str(event) 
+		message = f"This should not happen, pls contact Al." 
+	return event['EventID'], event['EventName'], str(datetime.timedelta(seconds=round(event['EventTime']))), message
 
 
 def handle_Ace(event):
-	print("Handling Multi Kill event")
-	return f"[+] {event['EventName']} ACE: {event['EventID']} @ {str(datetime.timedelta(seconds=round(event['EventTime'])))}: " + str(event)
+	print("[+] Handling Multi Kill event")
+	if event['AcingTeam'] == "ORDER":
+		message = f"{event['Acer']} of the Blue Team has scored an ACE-U!!!"
+	elif event['AcingTeam'] == "CHAOS":
+		message = f"{event['Acer']} of the Red Team has scored an ACE-U!!!"
+	else:
+		message = f"This should not happen, pls contact Al."  
+	return event['EventID'], event['EventName'], str(datetime.timedelta(seconds=round(event['EventTime']))), message
     
     
 def handle_FirstBrick(event):
-	print("Handling First Brick event")
-	return f"[+] {event['EventName']}: {event['EventID']} @ {str(datetime.timedelta(seconds=round(event['EventTime'])))}: " + str(event)
+	print("[+] Handling First Turret event")
+	message = f"{event['KillerName']} destroyed the first turret! BURN BABY BURN!!"
+	return event['EventID'], event['EventName'], str(datetime.timedelta(seconds=round(event['EventTime']))), message
 
-
+# YOU ARE HERE
 def handle_TurretKilled(event):
 	print("Handling Turret Killed event")
 	return f"[+] {event['EventName']}: {event['EventID']} @ {str(datetime.timedelta(seconds=round(event['EventTime'])))}: " + str(event)
@@ -232,6 +250,7 @@ def execute_game():
 						event_no, event_type, game_time, message = handle_event(event)
 						payload = {
 							'event_id': 	event_no,
+							'event_type':	event_type,
 							'game_time':	game_time,
 							'message':		message
 						}
