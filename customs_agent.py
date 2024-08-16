@@ -10,10 +10,11 @@ from config import LOCAL_HOST, LOCAL_PORT, LC_EVENT_URL, CUSTOMS_HOST, CUSTOMS_P
 
 ################### GLOBALS ###################
 CUSTOMS_SERVER_STATUS = False # tracks if uhohcustoms is online, True if it is, False if it isnt
-LC_PROXIES = None
-WEB_PROXIES = None
-#LC_PROXIES = { "http": "http://127.0.0.1:8080", "https": "http://127.0.0.1:8080" }
-#WEB_PROXIES = { "http": "http://127.0.0.1:8080", "https": "http://127.0.0.1:8080" }
+PLAYERS_DATA = []
+#LC_PROXIES = None
+#WEB_PROXIES = None
+LC_PROXIES = { "http": "http://127.0.0.1:8080", "https": "http://127.0.0.1:8080" }
+WEB_PROXIES = { "http": "http://127.0.0.1:8080", "https": "http://127.0.0.1:8080" }
 
 
 ################### NETWORK STUFF ###################
@@ -157,18 +158,20 @@ event_switch = {
 def execute_game():
 	# Global variable declarations
 	global CUSTOMS_SERVER_STATUS
+	global PLAYERS_DATA
 
-	# Function variables
-	players = []
 	event_id = 0
 	file_path = f"./{str(int(time.time()))}_game.txt"
+	event_header = "PLAYER_DATA"
 
 	# Request variables
 	headers = {
 		"Content-Type": "application/json",
-		"X-Agent-Secret": SECRET_HEADER
+		"X-Agent-Secret": SECRET_HEADER,
+		"X-Event-Type": event_header
 	}
 	
+	# open log file
 	with open(file_path, 'x', encoding='utf-8') as file:
 		# Get game data to fetch players
 		while True:
@@ -179,24 +182,23 @@ def execute_game():
 				gamedata = gamedata_response.json()
 				print(f"[?] Players in game and their champs:")
 				
-				for player in gamedata['allPlayers']:
-					print("[?] player: " + str(player))
-					players.append(json.dumps(player))
-					player_info = "{" + player['riotId'] + ":" + player['championName'] + ",team:" + player['team'] + "}"
-					print("[?] player_info: " + player_info)
-					file.write(player_info + '\n')
-					if CUSTOMS_SERVER_STATUS == True:
-						try:
-							callback_response = requests.post(CUSTOMS_EVENT_CALLBACK, json=player_info, headers=headers, verify=False, timeout=2, proxies=WEB_PROXIES)
-							callback_response.raise_for_status()
-						except requests.exceptions.Timeout:
-							print(f"[!] Callback request timed out.")
-							continue
-						except requests.exceptions.RequestException as e:
-							print(f"[!] Request failed: {e}")
-							continue
-				break
+				for p in gamedata['allPlayers']:
+					#print("[?] player: " + str(player))
+					#players.append(json.dumps(player))
+					player = {
+						'player_name':	p['riotId'],
+						'champion':		p['championName'],
+						'team':			p['team'],
+						'kills':		p['scores']['kills'],
+						'deaths':		p['scores']['deaths'],
+						'assists':		p['scores']['assists']
+					}
+					PLAYERS_DATA.append(player)
+					print(f"\t|-> {player['team']} player_info: " + str(player))
+					file.write(str(player) + '\n')
 
+				break
+				
 			except requests.exceptions.Timeout:
 				print(f"[!] Gamedata request timed out.")
 				time.sleep(1)
@@ -205,7 +207,19 @@ def execute_game():
 				print(f"[!] Gamedata Request failed: {e}")
 				time.sleep(1)
 				continue
-
+		
+		# Send player data to uhohcustoms if its running	
+		if CUSTOMS_SERVER_STATUS == True:
+			try:
+				#callback_response = requests.post(CUSTOMS_EVENT_CALLBACK, data=json.dumps(PLAYERS_DATA), headers=headers, verify=False, timeout=2, proxies=WEB_PROXIES)
+				callback_response = requests.post(CUSTOMS_EVENT_CALLBACK, json=PLAYERS_DATA, headers=headers, verify=False, timeout=2, proxies=WEB_PROXIES)
+				callback_response.raise_for_status()
+			except requests.exceptions.Timeout:
+				print(f"[!] Callback request timed out.")
+			except requests.exceptions.RequestException as e:
+				print(f"[!] Request failed: {e}")
+				
+		# START THE GAME EVENT LOOP
 		while True:
 			try:
 				response = requests.get(LC_EVENT_URL + "/eventdata?eventID=" + str(event_id), verify=False, timeout=2, proxies=LC_PROXIES)
@@ -215,8 +229,12 @@ def execute_game():
 
 				if isinstance(event_data['Events'], list):
 					for index, event in enumerate(event_data['Events']):
-						message = handle_event(event)
-						print(message)
+						event_no, event_type, game_time, message = handle_event(event)
+						payload = {
+							'event_id': 	event_no,
+							'game_time':	game_time,
+							'message':		message
+						}
 
 						# print message to file for tracking
 						try:
@@ -226,7 +244,8 @@ def execute_game():
 
 						if CUSTOMS_SERVER_STATUS == True:
 							try:
-								callback_response = requests.post(CUSTOMS_EVENT_CALLBACK, json=message, headers=headers, verify=False, timeout=2, proxies=WEB_PROXIES)
+								event_header = "EVENT_DATA"
+								callback_response = requests.post(CUSTOMS_EVENT_CALLBACK, data=json.dumps(payload), headers=headers, verify=False, timeout=2, proxies=WEB_PROXIES)
 								callback_response.raise_for_status()
 							except requests.exceptions.Timeout:
 								print(f"[!] Callback request timed out.")
@@ -235,6 +254,49 @@ def execute_game():
 
 						# Check for GameEnd event
 						if(event['EventName'] == 'GameEnd'):
+							try:
+								gamedata_response = requests.get(LC_EVENT_URL + "/allgamedata", verify=False, timeout=2, proxies=LC_PROXIES)
+								gamedata_response.raise_for_status()
+								
+								gamedata = gamedata_response.json()
+#								print(f"[?] Players in game and their champs:")
+								
+#								for player in gamedata['allPlayers']:
+#									print("[?] player: " + str(player))
+#									players.append(json.dumps(player))
+#									player_info = "{" + player['riotId'] + ":" + player['championName'] + ",team:" + player['team'] + "}"
+#									print("[?] player_info: " + player_info)
+#									file.write(player_info + '\n')
+#									if CUSTOMS_SERVER_STATUS == True:
+#										try:
+#											callback_response = requests.post(CUSTOMS_EVENT_CALLBACK, json=player_info, headers=headers, verify=False, timeout=2, proxies=WEB_PROXIES)
+#											callback_response.raise_for_status()
+#										except requests.exceptions.Timeout:
+#											print(f"[!] Callback request timed out.")
+#											continue
+#										except requests.exceptions.RequestException as e:
+#											print(f"[!] Request failed: {e}")
+#											continue
+
+							except requests.exceptions.Timeout:
+								print(f"[!] Gamedata request timed out.")
+								time.sleep(1)
+								continue
+							except requests.exceptions.RequestException as e:
+								print(f"[!] Gamedata Request failed: {e}")
+								time.sleep(1)
+								continue
+							
+							# THIS IS WHERE THIS FUNCTION SHOULD HOPEFULLY END
+							if CUSTOMS_SERVER_STATUS == True:
+								try:
+									event_header = "GAME_DATA"
+									gameend_response = requests.post(CUSTOMS_EVENT_CALLBACK, json=message, headers=headers, verify=False, timeout=2, proxies=WEB_PROXIES)
+									gameend_response.raise_for_status()
+								except requests.exceptions.Timeout:
+									print(f"[!] Callback request timed out.")
+								except requests.exceptions.RequestException as e:
+									print(f"[!] Request failed: {e}")
 							return
 						event_id += 1
 				else:
@@ -305,14 +367,15 @@ if __name__ == "__main__":
 
 		# execute game event loop
 		execute_game()
-		print("[+] Game concluded, sleeping 20 seconds before pulling match data...")
-		time.sleep(20)
+		print("[+] Game concluded, sleeping 20 seconds polling again...")
+		time.sleep(15)
 
 		# pull match history
-		recent_match_ids = get_match_ids(SUMMONER_PUUID, count=1)
-		if recent_match_ids:
-			match_details = get_match_details(recent_match_ids[0])
-			if match_details:
-				print("[+] Match details:", match_details)
+		# UNFORTUNATELY this does not work with customs game data
+		#recent_match_ids = get_match_ids(SUMMONER_PUUID, count=1)
+		#if recent_match_ids:
+		#	match_details = get_match_details(recent_match_ids[0])
+		#	if match_details:
+		#		print("[+] Match details:", match_details)
 
 
