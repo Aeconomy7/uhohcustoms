@@ -7,7 +7,7 @@ LC_EVENT_URL		= f"https://{LOCAL_HOST}:{LOCAL_PORT}/liveclientdata"
 
 CUSTOMS_HOST		= "127.0.0.1"
 CUSTOMS_PORT		= 8000
-CUSTOMS_EVENT_CALLBACK	= f"http://{CUSTOMS_HOST}:{CUSTOMS_PORT}/event_callback"
+CUSTOMS_DATA_CALLBACK	= f"http://{CUSTOMS_HOST}:{CUSTOMS_PORT}/data_callback"
 
 REGION			= "AMERICAS"
 

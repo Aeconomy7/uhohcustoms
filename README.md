@@ -32,7 +32,7 @@ A flask based web application to archive League of Legends customs
 	
 	CUSTOMS_HOST            = "127.0.0.1"
 	CUSTOMS_PORT            = 8000
-	CUSTOMS_EVENT_CALLBACK  = f"http://{CUSTOMS_HOST}:{CUSTOMS_PORT}/event_callback"
+	CUSTOMS_DATA_CALLBACK  = f"http://{CUSTOMS_HOST}:{CUSTOMS_PORT}/data_callback"
 	
 	REGION                  = "AMERICAS"
 	

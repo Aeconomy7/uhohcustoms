@@ -13,18 +13,59 @@
 			socket.on('event_data', function(event) {
 				const eventTable = document.querySelector("#events tbody");
 
-				console.log(event);
 
-				//var eventsList = document.getElementById('events');
-				//var newEvent = document.createElement('li');
-				//newEvent.textContent = JSON.stringify(event);
-				//eventsList.appendChild(newEvent);
+				const row = document.createElement("tr");
+
+				const e_no = document.createElement("td");
+				e_no.textContent = event.event_id;
+				row.appendChild(e_no);
+
+				const gt = document.createElement("td");
+				gt.textContent = event.game_time;
+				row.appendChild(gt);
+
+				const e_message = document.createElement("td");
+				e_message.textContent = event.message;
+				row.appendChild(e_message);
+
+				eventTable.appendChild(row);
 			});
 
-			socket.on('player_data', function(event) {
-				const teamOrderTable = document.querySelector("#team-order tbody");
-				const teamChaorTable = document.querySelector("#team-chaos tbody");
+			socket.on('add_player_data', function(event) {
+				const teamTable = document.querySelector("#teams tbody");
 
+				event.forEach(function(player){
+					const row = document.createElement("tr");
+					row.id = player.player_name;
+					row.classList.add(player.team)
+
+					const champ = document.createElement("td");
+					champ.innerHTML = "<img src=static/img/champions/" + player.champion + ".png />";
+					champ.style.width = "50px";
+					champ.style.height = "50px";
+					row.appendChild(champ);
+
+					const summoner = document.createElement("td");
+					summoner.textContent = player.player_name;
+					row.appendChild(summoner);
+
+					const kills = document.createElement("td");
+					kills.textContent = player.kills;
+					row.appendChild(kills);
+
+					const deaths = document.createElement("td");
+					deaths.textContent = player.deaths;
+					row.appendChild(deaths);
+
+					const assists = document.createElement("td");
+					assists.textContent = player.assists;
+					row.appendChild(assists);
+
+					teamTable.appendChild(row);
+				});
+			});
+
+			socket.on('update_player_data', function(event) {
 				console.log(event);
 			});
 		});
@@ -34,32 +75,27 @@
 	<div id="header" class="funcolor">
 		<h1>LIVE GAME EVENTS</h1>
 	</div>
+
 	<div id="main-container">
 		<div id="left-panel">
 			<div id="teams">
-				<div id="team-order">
-					<table>
-						<thead>
-							<tr>
-								<th class="champion">CHAMP</th>
-								<th class="player-name">PLAYER</th>
-								<th class="kda">KILLS</th>
-								<th class="kda">DEATHS</th>
-								<th class="kda">ASSISTS</th>
-							</tr>
-						</thead>
-						<tbody>
-						</tbody>
-					</table>				
-				</div>
-				<div id="team-chaos">
-					<table>
-						<tbody>
-						</tbody>
-					</table>
-				</div>
+				<table>
+					<thead>
+						<tr>
+							<th class="champion">CHAMP</th>
+							<th class="player-name">PLAYER</th>
+							<th class="kda">KILLS</th>
+							<th class="kda">DEATHS</th>
+							<th class="kda">ASSISTS</th>
+						</tr>
+					</thead>
+					<tbody>
+						<!-- Rows will be populated here via JavaScript -->	
+					</tbody>
+				</table>				
 			</div>
 		</div>
+
 		<div id="right-panel">
 			<table id="events">
 				<thead>
@@ -69,6 +105,9 @@
 						<th class="event-info">INFO</th>
 					</tr>
 				</thead>
+				<tbody>
+					<!-- Rows will be populated here via JavaScript -->
+				</tbody>
 			</table>
 		</div>
 	</div>
