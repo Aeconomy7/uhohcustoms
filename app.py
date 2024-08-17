@@ -249,9 +249,9 @@ def event_callback():
 					pn = p['player_name'].split('#')[0]
 					if pn == event['KillerName']:
 						p["kills"] += 1
-					elif pn == event['VictimName']:
+					if pn == event['VictimName']:
 						p["deaths"] += 1
-					elif pn in assisters:
+					if pn in assisters:
 						p["assists"] += 1
 
 				print(PLAYERS_DATA)
