@@ -67,6 +67,10 @@
 
 			socket.on('update_player_data', function(event) {
 				console.log(event);
+
+				event.forEach(function(player){
+					const p_row = document.querySelector(player.player_name);
+				});
 			});
 		});
 	</script>
