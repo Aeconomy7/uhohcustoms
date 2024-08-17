@@ -5,7 +5,7 @@ import socket
 import sys
 import io
 import json
-from config import LOCAL_HOST, LOCAL_PORT, LC_EVENT_URL, CUSTOMS_HOST, CUSTOMS_PORT, CUSTOMS_EVENT_CALLBACK, RIOT_API_KEY, SECRET_HEADER
+from config import LOCAL_HOST, LOCAL_PORT, LC_EVENT_URL, CUSTOMS_HOST, CUSTOMS_PORT, CUSTOMS_DATA_CALLBACK, RIOT_API_KEY, SECRET_HEADER
 
 
 ################### GLOBALS ###################
@@ -15,6 +15,15 @@ PLAYERS_DATA = []
 #WEB_PROXIES = None
 LC_PROXIES = { "http": "http://127.0.0.1:8080", "https": "http://127.0.0.1:8080" }
 WEB_PROXIES = { "http": "http://127.0.0.1:8080", "https": "http://127.0.0.1:8080" }
+
+
+################### UTILITY FUNCTIONS ###################
+def get_event_headers(event_type):
+	return {
+		"Content-Type": "application/json",
+		"X-Agent-Secret": SECRET_HEADER,
+		"X-Event-Type": event_type
+	}
 
 
 ################### NETWORK STUFF ###################
@@ -36,143 +45,6 @@ def is_port_open(host, port):
 
 
 ################### LIVE CLIENT API ###################
-def handle_event(event):
-	event_handler = event_switch.get(event['EventName'], handle_UnknownEvent)
-	id, name, time, message = event_handler(event))
-	return id, name, time, message
-
-
-def handle_GameStart(event):
-	print("[+] Handling Game Start event")
-	message = f"The game has started! May the best team win."
-	return event['EventID'], event['EventName'], str(datetime.timedelta(seconds=round(event['EventTime']))), message
-
-
-def handle_MinionsSpawning(event):
-	print("[+] Handling Minion Spawn event")
-	message = f"The minions have began their relentless march, be ready!"
-	return event['EventID'], event['EventName'], str(datetime.timedelta(seconds=round(event['EventTime']))), message
-
-
-def handle_ChampionKill(event):
-	print("[+] Handling Champion Kill event")
-	if not event['Assisters']:
-		message = f"{event['KillerName']} has slain {event['VictimName']}!"
-	else:
-		message = f"{event['KillerName']} has slain {event['VictimName']}. Assisters: "
-		for assister in event['Assisters']:
-			message = message + f"{assister} "
-	return event['EventID'], event['EventName'], str(datetime.timedelta(seconds=round(event['EventTime']))), message
-
-
-def handle_Multikill(event):
-	print("[+] Handling Multi Kill event")
-	message = f""
-	if(event['KillStreak'] == 2):
-		message = f"{event['KillerName']} got a Double Kill! Wow!"
-	elif(event['KillStreak'] == 3):
-		message = f"{event['KillerName']} got a Triple Kill! Holy Shiz!!"
-	elif(event['KillStreak'] == 4):
-		message = f"{event['KillerName']} got a QUADRA KILL! WHAT THE FRICK!"
-	elif(event['KillStreak'] == 5):
-		message = f"{event['KillerName']} GOT A PENTAKILLLLL PAPA JOHNS! I HAVE LOST MY MARBLES, THIS IS CUSTOMS HISTORY!!!!!"
-	else:
-		message = f"This should not happen, pls contact Al." 
-	return event['EventID'], event['EventName'], str(datetime.timedelta(seconds=round(event['EventTime']))), message
-
-
-def handle_Ace(event):
-	print("[+] Handling Multi Kill event")
-	if event['AcingTeam'] == "ORDER":
-		message = f"{event['Acer']} of the Blue Team has scored an ACE-U!!!"
-	elif event['AcingTeam'] == "CHAOS":
-		message = f"{event['Acer']} of the Red Team has scored an ACE-U!!!"
-	else:
-		message = f"This should not happen, pls contact Al."  
-	return event['EventID'], event['EventName'], str(datetime.timedelta(seconds=round(event['EventTime']))), message
-    
-    
-def handle_FirstBrick(event):
-	print("[+] Handling First Turret event")
-	message = f"{event['KillerName']} destroyed the first turret! BURN BABY BURN!!"
-	return event['EventID'], event['EventName'], str(datetime.timedelta(seconds=round(event['EventTime']))), message
-
-# YOU ARE HERE
-def handle_TurretKilled(event):
-	print("Handling Turret Killed event")
-	return f"[+] {event['EventName']}: {event['EventID']} @ {str(datetime.timedelta(seconds=round(event['EventTime'])))}: " + str(event)
-
-
-def handle_InhibKilled(event):
-	print("Handling Inhib Killed event")
-	return f"[+] {event['EventName']}: {event['EventID']} @ {str(datetime.timedelta(seconds=round(event['EventTime'])))}: " + str(event)
-
-
-def handle_DragonKill(event):
-	print("Handling Dragon Kill event")
-	return f"[+] {event['EventName']}: {event['EventID']} @ {str(datetime.timedelta(seconds=round(event['EventTime'])))}: " + str(event)
-
-
-def handle_BaronKill(event):
-	print("Handling Baron Kill event")
-	return f"[+] {event['EventName']}: {event['EventID']} @ {str(datetime.timedelta(seconds=round(event['EventTime'])))}: " + str(event)
-
-
-def handle_HeraldKill(event):
-	print("Handling Herald Kill event")
-	return f"[+] {event['EventName']}: {event['EventID']} @ {str(datetime.timedelta(seconds=round(event['EventTime'])))}: " + str(event)
-
-
-def handle_HordeKill(event):
-	print("Handling Void Grubbs Kill event")
-	return f"[+] {event['EventName']}: {event['EventID']} @ {str(datetime.timedelta(seconds=round(event['EventTime'])))}: " + str(event)
-
-
-def handle_ChampionSpecialKill(event):
-	print("Handling Champion Special Kill event")
-	return f"[+] {event['EventName']}: {event['EventID']} @ {str(datetime.timedelta(seconds=round(event['EventTime'])))}: " + str(event)
-
-
-def handle_EliteMonsterKill(event):
-	print("Handling Elite Monster Kill event")
-	return f"[+] {event['EventName']}: {event['EventID']} @ {str(datetime.timedelta(seconds=round(event['EventTime'])))}: " + str(event)
-
-
-def handle_FirstBlood(event):
-	print("Handling First Blood event")
-	return f"[+] {event['EventName']}: {event['EventID']} @ {str(datetime.timedelta(seconds=round(event['EventTime'])))}: " + str(event)
-
-
-def handle_GameEnd(event):
-	print("Handling Game End event")
-	return f"[+] {event['EventName']}: {event['EventID']} @ {str(datetime.timedelta(seconds=round(event['EventTime'])))}: " + str(event)
-
-
-def handle_UnknownEvent(event):
-	return f"[-] Unknown event type: {event.get('EventName', 'NoEventName')}: " + str(event)
-
-
-# Dictionary to map event names to handler functions
-event_switch = {
-	'GameStart': handle_GameStart,
-	'MinionsSpawning': handle_MinionsSpawning,
-	'ChampionKill': handle_ChampionKill,
-	'Multikill': handle_Multikill,
-	'Ace': handle_Ace,
-	'FirstBrick': handle_FirstBrick,
-    'TurretKilled': handle_TurretKilled,
-	'InhibKilled': handle_InhibKilled,
-	'DragonKill': handle_DragonKill,
-	'BaronKill': handle_BaronKill,
-	'HeraldKill': handle_HeraldKill,
-	'HordeKill': handle_HordeKill,
-	'ChampionSpecialKill': handle_ChampionSpecialKill,
-	'EliteMonsterKill': handle_EliteMonsterKill,
-	'FirstBlood': handle_FirstBlood,
-	'GameEnd': handle_GameEnd
-}
-
-
 def execute_game():
 	# Global variable declarations
 	global CUSTOMS_SERVER_STATUS
@@ -180,15 +52,7 @@ def execute_game():
 
 	event_id = 0
 	file_path = f"./{str(int(time.time()))}_game.txt"
-	event_header = "PLAYER_DATA"
-
-	# Request variables
-	headers = {
-		"Content-Type": "application/json",
-		"X-Agent-Secret": SECRET_HEADER,
-		"X-Event-Type": event_header
-	}
-	
+		
 	# open log file
 	with open(file_path, 'x', encoding='utf-8') as file:
 		# Get game data to fetch players
@@ -229,8 +93,7 @@ def execute_game():
 		# Send player data to uhohcustoms if its running	
 		if CUSTOMS_SERVER_STATUS == True:
 			try:
-				#callback_response = requests.post(CUSTOMS_EVENT_CALLBACK, data=json.dumps(PLAYERS_DATA), headers=headers, verify=False, timeout=2, proxies=WEB_PROXIES)
-				callback_response = requests.post(CUSTOMS_EVENT_CALLBACK, json=PLAYERS_DATA, headers=headers, verify=False, timeout=2, proxies=WEB_PROXIES)
+				callback_response = requests.post(CUSTOMS_DATA_CALLBACK, json=PLAYERS_DATA, headers=get_event_headers("PLAYER_DATA"), verify=False, timeout=2, proxies=WEB_PROXIES)
 				callback_response.raise_for_status()
 			except requests.exceptions.Timeout:
 				print(f"[!] Callback request timed out.")
@@ -247,24 +110,15 @@ def execute_game():
 
 				if isinstance(event_data['Events'], list):
 					for index, event in enumerate(event_data['Events']):
-						event_no, event_type, game_time, message = handle_event(event)
-						payload = {
-							'event_id': 	event_no,
-							'event_type':	event_type,
-							'game_time':	game_time,
-							'message':		message
-						}
-
 						# print message to file for tracking
 						try:
-							file.write(message + '\n')
+							file.write(str(event) + '\n')
 						except UnicodeEncodeError as e:
 							print(f"[!] Encoding error while printing event data: {e}")
 
 						if CUSTOMS_SERVER_STATUS == True:
 							try:
-								event_header = "EVENT_DATA"
-								callback_response = requests.post(CUSTOMS_EVENT_CALLBACK, data=json.dumps(payload), headers=headers, verify=False, timeout=2, proxies=WEB_PROXIES)
+								callback_response = requests.post(CUSTOMS_DATA_CALLBACK, data=json.dumps(event), headers=get_event_headers("EVENT_DATA"), verify=False, timeout=2, proxies=WEB_PROXIES)
 								callback_response.raise_for_status()
 							except requests.exceptions.Timeout:
 								print(f"[!] Callback request timed out.")
@@ -278,45 +132,36 @@ def execute_game():
 								gamedata_response.raise_for_status()
 								
 								gamedata = gamedata_response.json()
-#								print(f"[?] Players in game and their champs:")
 								
-#								for player in gamedata['allPlayers']:
-#									print("[?] player: " + str(player))
-#									players.append(json.dumps(player))
-#									player_info = "{" + player['riotId'] + ":" + player['championName'] + ",team:" + player['team'] + "}"
-#									print("[?] player_info: " + player_info)
-#									file.write(player_info + '\n')
-#									if CUSTOMS_SERVER_STATUS == True:
-#										try:
-#											callback_response = requests.post(CUSTOMS_EVENT_CALLBACK, json=player_info, headers=headers, verify=False, timeout=2, proxies=WEB_PROXIES)
-#											callback_response.raise_for_status()
-#										except requests.exceptions.Timeout:
-#											print(f"[!] Callback request timed out.")
-#											continue
-#										except requests.exceptions.RequestException as e:
-#											print(f"[!] Request failed: {e}")
-#											continue
+								# Write to file
+								try:
+									file.write(str(gamedata) + '\n')
+								except UnicodeEncodeError as e:
+									print(f"[!] Encoding error while printing event data: {e}")
+									
+								# THIS IS WHERE THIS FUNCTION SHOULD HOPEFULLY END
+								if CUSTOMS_SERVER_STATUS == True:
+									try:
+										gameend_response = requests.post(CUSTOMS_DATA_CALLBACK, json=message, headers=get_event_headers("GAME_DATA"), verify=False, timeout=2, proxies=WEB_PROXIES)
+										gameend_response.raise_for_status()
+									except requests.exceptions.Timeout:
+										print(f"[!] Callback request timed out.")
+									except requests.exceptions.RequestException as e:
+										print(f"[!] Request failed: {e}")
 
+								return
+								
 							except requests.exceptions.Timeout:
 								print(f"[!] Gamedata request timed out.")
 								time.sleep(1)
 								continue
+								
 							except requests.exceptions.RequestException as e:
 								print(f"[!] Gamedata Request failed: {e}")
 								time.sleep(1)
 								continue
-							
-							# THIS IS WHERE THIS FUNCTION SHOULD HOPEFULLY END
-							if CUSTOMS_SERVER_STATUS == True:
-								try:
-									event_header = "GAME_DATA"
-									gameend_response = requests.post(CUSTOMS_EVENT_CALLBACK, json=message, headers=headers, verify=False, timeout=2, proxies=WEB_PROXIES)
-									gameend_response.raise_for_status()
-								except requests.exceptions.Timeout:
-									print(f"[!] Callback request timed out.")
-								except requests.exceptions.RequestException as e:
-									print(f"[!] Request failed: {e}")
-							return
+
+						# iterate to next event in queue
 						event_id += 1
 				else:
 					print(f"[!] event_data is not a list: {event_data}")
