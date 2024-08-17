@@ -71,9 +71,12 @@ def execute_game():
 						'player_name':	p['riotId'],
 						'champion':		p['championName'],
 						'team':			p['team'],
-						'kills':		p['scores']['kills'],
-						'deaths':		p['scores']['deaths'],
-						'assists':		p['scores']['assists']
+						#'kills':		p['scores']['kills'],
+						#'deaths':		p['scores']['deaths'],
+						#'assists':		p['scores']['assists']
+						'kills':		0,
+						'deaths':		0,
+						'assists':		0
 					}
 					PLAYERS_DATA.append(player)
 					print(f"\t|-> {player['team']} player_info: " + str(player))
