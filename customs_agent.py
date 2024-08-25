@@ -2,29 +2,48 @@ import requests
 import datetime
 import time
 import socket
+import os
 import sys
 import io
 import json
+import uuid
 from config import LOCAL_HOST, LOCAL_PORT, LC_EVENT_URL, CUSTOMS_HOST, CUSTOMS_PORT, CUSTOMS_DATA_CALLBACK, RIOT_API_KEY, SECRET_HEADER
 
 
 ################### GLOBALS ###################
 CUSTOMS_SERVER_STATUS = False # tracks if uhohcustoms is online, True if it is, False if it isnt
 PLAYERS_DATA = []
-#LC_PROXIES = None
+LC_PROXIES = None
 #WEB_PROXIES = None
-LC_PROXIES = { "http": "http://127.0.0.1:8080", "https": "http://127.0.0.1:8080" }
+#LC_PROXIES = { "http": "http://127.0.0.1:8080", "https": "http://127.0.0.1:8080" }
 WEB_PROXIES = { "http": "http://127.0.0.1:8080", "https": "http://127.0.0.1:8080" }
 
 
 ################### UTILITY FUNCTIONS ###################
-def get_event_headers(event_type):
+def get_event_headers(event_type, game_id):
 	return {
 		"Content-Type": "application/json",
 		"X-Agent-Secret": SECRET_HEADER,
-		"X-Event-Type": event_type
+		"X-Event-Type": event_type,
+		"X-Game-ID": str(game_id)
 	}
 
+# checks if valid UUID v4 string
+# Example UUID v4: f47ac10b-58cc-4372-a567-0e02b2c3d479
+def is_valid_uuid(uuid_to_test, version=4):
+	try:
+		uuid_obj = uuid.UUID(uuid_to_test, version=version)
+	except ValueError:
+		return False
+	return str(uuid_obj) == uuid_to_test
+
+
+def file_exists_with_uuid(uuid_str, directory='.'):
+	# Construct the full file path
+	file_path = os.path.join(directory, uuid_str)
+
+	# Check if the file exists
+	return os.path.isfile(file_path)
 
 ################### NETWORK STUFF ###################
 def wait_for_port(host, port):
@@ -45,16 +64,31 @@ def is_port_open(host, port):
 
 
 ################### LIVE CLIENT API ###################
-def execute_game():
+def execute_game(game_id=None):
 	# Global variable declarations
 	global CUSTOMS_SERVER_STATUS
 	global PLAYERS_DATA
 
+	# Find out if there was an active game prior to the agent being run
+	# active game does not exist
+	if(game_id == ""):
+		game_id = uuid.uuid4()
+		print(f"[?] No active game entered, generating new game ID: {game_id}")
+		# Send player data to uhohcustoms if its running	
+		if CUSTOMS_SERVER_STATUS == True:
+			try:
+				callback_response = requests.post(CUSTOMS_DATA_CALLBACK, json=PLAYERS_DATA, headers=get_event_headers("GAME_REGISTRATION", game_id), verify=False, timeout=2, proxies=WEB_PROXIES)
+				callback_response.raise_for_status()
+			except requests.exceptions.Timeout:
+				print(f"[!] Callback request timed out.")
+			except requests.exceptions.RequestException as e:
+				print(f"[!] Request failed: {e}")
+	
 	event_id = 0
-	file_path = f"./{str(int(time.time()))}_game.txt"
+	file_path = f"./{game_id}"
 		
 	# open log file
-	with open(file_path, 'x', encoding='utf-8') as file:
+	with open(file_path, 'a', encoding='utf-8') as file:
 		# Get game data to fetch players
 		while True:
 			try:
@@ -65,18 +99,16 @@ def execute_game():
 				print(f"[?] Players in game and their champs:")
 				
 				for p in gamedata['allPlayers']:
-					#print("[?] player: " + str(player))
-					#players.append(json.dumps(player))
 					player = {
 						'player_name':	p['riotId'],
 						'champion':		p['championName'],
 						'team':			p['team'],
-						#'kills':		p['scores']['kills'],
-						#'deaths':		p['scores']['deaths'],
-						#'assists':		p['scores']['assists']
-						'kills':		0,
-						'deaths':		0,
-						'assists':		0
+						'kills':		p['scores']['kills'],
+						'deaths':		p['scores']['deaths'],
+						'assists':		p['scores']['assists']
+						#'kills':		0,
+						#'deaths':		0,
+						#'assists':		0
 					}
 					PLAYERS_DATA.append(player)
 					print(f"\t|-> {player['team']} player_info: " + str(player))
@@ -96,7 +128,7 @@ def execute_game():
 		# Send player data to uhohcustoms if its running	
 		if CUSTOMS_SERVER_STATUS == True:
 			try:
-				callback_response = requests.post(CUSTOMS_DATA_CALLBACK, json=PLAYERS_DATA, headers=get_event_headers("PLAYER_DATA"), verify=False, timeout=2, proxies=WEB_PROXIES)
+				callback_response = requests.post(CUSTOMS_DATA_CALLBACK, json=PLAYERS_DATA, headers=get_event_headers("PLAYER_DATA", game_id), verify=False, timeout=2, proxies=WEB_PROXIES)
 				callback_response.raise_for_status()
 			except requests.exceptions.Timeout:
 				print(f"[!] Callback request timed out.")
@@ -121,7 +153,7 @@ def execute_game():
 
 						if CUSTOMS_SERVER_STATUS == True:
 							try:
-								callback_response = requests.post(CUSTOMS_DATA_CALLBACK, data=json.dumps(event), headers=get_event_headers("EVENT_DATA"), verify=False, timeout=2, proxies=WEB_PROXIES)
+								callback_response = requests.post(CUSTOMS_DATA_CALLBACK, data=json.dumps(event), headers=get_event_headers("EVENT_DATA", game_id), verify=False, timeout=2, proxies=WEB_PROXIES)
 								callback_response.raise_for_status()
 							except requests.exceptions.Timeout:
 								print(f"[!] Callback request timed out.")
@@ -142,10 +174,10 @@ def execute_game():
 								except UnicodeEncodeError as e:
 									print(f"[!] Encoding error while printing event data: {e}")
 									
-								# THIS IS WHERE THIS FUNCTION SHOULD HOPEFULLY END
+								# THIS IS WHERE THIS FUNCTION SHOULD HOPEFULLY END !!!
 								if CUSTOMS_SERVER_STATUS == True:
 									try:
-										gameend_response = requests.post(CUSTOMS_DATA_CALLBACK, json=message, headers=get_event_headers("GAME_DATA"), verify=False, timeout=2, proxies=WEB_PROXIES)
+										gameend_response = requests.post(CUSTOMS_DATA_CALLBACK, json=gamedata, headers=get_event_headers("GAME_DATA", game_id), verify=False, timeout=2, proxies=WEB_PROXIES)
 										gameend_response.raise_for_status()
 									except requests.exceptions.Timeout:
 										print(f"[!] Callback request timed out.")
@@ -226,16 +258,29 @@ if __name__ == "__main__":
 
 	# main agent loop
 	while True:
+		# check for user entered active game and verify UUID
+		game_id = input("[?] Enter active game UUID, if none, hit <ENTER>: ").strip()
+		if game_id != "":
+			if is_valid_uuid(game_id):
+				if file_exists_with_uuid(game_id):
+					print(f"[+] Found active game file with ID {game_id}!")
+				else:
+					print(f"[-] No active game data found with game ID {game_id} :(")
+					break
+			else:
+				print(f"[-] Invalid game id entered")
+				break
+		
 		# wait for game port to be open
-		print(f"[?] Waiting for game port to be open")
+		print(f"[?] Waiting for game port to be open...")
 		wait_for_port(LOCAL_HOST, LOCAL_PORT)
 		print("[+] Game port open, sleeping for 3 seconds before commence")
 		time.sleep(4)
 
 		# execute game event loop
-		execute_game()
-		print("[+] Game concluded, sleeping 20 seconds polling again...")
-		time.sleep(15)
+		execute_game(game_id)
+		print("[+] Game concluded, sleeping 10 seconds polling again...")
+		time.sleep(10)
 
 		# pull match history
 		# UNFORTUNATELY this does not work with customs game data
