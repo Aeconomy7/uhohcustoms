@@ -12,11 +12,11 @@
 		<h2>WE IN IT NOW!</h2>
 	</div>
 
-	{% if active_match_id %}
-		<p>Active Game ID: {{ active_match_id }}</p>
-		<a href="{{ url_for('live_game', match_id=active_match_id) }}">Track Live Game</a>
-	{% else %}
-		<a href="{{ url_for('customs_history') }}">Customs History</a>
+	{% if active_game_id %}
+		<p>Active Game ID: {{ active_game_id }}</p>
+		<a href="{{ url_for('game', game_id=active_game_id) }}">Track Live Game</a>
 	{% endif %}
+
+	<a href="{{ url_for('game_history') }}">Customs History</a>
 </body>
 </html>
