@@ -14,7 +14,7 @@ from config import RIOT_API_KEY, FLASK_SECRET_KEY, REGION, USERS, SECRET_HEADER
 # FLASK #
 #########
 app = Flask(__name__)
-app.secret_key = FLASK_SECRET_KEY  # Change this to a secure key
+app.secret_key = FLASK_SECRET_KEY
 
 auth = HTTPBasicAuth()
 
@@ -29,7 +29,23 @@ CUSTOMS_DB.__enter__()
 ###########
 # GLOBALS #
 ###########
-PLAYERS_DATA = []
+PLAYERS_DATA 		= []
+
+ACTIVE_GAME_DATA 	= []
+"""
+	[
+		{
+			"gameID":"123e4567-e89b-12d3-a456-426614174000",
+			"reporter":"Sc00by#NA1",
+			"gameState":"COMPLETE"
+		},
+		{
+			"gameID":"123e4567-e89b-12d3-a456-426614174001",
+			"reported":"Sc00by#NA1",
+			"gameState":"ACTIVE"
+		}
+	]
+"""
 
 #####################
 # UTILITY FUNCTIONS #
@@ -45,6 +61,7 @@ def get_user_roles(username):
 
 # Event handlers
 def handle_event(event):
+	print(f"[?] handle_event : event : {event}")
 	event_handler = event_switch.get(event['EventName'], handle_UnknownEvent)
 	id, name, time, message = event_handler(event)
 	return id, name, time, message
@@ -162,11 +179,13 @@ def handle_EliteMonsterKill(event):
 
 def handle_GameEnd(event):
 	print("Handling Game End event")
-	return f"[+] {event['EventName']}: {event['EventID']} @ {str(datetime.timedelta(seconds=round(event['EventTime'])))}: " + str(event)
+	message = f"[+] {event['EventName']}: {event['EventID']} @ {str(datetime.timedelta(seconds=round(event['EventTime'])))}: " + str(event)
+	return event['EventID'], event['EventName'], str(datetime.timedelta(seconds=round(event['EventTime']))), message
 
 
 def handle_UnknownEvent(event):
-	return f"[-] Unknown event type: {event.get('EventName', 'NoEventName')}: " + str(event)
+	message = f"[-] Unknown event type: {event.get('EventName', 'NoEventName')}: " + str(event)
+	return event['EventID'], event['EventName'], str(datetime.timedelta(seconds=round(event['EventTime']))), message
 
 
 # Dictionary to map event names to handler functions
@@ -195,20 +214,22 @@ event_switch = {
 @app.route('/')
 @auth.login_required
 def index():
-	global active_match_id
+	global ACTIVE_GAME_DATA
 
-	print(f"[!] Enter INDEX, active_match_id: {active_match_id}")
+	print(f"[!] Enter INDEX, ACTIVE_GAME_DATA: {str(ACTIVE_GAME_DATA)}")
 
-	return render_template('index.html', active_match_id=active_match_id)
+	return render_template('index.html', active_game_data=ACTIVE_GAME_DATA)
 
 
 # Get game events callback
 @app.route('/data_callback', methods=['POST'])
 def event_callback():
 	global PLAYERS_DATA
+	global ACTIVE_GAME_DATA
 
 	event = request.json
 	headers = request.headers
+	game_id = headers.get('X-Game-ID')
 
 	if isinstance(event, str):
 		# Convert the string into a list of dictionaries
@@ -220,16 +241,30 @@ def event_callback():
 		print(f"	|-> X-Event-Type: {headers.get('X-Event-Type')}")
 
 
+		# HANDLE GAME REGISTRATION
+		if headers.get('X-Event-Type') == 'GAME_REGISTRATION':
+			if len(ACTIVE_GAME_DATA) != 0:
+				if ACTIVE_GAME_DATA['game_id'][0] != game_id:
+					return jsonify({'error': 'Active Game in Progress'}), 400
+				else:
+					CUSTOMS_DB.register_game(game_id)
+					payload = {
+						"game_id": game_id
+					}
+					ACTIVE_GAME_DATA.append(payload)
+					print(f"[+] Successfully registered game id {game_id}! :)")
+
 		# HANDLE PLAYER_DATA
-		if headers.get('X-Event-Type') == 'PLAYER_DATA':
+		elif headers.get('X-Event-Type') == 'PLAYER_DATA':
 			for p in event:
 				print(f"p: {p}")
 				PLAYERS_DATA.append(p)
+#				CUSTOMS_DB.register_player(p['player_name'].split('#')[0], p['player_name'].split('#')[1])
 			socketio.emit('add_player_data', event)
+
 
 		# HANDLE EVENT_DATA
 		elif headers.get('X-Event-Type') == 'EVENT_DATA':
-			# BEGIN PASTED CODE
 			event_no, event_type, game_time, message = handle_event(event)
 			payload = {
 				'event_id':	event_no,
@@ -237,6 +272,9 @@ def event_callback():
 				'game_time':	game_time,
 				'message':	message
 			}
+
+			# push events to DB
+			CUSTOMS_DB.insert_game_event(game_id, event_no, event)
 
 			# OG
 			socketio.emit('event_data', payload)
@@ -249,23 +287,24 @@ def event_callback():
 					pn = p['player_name'].split('#')[0]
 					if pn == event['KillerName']:
 						p["kills"] += 1
-					if pn == event['VictimName']:
+					if pn == e['VictimName']:
 						p["deaths"] += 1
 					if pn in assisters:
 						p["assists"] += 1
 
-				print(PLAYERS_DATA)
+				print(f"[?] PLAYERS_DATA: {PLAYERS_DATA}")
 				socketio.emit('update_player_data', PLAYERS_DATA)
 
 			# Check for GameEnd event
 			if event['EventName'] == 'GameEnd':
 				print(f"[?] Got GameEnd event")
 				PLAYERS_DATA = []
-
+				ACTIVE_GAME_DATA = []
 
 		# HANDLE GAME_DATA
 		elif headers.get('X-Event-Type') == 'GAME_DATA':
-			print(f"[*] Got GAME_DATA, no yet implemented")
+			print(f"[?] Got GAME_DATA")
+			CUSTOMS_DB.update_end_game_history(game_id, event)
 
 		else:
 			print(f"[-] Found unknown X-Event-Type header")
@@ -279,17 +318,32 @@ def event_callback():
 @app.route('/live_game', methods=['GET'])
 @auth.login_required
 def live_game():
-	return render_template('live_game.html')
+	global PLAYERS_DATA
+#	game_events_raw = CUSTOMS_DB.get_game_events_by_game_id(game_id)
+#	game_events = []
+
+#	if game_events_raw != None:
+#		for event in game_events_raw:
+#			event_no, event_type, game_time, message = handle_event(event)
+#			payload = {
+#				'event_id':     event_no,
+#				'event_type':   event_type,
+#				'game_time':    game_time,
+#				'message':      message
+#			}
+#			game_events.append(game_events)
+
+#	return render_template('live_game.html', game_events=game_events)
+	return render_template('live_game.html', player_data=PLAYERS_DATA)
 
 
-@app.route('/customs_history', methods=['GET'])
+# Display game history
+@app.route('/game_history', methods=['GET'])
 @auth.login_required
-def customs_history():
-	global active_tournament_id
+def game_history():
+	game_history = CUSTOMS_DB.get_all_game_history()
 
-	match_history = CUSTOMS_DB.get_match_history()
-
-	return render_template('match_history.html', tournament_id=active_tournament_id, match_history=match_history)
+	return render_template('game_history.html', game_history=game_history)
 
 ########
 # MAIN #
