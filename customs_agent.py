@@ -14,9 +14,9 @@ from config import LOCAL_HOST, LOCAL_PORT, LC_EVENT_URL, CUSTOMS_HOST, CUSTOMS_P
 CUSTOMS_SERVER_STATUS = False # tracks if uhohcustoms is online, True if it is, False if it isnt
 PLAYERS_DATA = []
 LC_PROXIES = None
-#WEB_PROXIES = None
+WEB_PROXIES = None
 #LC_PROXIES = { "http": "http://127.0.0.1:8080", "https": "http://127.0.0.1:8080" }
-WEB_PROXIES = { "http": "http://127.0.0.1:8080", "https": "http://127.0.0.1:8080" }
+#WEB_PROXIES = { "http": "http://127.0.0.1:8080", "https": "http://127.0.0.1:8080" }
 
 
 ################### UTILITY FUNCTIONS ###################
@@ -79,13 +79,18 @@ def execute_game(game_id=None):
 			try:
 				callback_response = requests.post(CUSTOMS_DATA_CALLBACK, json=PLAYERS_DATA, headers=get_event_headers("GAME_REGISTRATION", game_id), verify=False, timeout=2, proxies=WEB_PROXIES)
 				callback_response.raise_for_status()
+				if callback_response == 400:
+					print(f"[-] Uhohcustoms already has an active game")
+					return
 			except requests.exceptions.Timeout:
 				print(f"[!] Callback request timed out.")
+				return
 			except requests.exceptions.RequestException as e:
 				print(f"[!] Request failed: {e}")
+				return
 	
 	event_id = 0
-	file_path = f"./{game_id}"
+	file_path = f"./games/{game_id}"
 		
 	# open log file
 	with open(file_path, 'a', encoding='utf-8') as file:
@@ -153,7 +158,7 @@ def execute_game(game_id=None):
 
 						if CUSTOMS_SERVER_STATUS == True:
 							try:
-								callback_response = requests.post(CUSTOMS_DATA_CALLBACK, data=json.dumps(event), headers=get_event_headers("EVENT_DATA", game_id), verify=False, timeout=2, proxies=WEB_PROXIES)
+								callback_response = requests.post(CUSTOMS_DATA_CALLBACK, data=str(json.dumps(event)), headers=get_event_headers("EVENT_DATA", game_id), verify=False, timeout=2, proxies=WEB_PROXIES)
 								callback_response.raise_for_status()
 							except requests.exceptions.Timeout:
 								print(f"[!] Callback request timed out.")
@@ -177,7 +182,7 @@ def execute_game(game_id=None):
 								# THIS IS WHERE THIS FUNCTION SHOULD HOPEFULLY END !!!
 								if CUSTOMS_SERVER_STATUS == True:
 									try:
-										gameend_response = requests.post(CUSTOMS_DATA_CALLBACK, json=gamedata, headers=get_event_headers("GAME_DATA", game_id), verify=False, timeout=2, proxies=WEB_PROXIES)
+										gameend_response = requests.post(CUSTOMS_DATA_CALLBACK, data=str(json.dumps(gamedata)), headers=get_event_headers("GAME_DATA", game_id), verify=False, timeout=2, proxies=WEB_PROXIES)
 										gameend_response.raise_for_status()
 									except requests.exceptions.Timeout:
 										print(f"[!] Callback request timed out.")
