@@ -2,14 +2,20 @@
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
-	<title>Customs History</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>UH OH CUSSMS</title>
+	<link rel="stylesheet" href="static/css/style.css"></head>
 </head>
 <body>
-	<h1>Customs History</h1>
-	<tr>
-	{% for match in match_history %}
-		<td>{{ match }}</td>
-	{% endfor %}
-	</tr>
+	<div id="header" class="funcolor">
+		<h1>CUSSMS HISTORY</h1>
+	</div>
+	<div id="main-container">
+		<tr>
+		{% for game in game_history %}
+			<td>{{ game }}</td>
+		{% endfor %}
+        	</tr>
+	</div>
 </body>
 </html>

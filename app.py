@@ -5,6 +5,8 @@ from flask_socketio import SocketIO, emit
 from werkzeug.security import check_password_hash
 import requests
 import datetime
+import json
+import re
 
 # Custom imports
 from db.customsdb import CustomsDbHandler
@@ -274,7 +276,7 @@ def event_callback():
 			}
 
 			# push events to DB
-			CUSTOMS_DB.insert_game_event(game_id, event_no, event)
+			CUSTOMS_DB.insert_game_event(game_id, event_no, json.dumps(event))
 
 			# OG
 			socketio.emit('event_data', payload)
@@ -286,11 +288,11 @@ def event_callback():
 				for p in PLAYERS_DATA:
 					pn = p['player_name'].split('#')[0]
 					if pn == event['KillerName']:
-						p["kills"] += 1
-					if pn == e['VictimName']:
-						p["deaths"] += 1
-					if pn in assisters:
-						p["assists"] += 1
+						p['kills'] += 1
+					elif pn == event['VictimName']:
+						p['deaths'] += 1
+					elif pn in assisters:
+						p['assists'] += 1
 
 				print(f"[?] PLAYERS_DATA: {PLAYERS_DATA}")
 				socketio.emit('update_player_data', PLAYERS_DATA)
@@ -304,7 +306,7 @@ def event_callback():
 		# HANDLE GAME_DATA
 		elif headers.get('X-Event-Type') == 'GAME_DATA':
 			print(f"[?] Got GAME_DATA")
-			CUSTOMS_DB.update_end_game_history(game_id, event)
+			CUSTOMS_DB.update_end_game_history(game_id, json.dumps(event))
 
 		else:
 			print(f"[-] Found unknown X-Event-Type header")
@@ -344,6 +346,15 @@ def game_history():
 	game_history = CUSTOMS_DB.get_all_game_history()
 
 	return render_template('game_history.html', game_history=game_history)
+
+
+#################
+# JINJA FILTERS #
+#################
+@app.template_filter('sanitize')
+def sanitize(value):
+	return re.sub(r'\W+', '', value)
+
 
 ########
 # MAIN #

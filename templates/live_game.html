@@ -13,7 +13,6 @@
 			socket.on('event_data', function(event) {
 				const eventTable = document.querySelector("#events tbody");
 
-
 				const row = document.createElement("tr");
 
 				const e_no = document.createElement("td");
@@ -35,31 +34,43 @@
 				const teamTable = document.querySelector("#teams tbody");
 
 				event.forEach(function(player){
-					const row = document.createElement("tr");
-					row.id = player.player_name.replace('#', '');
-					row.classList.add(player.team)
+					player_id = player.player_name.replace('#', '').replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
 
-					const champ = document.createElement("td");
-					champ.innerHTML = "<img src=static/img/champions/" + player.champion.replace(' ', '').toLowerCase() + ".png style=width:10px,height:10px />";
-					row.appendChild(champ);
+					let existing_row = document.getElementById(player_id);
 
-					const summoner = document.createElement("td");
-					summoner.textContent = player.player_name;
-					row.appendChild(summoner);
+					if(existing_row){
+						existing_row.querySelector("td:nth-child(1)").innerHTML = "<img src='static/img/champions/" + player.champion.replace(" ", "").replace("'", "").toLowerCase() + ".png' width='50px' height='50px' />";
+						existing_row.querySelector("td:nth-child(2)").textContent = player.player_name;
+						existing_row.querySelector("td:nth-child(3)").textContent = player.kills;
+						existing_row.querySelector("td:nth-child(4)").textContent = player.deaths;
+						existing_row.querySelector("td:nth-child(5)").textContent = player.assists;
+					} else {
+						const row = document.createElement("tr");
+						row.id = player_id;
+						row.classList.add(player.team);
 
-					const kills = document.createElement("td");
-					kills.textContent = player.kills;
-					row.appendChild(kills);
+						const champ = document.createElement("td");
+						champ.innerHTML = "<img src='static/img/champions/" + player.champion.replace(" ", "").replace("'", "").toLowerCase() + ".png' width='50px' height='50px' />";
+						row.appendChild(champ);
 
-					const deaths = document.createElement("td");
-					deaths.textContent = player.deaths;
-					row.appendChild(deaths);
+						const summoner = document.createElement("td");
+						summoner.textContent = player.player_name;
+						row.appendChild(summoner);
 
-					const assists = document.createElement("td");
-					assists.textContent = player.assists;
-					row.appendChild(assists);
+						const kills = document.createElement("td");
+						kills.textContent = player.kills;
+						row.appendChild(kills);
 
-					teamTable.appendChild(row);
+						const deaths = document.createElement("td");
+						deaths.textContent = player.deaths;
+						row.appendChild(deaths);
+
+						const assists = document.createElement("td");
+						assists.textContent = player.assists;
+						row.appendChild(assists);
+
+						teamTable.appendChild(row);
+					}
 				});
 			});
 
@@ -67,7 +78,9 @@
 				console.log(event);
 
 				event.forEach(function(player){
-					const p_row = document.querySelector('#' + player.player_name.replace('#', ''));
+					player_id = player.player_name.replace('#', '').replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+
+					const p_row = document.querySelector('#' + player_id);
 
 					console.log(p_row);
 
@@ -106,9 +119,9 @@
 					</thead>
 					<tbody>
 						{% for player in player_data %}
-						<tr>
-							<td><img src="static/img/champions/{{ player.champion.lower() }}.png" style=width:50px,height:50px /></td>
-							<td>{{ player.name }}</td>
+						<tr id={{ player.player_name.split('#')[0].lower() | sanitize }} class={{ player.team }} >
+							<td><img src="static/img/champions/{{ player.champion.replace("'", "").replace(" ", "").lower() }}.png" width="50px" height="50px" /></td>
+							<td>{{ player.player_name }}</td>
 							<td>{{ player.kills }}</td>
 							<td>{{ player.deaths }}</td>
 							<td>{{ player.assists }}</td>

@@ -7,7 +7,7 @@ body, html {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	background-image: url("../img/px_bg_darkblue.png");
+	background-image: url("../img/px_bg_darkgreenblue.jpg");
 	background-repeat: repeat;
 }
 
@@ -40,16 +40,7 @@ body, html {
 	background-image: url("../img/px_bg_dark.png");
 	background-repeat: repeat;
 	color: white;
-	/*overflow-y: auto;
-	max-height: 80vh;*/
-}
-
-#team-order {
-
-}
-
-#team-chaos {
-
+	overflow-y: auto;
 }
 
 #right-panel {
@@ -61,6 +52,7 @@ body, html {
 	box-sizing: border-box;
 	background-image: url("../img/px_bg_inverted.png");
 	background-repeat: repeat;
+	overflow-y: auto;
 }
 
 
@@ -86,11 +78,11 @@ th {
 }
 
 th.player-name {
-	width: 35%;
+	width: 70%;
 }
 
 th.champion {
-	width: 35%;
+	width: 10%;
 }
 
 th.kda {

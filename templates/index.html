@@ -4,19 +4,20 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>UH OH CUSSMS</title>
-	<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"></head>
+	<link rel="stylesheet" href="static/css/style.css"></head>
 </head>
 <body>
 	<div id="header" class="funcolor">
 		<h1>UH OH CUSSMS</h1>
 		<h2>WE IN IT NOW!</h2>
 	</div>
-
+	<div id="main-container">
 	{% if active_game_id %}
 		<p>Active Game ID: {{ active_game_id }}</p>
-		<a href="{{ /live_game }}">Track Live Game</a>
+		<a href="/live_game">Track Live Game</a>
 	{% endif %}
 
 	<a href="{{ url_for('game_history') }}">Customs History</a>
+	</div>
 </body>
 </html>
