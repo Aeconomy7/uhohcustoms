@@ -1,23 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>UH OH CUSSMS</title>
-	<link rel="stylesheet" href="static/css/style.css"></head>
-</head>
-<body>
-	<div id="header" class="funcolor">
-		<h1>UH OH CUSSMS</h1>
-		<h2>WE IN IT NOW!</h2>
-	</div>
-	<div id="main-container">
-	{% if active_game_id %}
-		<p>Active Game ID: {{ active_game_id }}</p>
-		<a href="/live_game">Track Live Game</a>
-	{% endif %}
+{% extends "base.html" %}
 
-	<a href="{{ url_for('game_history') }}">Customs History</a>
+{% block content %}
+<div class="d-flex justify-content-center align-items-center vh-100">
+	<div class="card p-4 shadow text-center px-bg-inverted" style="padding: 10px;">
+		<h1>Welcome to uhohcustoms!</h1>
+		<p>Created by Sc00by</p>
 	</div>
-</body>
-</html>
+</div>
+{% endblock %}

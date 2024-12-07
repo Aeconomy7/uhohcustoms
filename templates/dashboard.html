@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>UH OH CUSSMS</title>
+	<link rel="stylesheet" href="static/css/bootstrap.min.css">	
+	<link rel="stylesheet" href="static/css/style.css"></head>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-light bg-light" id="header">
+		<div class="container-fluid">
+				<a class="navbar-brand funcolor" href="#">UH OH CUSSMS</a>
+				<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+						<span class="navbar-toggler-icon"></span>
+				</button>
+				<div class="collapse navbar-collapse" id="navbarNav">
+						<ul class="navbar-nav">
+								<li class="nav-item">
+										<a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a>
+								</li>
+								<li class="nav-item">
+										<a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+								</li>
+						</ul>
+				</div>
+		</div>
+</nav>
+
+<!--	<div id="header" class="funcolor">
+		<h1>UH OH CUSSMS</h1>
+		<h2>WE IN IT NOW!</h2>
+	</div>
+-->
+<div id="main-container">
+	{% if active_game_id %}
+		<p>Active Game ID: {{ active_game_id }}</p>
+		<a href="/live_game">Track Live Game</a>
+	{% endif %}
+
+	<a href="{{ url_for('game_history') }}">Customs History</a>
+</div>
+
+<script src="static/js/bootstrap.min.js"></script>
+
+</body>
+</html>

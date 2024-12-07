@@ -14,10 +14,12 @@ class CustomsDbHandler:
 			return
 
 		# Create tables if not exist
+		self.__create_users_table()
+		self.__create_teams_table()
 		self.__create_players_table()
 		self.__create_game_events_table()
 		self.__create_game_history_table()
-		print("[+] Successfully initiated Customs database!")
+		print("[+] Successfully initiated Customs database tables!")
 
 		# Close connection
 		self.__conn.close()
@@ -43,6 +45,148 @@ class CustomsDbHandler:
 
 		return conn
 
+	#########
+	# TEAMS #
+	#########
+	def __create_teams_table(self):
+		sql_query = """ CREATE TABLE IF NOT EXISTS teams (
+				id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+				team_name TEXT NOT NULL,
+				team_uuid TEXT NOT NULL
+			);"""
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query)
+			self.__conn.commit()
+			return True
+		except Error as e:
+			print(f"[!] __create_users_table {e}")
+			return False
+
+
+	def check_if_team_exists(self, team_name):
+		sql_query = "SELECT * FROM teams WHERE team_name = ?;"
+
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query, (team_name,))
+			row = cursor.fetchone()
+			if row is None:
+				print(f"[+] Team {team_name} does not exist")
+				return None
+			else:
+				print(f"[-] Team {team_name} exists :)")
+				return row
+		except Error as e:
+			print(f"[!] check_if_team_exists: {e}")
+			return None
+
+
+
+	def register_team(self, team_name, team_uuid):
+		sql_query = "INSERT INTO teams (team_name, team_uuid) VALUES (?, ?);"
+
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query, (username, password_hash, email))
+			self.__conn.commit()
+			print(f"[+] Successfully registered team {team_name} :D")
+			return True
+		except Error as e:
+			print(f"[!] register_user: {e}")
+			return False
+
+
+	#########
+	# USERS #
+	#########
+	def __create_users_table(self):
+		sql_query = """ CREATE TABLE IF NOT EXISTS users (
+				id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+				username TEXT NOT NULL,
+				password_hash TEXT NOT NULL,
+				email TEXT NOT NULL,
+				team_uuid TEXT NOT NULL DEFAULT 'None'
+			);"""
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query)
+			self.__conn.commit()
+			return True
+		except Error as e:
+			print(f"[!] __create_users_table {e}")
+			return False
+
+
+	def get_user_by_id(self, id):
+		sql_query = "SELECT * FROM users WHERE id = ?;"
+
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query, (id,))
+			row = cursor.fetchone()
+			if row is None:
+				print(f"[-] User with id {id} does not exist")
+				return None
+			else:
+				print(f"[+] User with id {id} exists :)")
+				return row
+		except Error as e:
+			print(f"[!] get_user_by_id: {e}")
+			return None
+
+
+
+	def get_user_by_username(self, username):
+		sql_query = "SELECT * FROM users WHERE username = ?;"
+
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query, (username,))
+			row = cursor.fetchone()
+			if row is None:
+				print(f"[-] User {username} does not exist")
+				return None
+			else:
+				print(f"[+] User {username} exists :)")
+				return row
+		except Error as e:
+			print(f"[!] get_user_by_username: {e}")
+			return None
+
+
+	def check_if_user_email_exists(self, username, email):
+		sql_query = "SELECT * FROM users WHERE username = ? OR email = ?;"
+
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query, (username, email))
+			row = cursor.fetchone()
+			if row is None:
+				print(f"[+] User {username} and email {email} does not exist")
+				return None
+			else:
+				print(f"[-] User {username} or email {email} exists :)")
+				return row
+		except Error as e:
+			print(f"[!] check_if_user_email_exists: {e}")
+			return None
+
+
+	def register_user(self, username, password_hash, email):
+		sql_query = "INSERT INTO users (username, password_hash, email) VALUES (?, ?, ?);"
+
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query, (username, password_hash, email))
+			self.__conn.commit()
+			print(f"[+] Successfully registered user {username} :D")
+			return True
+		except Error as e:
+			print(f"[!] register_user: {e}")
+			return False
+
+
 	##########
 	# PLAYER #
 	##########
@@ -55,8 +199,7 @@ class CustomsDbHandler:
 				loses INTEGER DEFAULT 0,
 				kills INTEGER DEFAULT 0,
 				deaths INTEGER DEFAULT 0,
-				assists INTEGER DEFAULT 0,
-				flashes INTEGER DEFAULT 0
+				assists INTEGER DEFAULT 0
 			);"""
 		try:
 			cursor = self.__conn.cursor()
@@ -93,11 +236,24 @@ class CustomsDbHandler:
 			cursor = self.__conn.cursor()
 			cursor.execute(sql_query, (summoner_name, summoner_tag))
 			self.__conn.commit()
+			print(f"[+] Successfully registered player {summoner_name}#{summoner_tag} :D")
 			return True
 		except Error as e:
 			print(f"[!] register_player: {e}")
 			return False
 
+	def update_player(self, summoner_name, summoner_tag, wins, loses, kills, deaths, assists):
+		sql_query = f"UPDATE players SET wins = ?, loses = ?, kills = ?, deaths = ?, assists = ?  WHERE summoner_name = ? AND summoner_tag = ?;"
+
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query, (wins, loses, kills, deaths, assists, summoner_name, summoner_tag))
+			self.__conn.commit()
+			print(f"[+] Successfully updated player details for {summoner_name}#{summoner_tag} :D")
+			return True
+		except Error as e:
+			print(f"[!] update_player: {e}")
+			return False
 
 	##########
 	# EVENTS #
@@ -124,7 +280,7 @@ class CustomsDbHandler:
 
 		try:
 			cursor = self.__conn.cursor()
-			cursor.execute(sql_query, (game_id))
+			cursor.execute(sql_query, (game_id,))
 			row = cursor.fetchall()
 			if row is None:
 				print(f"[-] Could not find game events associated with game id {game_id} :(")
@@ -144,6 +300,7 @@ class CustomsDbHandler:
 			cursor = self.__conn.cursor()
 			cursor.execute(sql_query, (game_id, game_event_id, game_event_data))
 			self.__conn.commit()
+			print(f"[+] Successfully inserted game event for game {game_id} :D")
 			return True
 		except Error as e:
 			print(f"[!] insert_game_event: {e}")
@@ -159,6 +316,7 @@ class CustomsDbHandler:
 				game_id TEXT NOT NULL,
 				game_data TEXT DEFAULT 'NA',
 				game_state TEXT DEFAULT 'ACTIVE',
+				team_id TEXT NOT NULL,
 				last_updated TEXT NOT NULL
 			);"""
 
@@ -208,12 +366,12 @@ class CustomsDbHandler:
 			return None
 
 
-	def get_game_history_by_id(self, game_id):
+	def get_game_history_by_game_id(self, game_id):
 		sql_query = "SELECT * FROM game_history WHERE game_id = ?;"
 
 		try:
 			cursor = self.__conn.cursor()
-			cursor.execute(sql_query, (game_id))
+			cursor.execute(sql_query, (game_id,))
 			row = cursor.fetchone()
 			if row is None:
 				print("[-] Could not find any game history :(")
@@ -222,7 +380,24 @@ class CustomsDbHandler:
 				print("[+] Found game id {game_id} :D")
 				return row
 		except Error as e:
-			print(f"[!] get_game_history_by_id: {e}")
+			print(f"[!] get_game_history_by_game_id: {e}")
+			return None
+
+	def get_game_history_by_team_id(self, team_id):
+		sql_query = "SELECT * FROM game_history WHERE team_id = ?;"
+
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query, (team_id,))
+			row = cursor.fetchall()
+			if row is None:
+				print("[-] Could not find any game history :(")
+				return None
+			else:
+				print("[+] Found {str(len(row))} game(s) history for team {team_id} :D")
+				return row
+		except Error as e:
+			print(f"[!] get_game_history_by_team_id: {e}")
 			return None
 
 

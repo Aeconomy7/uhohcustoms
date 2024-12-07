@@ -1,8 +1,9 @@
 # Library imports
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from functools import wraps
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
 from flask_httpauth import HTTPBasicAuth
 from flask_socketio import SocketIO, emit
-from werkzeug.security import check_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash
 import requests
 import datetime
 import json
@@ -40,11 +41,6 @@ ACTIVE_GAME_DATA 	= []
 			"gameID":"123e4567-e89b-12d3-a456-426614174000",
 			"reporter":"Sc00by#NA1",
 			"gameState":"COMPLETE"
-		},
-		{
-			"gameID":"123e4567-e89b-12d3-a456-426614174001",
-			"reported":"Sc00by#NA1",
-			"gameState":"ACTIVE"
 		}
 	]
 """
@@ -52,6 +48,15 @@ ACTIVE_GAME_DATA 	= []
 #####################
 # UTILITY FUNCTIONS #
 #####################
+
+def app_login_required(f):
+	@wraps(f)
+	def decorated_function(*args, **kwargs):
+		if 'user_id' not in session:
+			return redirect(url_for('login'))
+		return f(*args, **kwargs)
+	return decorated_function
+
 @auth.verify_password
 def verify_password(username, password):
 	if username in USERS and check_password_hash(USERS[username]["password"], password):
@@ -152,32 +157,43 @@ def handle_DragonKill(event):
 		message = message + f" WHAT A STEAL!!!"
 	return event['EventID'], event['EventName'], str(datetime.timedelta(seconds=round(event['EventTime']))), message
 
-"""
+
 def handle_BaronKill(event):
 	print("[+] Handling Baron Kill event")
-	message = f""
+	message = f"{event['KillerName']} felled the Baron Nashor!"
+	if event['Stolen'] == 'True':
+		message = message + f" HOLY SHIT WHAT A STEAL, COULD BE A GAME CHANGER!"
 	return event['EventID'], event['EventName'], str(datetime.timedelta(seconds=round(event['EventTime']))), message
 
 
 def handle_HeraldKill(event):
-	print("Handling Herald Kill event")
-	return f"[+] {event['EventName']}: {event['EventID']} @ {str(datetime.timedelta(seconds=round(event['EventTime'])))}: " + str(event)
+	print("[+] Handling Herald Kill event")
+	message = f"{event['KillerName']} shattered the Rift Herald."
+	if event['Stolen'] == 'True':
+		mesage = message + f" WHAT A STEAL!"
+	return event['EventID'], event['EventName'], str(datetime.timedelta(seconds=round(event['EventTime']))), message
 
 
 def handle_HordeKill(event):
-	print("Handling Void Grubbs Kill event")
-	return f"[+] {event['EventName']}: {event['EventID']} @ {str(datetime.timedelta(seconds=round(event['EventTime'])))}: " + str(event)
+	print("[+] Handling Void Grubbs Kill event")
+	message = f"{event['KillerName']} smashed a void grubby."
+	if event['Stolen'] == 'True':
+		message = message + f" WHAT A STEAL!"
+	return event['EventID'], event['EventName'], str(datetime.timedelta(seconds=round(event['EventTime']))), message
 
 
-def handle_ChampionSpecialKill(event):
-	print("Handling Champion Special Kill event")
-	return f"[+] {event['EventName']}: {event['EventID']} @ {str(datetime.timedelta(seconds=round(event['EventTime'])))}: " + str(event)
+#def handle_ChampionSpecialKill(event):
+#	print("Handling Champion Special Kill event")
+#	return f"[+] {event['EventName']}: {event['EventID']} @ {str(datetime.timedelta(seconds=round(event['EventTime'])))}: " + str(event)
 
 
 def handle_EliteMonsterKill(event):
-	print("Handling Elite Monster Kill event")
-	return f"[+] {event['EventName']}: {event['EventID']} @ {str(datetime.timedelta(seconds=round(event['EventTime'])))}: " + str(event)
-"""
+	print("[+] Handling Elite Monster Kill event")
+	message = f"{event['KillerName']} has demolished the Elder Dragon!!!"
+	if event['Stolen'] == 'True':
+		message = message + f" HOLY SHIT WHAT A STEAL, THAT COULD BE THE GAME WINNING PLAY!"
+	return event['EventID'], event['EventName'], str(datetime.timedelta(seconds=round(event['EventTime']))), message
+
 
 def handle_GameEnd(event):
 	print("Handling Game End event")
@@ -202,11 +218,11 @@ event_switch = {
 	'TurretKilled': handle_TurretKilled,
 	'InhibKilled': handle_InhibKilled,
 	'DragonKill': handle_DragonKill,
-#	'BaronKill': handle_BaronKill,
-#	'HeraldKill': handle_HeraldKill,
-#	'HordeKill': handle_HordeKill,
+	'BaronKill': handle_BaronKill,
+	'HeraldKill': handle_HeraldKill,
+	'HordeKill': handle_HordeKill,
 #	'ChampionSpecialKill': handle_ChampionSpecialKill,
-#	'EliteMonsterKill': handle_EliteMonsterKill,
+	'EliteMonsterKill': handle_EliteMonsterKill,
 	'GameEnd': handle_GameEnd
 }
 
@@ -216,11 +232,74 @@ event_switch = {
 @app.route('/')
 @auth.login_required
 def index():
-	global ACTIVE_GAME_DATA
+	return render_template('index.html', username=session.get('username'))
 
-	print(f"[!] Enter INDEX, ACTIVE_GAME_DATA: {str(ACTIVE_GAME_DATA)}")
+# User Registration
+@app.route('/register_user', methods=['GET','POST'])
+@auth.login_required
+def register_user():
+	if request.method == 'POST':
+		username = request.form['username']
+		email = request.form['email']
+		password = request.form['password']
 
-	return render_template('index.html', active_game_data=ACTIVE_GAME_DATA)
+		password_hash = generate_password_hash(password)
+
+		if(CUSTOMS_DB.check_if_user_email_exists(username, email) != None):
+			return jsonify({'status': 'User or email already exists'}), 400
+
+		if(CUSTOMS_DB.register_user(username, password_hash, email)):
+			return redirect(url_for('login'))
+		else:
+			return jsonify({'status': 'Failed to register user'}), 500
+
+	return render_template('register_user.html', username=session.get('username'))
+
+
+# Login
+@app.route('/login', methods=['GET','POST'])
+@auth.login_required
+def login():
+	if request.method == 'POST':
+		username = request.form['username']
+		password = request.form['password']
+
+		user = CUSTOMS_DB.get_user_by_username(username)
+
+		if user	and check_password_hash(user[2], password):
+			session['user_id'] = user[0]
+			session['username'] = user[1]
+			return redirect(url_for('dashboard'))
+		else:
+			return jsonify({'status': 'Invalid username or password'}), 403
+
+	return render_template('login.html', username=session.get('username'))
+
+
+@app.route('/logout', methods=['GET'])
+def logout():
+	session.clear()
+	return redirect(url_for('index'))
+
+
+# Dashboard
+@app.route('/dashboard', methods=['GET'])
+@auth.login_required
+@app_login_required
+def dashboard():
+	if 'user_id' not in session:
+		return redirect(url_for('login'))
+
+	user_id = session['user_id']
+
+	user = CUSTOMS_DB.get_user_by_id(user_id)
+	games = []
+
+	if user[4] != 'None':
+		games = CUSTOMS_DB.get_game_history_by_team_id(user[4])
+
+	return render_template('dashboard.html', USER_DATA=user, GAMES_DATA=games, username=session.get('username'))
+
 
 
 # Get game events callback
@@ -232,6 +311,8 @@ def event_callback():
 	event = request.json
 	headers = request.headers
 	game_id = headers.get('X-Game-ID')
+
+	print(f"ACTIVE_GAME_DATA: {ACTIVE_GAME_DATA}")
 
 	if isinstance(event, str):
 		# Convert the string into a list of dictionaries
@@ -246,22 +327,22 @@ def event_callback():
 		# HANDLE GAME REGISTRATION
 		if headers.get('X-Event-Type') == 'GAME_REGISTRATION':
 			if len(ACTIVE_GAME_DATA) != 0:
-				if ACTIVE_GAME_DATA['game_id'][0] != game_id:
+				if ACTIVE_GAME_DATA[0]['game_id'] != game_id:
 					return jsonify({'error': 'Active Game in Progress'}), 400
-				else:
-					CUSTOMS_DB.register_game(game_id)
-					payload = {
-						"game_id": game_id
-					}
-					ACTIVE_GAME_DATA.append(payload)
-					print(f"[+] Successfully registered game id {game_id}! :)")
+			else:
+				CUSTOMS_DB.register_game(game_id)
+				payload = {
+					"game_id": game_id
+				}
+				ACTIVE_GAME_DATA.append(payload)
+				print(f"[+] Successfully registered game id {game_id}! :)")
 
 		# HANDLE PLAYER_DATA
 		elif headers.get('X-Event-Type') == 'PLAYER_DATA':
 			for p in event:
 				print(f"p: {p}")
 				PLAYERS_DATA.append(p)
-#				CUSTOMS_DB.register_player(p['player_name'].split('#')[0], p['player_name'].split('#')[1])
+				CUSTOMS_DB.register_player(p['player_name'].split('#')[0], p['player_name'].split('#')[1])
 			socketio.emit('add_player_data', event)
 
 

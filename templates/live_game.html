@@ -39,7 +39,7 @@
 					let existing_row = document.getElementById(player_id);
 
 					if(existing_row){
-						existing_row.querySelector("td:nth-child(1)").innerHTML = "<img src='static/img/champions/" + player.champion.replace(" ", "").replace("'", "").toLowerCase() + ".png' width='50px' height='50px' />";
+						existing_row.querySelector("td:nth-child(1)").innerHTML = "<img src='static/img/champions/" + player.champion.replace(" ", "").replace("'", "").replace(".", "").toLowerCase() + ".png' width='50px' height='50px' style='padding: 10px;'/>";
 						existing_row.querySelector("td:nth-child(2)").textContent = player.player_name;
 						existing_row.querySelector("td:nth-child(3)").textContent = player.kills;
 						existing_row.querySelector("td:nth-child(4)").textContent = player.deaths;
@@ -50,7 +50,7 @@
 						row.classList.add(player.team);
 
 						const champ = document.createElement("td");
-						champ.innerHTML = "<img src='static/img/champions/" + player.champion.replace(" ", "").replace("'", "").toLowerCase() + ".png' width='50px' height='50px' />";
+						champ.innerHTML = "<img src='static/img/champions/" + player.champion.replace(" ", "").replace("'", "").replace(".", "").toLowerCase() + ".png' width='50px' height='50px' style='padding: 10px;' />";
 						row.appendChild(champ);
 
 						const summoner = document.createElement("td");
@@ -120,7 +120,7 @@
 					<tbody>
 						{% for player in player_data %}
 						<tr id={{ player.player_name.split('#')[0].lower() | sanitize }} class={{ player.team }} >
-							<td><img src="static/img/champions/{{ player.champion.replace("'", "").replace(" ", "").lower() }}.png" width="50px" height="50px" /></td>
+							<td><img src="static/img/champions/{{ player.champion.replace(" ", "").replace("'", "").replace(".", "").lower() }}.png" width="50px" height="50px" style="padding: 10px;" /></td>
 							<td>{{ player.player_name }}</td>
 							<td>{{ player.kills }}</td>
 							<td>{{ player.deaths }}</td>
