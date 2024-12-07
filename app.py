@@ -4,6 +4,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash, jso
 from flask_httpauth import HTTPBasicAuth
 from flask_socketio import SocketIO, emit
 from werkzeug.security import generate_password_hash, check_password_hash
+import uuid
 import requests
 import datetime
 import json
@@ -254,6 +255,76 @@ def register_user():
 			return jsonify({'status': 'Failed to register user'}), 500
 
 	return render_template('register_user.html', username=session.get('username'))
+
+
+# Create team
+@app.route('/create_team', methods=['POST'])
+@auth.login_required
+@app_login_required
+def create_team():
+	team_name = request.form['team_name']
+
+	try:
+		if not team_name:
+			raise ValueError("Team name cannot be empty.")
+
+		if CUSTOMS_DB.check_if_team_exists_by_team_name(team_name) != None:
+			raise ValueError("Team name already exists.")
+
+		# Create team uuid
+		team_uuid = uuid.uuid4()
+
+		if not CUSTOMS_DB.register_team(team_name, team_uuid):
+			raise ValueError("Failed to create team.")
+
+		flash("Successfully created team!")
+
+		return jsonify({'status': 'Successfully created team'}), 201
+
+	except ValueError as e:
+		flash(str(e), 'danger')
+		return jsonify({'status': 'Failed to create team'}), 400
+
+	except Exception as e:
+		flash('An unexpected error occurred. Please try again.', 'danger')
+		return jsonify({'status': 'Unexpected error'}), 500
+
+
+# Join team
+@app.route('/join_team', methods=['POST'])
+@auth.login_required
+@app_login_required
+def join_team():
+	team_uuid = request.form['team_code']
+
+	try:
+		if 'username' not in session:
+			raise ValueError("Invalid session.")
+
+		username = session['username']
+
+		if not team_code:
+			raise ValueError("Team code cannot be empty.")
+
+		team = CUSTOMS_DB.check_if_team_exists_by_team_uuid(team_code)
+
+		if team == None:
+			raise ValueError("Team code is invalid.")
+
+		if not CUSTOMS_DB.join_user_to_team(username, team_uuid):
+			raise ValueError("Failed to create team.")
+
+		flash(f"Successfully joined team {team[1]}!")
+
+		return jsonify({'status': 'Successfully joined team'}), 200
+
+	except ValueError as e:
+		flash(str(e), 'danger')
+		return jsonify({'status': 'Failed to join team'}), 400
+
+	except Exception as e:
+		flash('An unexpected error occurred. Please try again.', 'danger')
+		return jsonify({'status': 'Unexpected error'}), 500
 
 
 # Login

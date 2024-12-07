@@ -64,7 +64,7 @@ class CustomsDbHandler:
 			return False
 
 
-	def check_if_team_exists(self, team_name):
+	def check_if_team_exists_by_team_name(self, team_name):
 		sql_query = "SELECT * FROM teams WHERE team_name = ?;"
 
 		try:
@@ -78,7 +78,25 @@ class CustomsDbHandler:
 				print(f"[-] Team {team_name} exists :)")
 				return row
 		except Error as e:
-			print(f"[!] check_if_team_exists: {e}")
+			print(f"[!] check_if_team_exists_by_team_name: {e}")
+			return None
+
+
+	def check_if_team_exists_by_team_uuid(self, team_uuid):
+		sql_query = "SELECT * FROM teams WHERE team_uuid = ?;"
+
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query, (str(team_uuid),))
+			row = cursor.fetchone()
+			if row is None:
+				print(f"[+] Team with uuid {str(team_uuid)} does not exist")
+				return None
+			else:
+				print(f"[-] Team with uuid {str(team_uuid)} exists :)")
+				return row
+		except Error as e:
+			print(f"[!] check_if_team_exists_by_team_uuid: {e}")
 			return None
 
 
@@ -88,12 +106,12 @@ class CustomsDbHandler:
 
 		try:
 			cursor = self.__conn.cursor()
-			cursor.execute(sql_query, (username, password_hash, email))
+			cursor.execute(sql_query, (team_name, str(team_uuid)))
 			self.__conn.commit()
 			print(f"[+] Successfully registered team {team_name} :D")
 			return True
 		except Error as e:
-			print(f"[!] register_user: {e}")
+			print(f"[!] register_team: {e}")
 			return False
 
 
@@ -172,6 +190,18 @@ class CustomsDbHandler:
 			print(f"[!] check_if_user_email_exists: {e}")
 			return None
 
+	def join_user_to_team(self, username, team_uuid):
+		sql_query = "UPDATE users SET team_uuid = ? WHERE username = ?;"
+
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query, (str(team_uuid), username))
+			self.__conn.commit()
+			print(f"[+] Successfully joined user {username} to team {str(team_uuid)} :D")
+			return True
+		except Error as e:
+			print(f"[!] join_user_to_team: {e}")
+			return False
 
 	def register_user(self, username, password_hash, email):
 		sql_query = "INSERT INTO users (username, password_hash, email) VALUES (?, ?, ?);"
@@ -314,9 +344,9 @@ class CustomsDbHandler:
 		sql_query = """ CREATE TABLE IF NOT EXISTS game_history (
 				id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
 				game_id TEXT NOT NULL,
-				game_data TEXT DEFAULT 'NA',
+				game_data BLOB DEFAULT 'NA',
 				game_state TEXT DEFAULT 'ACTIVE',
-				team_id TEXT NOT NULL,
+				team_uuiid TEXT NOT NULL,
 				last_updated TEXT NOT NULL
 			);"""
 
