@@ -3,6 +3,7 @@ html, body {
 	height: 100%;
 	margin: 0;
 	overflow: hidden; /* Prevent any scrolling */
+	background-color: #333333;
 }
 
 /* Ensure no padding in container-fluid sections */
@@ -25,6 +26,12 @@ html, body {
 	text-align: center;
 }
 
+.navbar-text {
+	display: flex;
+	align-items: center; /* Center vertically */
+	margin-bottom: 0;   /* Remove any default margin */
+	color: white;
+}
 
 .px-bg-dark {
 	background-image: url("../img/px_bg_dark.png");
@@ -35,31 +42,37 @@ html, body {
 .px-bg-darkblue {
 	background-image: url("../img/px_bg_darkblue.png");
 	background-repeat: repeat;
+	color: white;
 }
 
 .px-bg-darkpink {
 	background-image: url("../img/px_bg_darkpink.png");
 	background-repeat: repeat;
+	color: yellow;
 }
 
 .px-bg-darkgreenblue {
 	background-image: url("../img/px_bg_darkgreenblue.jpg");
 	background-repeat: repeat;
+	color: white;
 }
 
 .px-bg-inverted {
 	background-image: url("../img/px_bg_inverted.png");
 	background-repeat: repeat;
+	color: black;
 }
 
 .px-bg-lightcyan {
 	background-image: url("../img/px_bg_lightcyan.png");
 	background-repeat: repeat;
+	color: black;
 }
 
 .px-bg-selected {
 	background-image: url("../img/px_bg_selected.png");
 	background-repeat: repeat;
+	color: black;
 }
 
 tr.ORDER {

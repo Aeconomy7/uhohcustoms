@@ -268,6 +268,9 @@ def create_team():
 		if not team_name:
 			raise ValueError("Team name cannot be empty.")
 
+		if session['team'] != 'None':
+			raise ValueError("You cannot create a team if you have already joined a team.")
+
 		if CUSTOMS_DB.check_if_team_exists_by_team_name(team_name) != None:
 			raise ValueError("Team name already exists.")
 
@@ -277,17 +280,19 @@ def create_team():
 		if not CUSTOMS_DB.register_team(team_name, team_uuid):
 			raise ValueError("Failed to create team.")
 
-		flash("Successfully created team!")
+		flash("Successfully created team!", 'success')
 
-		return jsonify({'status': 'Successfully created team'}), 201
+		#return jsonify({'status': 'Successfully created team'}), 201
 
 	except ValueError as e:
 		flash(str(e), 'danger')
-		return jsonify({'status': 'Failed to create team'}), 400
+		#return jsonify({'status': 'Failed to create team'}), 400
 
 	except Exception as e:
 		flash('An unexpected error occurred. Please try again.', 'danger')
-		return jsonify({'status': 'Unexpected error'}), 500
+		#return jsonify({'status': 'Unexpected error'}), 500
+
+	return redirect(url_for('dashboard'))
 
 
 # Join team
@@ -301,52 +306,60 @@ def join_team():
 		if 'username' not in session:
 			raise ValueError("Invalid session.")
 
+		if session['team'] != 'None':
+			raise ValueError("Already joined a team.")
+
 		username = session['username']
 
-		if not team_code:
+		if not team_uuid:
 			raise ValueError("Team code cannot be empty.")
 
-		team = CUSTOMS_DB.check_if_team_exists_by_team_uuid(team_code)
+		team = CUSTOMS_DB.check_if_team_exists_by_team_uuid(team_uuid)
 
 		if team == None:
 			raise ValueError("Team code is invalid.")
 
 		if not CUSTOMS_DB.join_user_to_team(username, team_uuid):
-			raise ValueError("Failed to create team.")
+			raise ValueError("Failed to join team.")
 
-		flash(f"Successfully joined team {team[1]}!")
+		flash(f"{username} successfully joined {team[1]}!", 'success')
+		session['team'] = team_uuid
 
-		return jsonify({'status': 'Successfully joined team'}), 200
+		#return jsonify({'status': 'Successfully joined team'}), 200
 
 	except ValueError as e:
 		flash(str(e), 'danger')
-		return jsonify({'status': 'Failed to join team'}), 400
+		#return jsonify({'status': 'Failed to join team'}), 400
 
 	except Exception as e:
 		flash('An unexpected error occurred. Please try again.', 'danger')
-		return jsonify({'status': 'Unexpected error'}), 500
+		#return jsonify({'status': 'Unexpected error'}), 500
 
+	return redirect(url_for('dashboard'))
 
 # Login
 @app.route('/login', methods=['GET','POST'])
 @auth.login_required
 def login():
 	if request.method == 'POST':
-		username = request.form['username']
+		email = request.form['email']
 		password = request.form['password']
 
-		user = CUSTOMS_DB.get_user_by_username(username)
+		user = CUSTOMS_DB.get_user_by_email(email)
 
 		if user	and check_password_hash(user[2], password):
 			session['user_id'] = user[0]
 			session['username'] = user[1]
+			session['email'] = user[3]
+			session['team'] = user[4]
 			return redirect(url_for('dashboard'))
 		else:
-			return jsonify({'status': 'Invalid username or password'}), 403
+			return jsonify({'status': 'Invalid email or password'}), 403
 
 	return render_template('login.html', username=session.get('username'))
 
 
+# Logout
 @app.route('/logout', methods=['GET'])
 def logout():
 	session.clear()
@@ -361,15 +374,30 @@ def dashboard():
 	if 'user_id' not in session:
 		return redirect(url_for('login'))
 
-	user_id = session['user_id']
 
-	user = CUSTOMS_DB.get_user_by_id(user_id)
-	games = []
+	teams = {}
+	games = {}
+	user = {
+		'user_id': 	session['user_id'],
+		'username':	session['username'],
+		'email':	session['email'],
+		'team':		session['team']
+	}
 
-	if user[4] != 'None':
-		games = CUSTOMS_DB.get_game_history_by_team_id(user[4])
+	if user['team'] != 'None':
+		games = CUSTOMS_DB.get_game_history_by_team_uuid(user['team'])
+		teams = {
+			'members': CUSTOMS_DB.get_users_by_team_uuid(user['team']),
+			'team_name': CUSTOMS_DB.get_team_by_team_uuid(user['team'])[1],
+			'team_uuid': user['team']
+		}
 
-	return render_template('dashboard.html', USER_DATA=user, GAMES_DATA=games, username=session.get('username'))
+	print(f"[?] Rendering dashboard with the following: ")
+	print(f"	|-> user:  {user}")
+	print(f"	|-> teams: {teams}")
+	print(f"	|-> games: {games}")
+
+	return render_template('dashboard.html', USER_DATA=user, GAMES_DATA=games, TEAM_DATA=teams, username=session.get('username'))
 
 
 

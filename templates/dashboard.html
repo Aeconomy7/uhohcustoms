@@ -2,65 +2,92 @@
 
 {% block content %}
 <div class="container-fluid vh-100">
-    <div class="row h-100">
-        <!-- Sidebar: Create/Join Team -->
-        <div class="col-md-3 bg-light border-end">
-            <div class="p-3">
-                <h4>Create / Join Team</h4>
-                <form action="{{ url_for('create_team') }}" method="post" class="mb-3">
-                    <div class="mb-3">
-                        <label for="teamName" class="form-label">Team Name</label>
-                        <input type="text" name="team_name" id="teamName" class="form-control" placeholder="Enter team name" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary w-100">Create Team</button>
-                </form>
+	<div class="row h-100">
 
-                <hr>
+		<!-- Alert messages -->
+		{% with messages = get_flashed_messages(with_categories=true) %}
+			{% if messages %}
+				<div class="container mt-3">
+				{% for category, message in messages %}
+					<div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+						{{ message }}
+						<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+					</div>
+				{% endfor %}
+				</div>
+			{% endif %}
+		{% endwith %}
+		
+		<!-- Sidebar: Create/Join Team -->
+		<div class="col-md-3 bg-light border-end px-bg-inverted">
+			<div class="p-3">
+			{% if TEAM_DATA %}
+				<h4>Team Information</h4>
+				<p><strong>Name:</strong> {{ TEAM_DATA.team_name }}</p>
+				<p><strong>Team code:</strong> {{ TEAM_DATA.team_uuid }}</p>
+				<h5>Team Members:</h5>
+				<ul>
+				{% for member in TEAM_DATA.members %}
+					<li>{{ member[0] }}</li>
+				{% endfor %}
+				</ul>
+			{% else %}
+				<h4>Create / Join Team</h4>
+				<form action="{{ url_for('create_team') }}" method="post" class="mb-3">
+					<div class="mb-3">
+						<label for="teamName" class="form-label">Team Name</label>
+						<input type="text" name="team_name" id="teamName" class="form-control" placeholder="Enter team name" required>
+					</div>
+					<button type="submit" class="btn btn-primary w-100">Create Team</button>
+				</form>
 
-                <form action="{{ url_for('join_team') }}" method="post">
-                    <div class="mb-3">
-                        <label for="joinTeamId" class="form-label">Team ID</label>
-                        <input type="text" name="team_id" id="joinTeamId" class="form-control" placeholder="Enter team ID" required>
-                    </div>
-                    <button type="submit" class="btn btn-success w-100">Join Team</button>
-                </form>
-            </div>
-        </div>
+				<hr>
 
-        <!-- Main Content: Game History -->
-        <div class="col-md-9 p-3">
-            <h3 class="mb-4">Game History</h3>
-            <div class="table-responsive">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Game</th>
-                            <th>Kills</th>
-                            <th>Deaths</th>
-                            <th>Assists</th>
-                            <th>Result</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for game in games %}
-                        <tr>
-                            <td>{{ game.date }}</td>
-                            <td>{{ game.name }}</td>
-                            <td>{{ game.kills }}</td>
-                            <td>{{ game.deaths }}</td>
-                            <td>{{ game.assists }}</td>
-                            <td>{{ game.result }}</td>
-                        </tr>
-                        {% else %}
-                        <tr>
-                            <td colspan="6" class="text-center">No games found.</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+				<form action="{{ url_for('join_team') }}" method="post">
+					<div class="mb-3">
+						<label for="joinTeamId" class="form-label">Team Code</label>
+						<input type="text" name="team_code" id="joinTeamId" class="form-control" placeholder="Enter team code" required>
+					</div>
+					<button type="submit" class="btn btn-success w-100">Join Team</button>
+				</form>
+			{% endif %}
+			</div>
+		</div>
+
+		<!-- Main Content: Game History -->
+		<div class="col-md-9 p-3 px-bg-darkgreenblue">
+			<h3 class="mb-4">Game History</h3>
+			<div class="table-responsive px-bg-inverted">
+				<table class="table table-striped">
+					<thead>
+						<tr>
+							<th>Date</th>
+							<th>Game</th>
+							<th>Kills</th>
+							<th>Deaths</th>
+							<th>Assists</th>
+							<th>Result</th>
+						</tr>
+					</thead>
+					<tbody>
+						{% for game in games %}
+						<tr>
+							<td>{{ game.date }}</td>
+							<td>{{ game.name }}</td>
+							<td>{{ game.kills }}</td>
+							<td>{{ game.deaths }}</td>
+							<td>{{ game.assists }}</td>
+							<td>{{ game.result }}</td>
+						</tr>
+						{% else %}
+						<tr>
+							<td colspan="6" class="text-center">No games found.</td>
+						</tr>
+						{% endfor %}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
 </div>
 {% endblock %}

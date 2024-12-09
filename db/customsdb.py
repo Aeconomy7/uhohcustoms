@@ -64,6 +64,25 @@ class CustomsDbHandler:
 			return False
 
 
+	def get_team_by_team_uuid(self, team_uuid):
+		sql_query = "SELECT * FROM teams WHERE team_uuid = ?;"
+
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query, (str(team_uuid),))
+			row = cursor.fetchone()
+			if row is None:
+				print(f"[-] Team with UUID {team_uuid} does not exist")
+				return None
+			else:
+				print(f"[+] Team with UUID {team_uuid} exists :)")
+				return row
+		except Error as e:
+			print(f"[!] get_user_by_id: {e}")
+			return None
+
+
+
 	def check_if_team_exists_by_team_name(self, team_name):
 		sql_query = "SELECT * FROM teams WHERE team_name = ?;"
 
@@ -170,6 +189,41 @@ class CustomsDbHandler:
 				return row
 		except Error as e:
 			print(f"[!] get_user_by_username: {e}")
+			return None
+
+	def get_user_by_email(self, email):
+		sql_query = "SELECT * FROM users WHERE email = ?;"
+
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query, (email,))
+			row = cursor.fetchone()
+			if row is None:
+				print(f"[-] User with email {email} does not exist")
+				return None
+			else:
+				print(f"[+] User with email {email} exists :)")
+				return row
+		except Error as e:
+			print(f"[!] get_user_by_email: {e}")
+			return None
+
+
+	def get_users_by_team_uuid(self, team_uuid):
+		sql_query = "SELECT username FROM users WHERE team_uuid = ?;"
+
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query, (str(team_uuid),))
+			row = cursor.fetchall()
+			if row is None:
+				print(f"[-] Team with uuid {str(team_uuid)} has no users")
+				return None
+			else:
+				print(f"[+] Team with uuid {str(team_uuid)} exists with {str(len(row))} users! :)")
+				return row
+		except Error as e:
+			print(f"[!] get_users_by_team_uuid: {e}")
 			return None
 
 
@@ -413,18 +467,18 @@ class CustomsDbHandler:
 			print(f"[!] get_game_history_by_game_id: {e}")
 			return None
 
-	def get_game_history_by_team_id(self, team_id):
+	def get_game_history_by_team_uuid(self, team_uuid):
 		sql_query = "SELECT * FROM game_history WHERE team_id = ?;"
 
 		try:
 			cursor = self.__conn.cursor()
-			cursor.execute(sql_query, (team_id,))
+			cursor.execute(sql_query, (team_uuid,))
 			row = cursor.fetchall()
 			if row is None:
 				print("[-] Could not find any game history :(")
 				return None
 			else:
-				print("[+] Found {str(len(row))} game(s) history for team {team_id} :D")
+				print("[+] Found {str(len(row))} game(s) history for team {team_uuid} :D")
 				return row
 		except Error as e:
 			print(f"[!] get_game_history_by_team_id: {e}")
