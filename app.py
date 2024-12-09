@@ -337,6 +337,36 @@ def join_team():
 
 	return redirect(url_for('dashboard'))
 
+
+# Leave Team
+@app.route('/leave_team', methods=['POST'])
+@auth.login_required
+@app_login_required
+def leave_team():
+	try:
+		if 'username' not in session:
+			raise ValueError("Invalid session.")
+
+		if session['team'] == 'None':
+			raise ValueError("Not part of a team.")
+
+		if not CUSTOMS_DB.join_user_to_team(session['username'], 'None'):
+			raise ValueError("Failed to leave team.")
+
+		flash(f"You have successfully left your team, time to join a new one!", 'success')
+		session['team'] = 'None'
+
+	except ValueError as e:
+		flash(str(e), 'danger')
+		#return jsonify({'status': 'Failed to join team'}), 400
+
+	except Exception as e:
+		flash('An unexpected error occurred. Please try again.', 'danger')
+		#return jsonify({'status': 'Unexpected error'}), 500
+
+	return redirect(url_for('dashboard'))
+
+
 # Login
 @app.route('/login', methods=['GET','POST'])
 @auth.login_required
