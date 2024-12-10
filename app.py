@@ -265,6 +265,9 @@ def create_team():
 	team_name = request.form['team_name']
 
 	try:
+		if 'username' not in session:
+			raise ValueError("Invalid session.")
+
 		if not team_name:
 			raise ValueError("Team name cannot be empty.")
 
@@ -280,7 +283,11 @@ def create_team():
 		if not CUSTOMS_DB.register_team(team_name, team_uuid):
 			raise ValueError("Failed to create team.")
 
-		flash("Successfully created team!", 'success')
+		if not CUSTOMS_DB.join_user_to_team(session['username'], team_uuid):
+			raise ValueError("Failed to join team.")
+
+		session['team'] = team_uuid
+		flash("Successfully created and joined team!", 'success')
 
 		#return jsonify({'status': 'Successfully created team'}), 201
 
@@ -322,8 +329,8 @@ def join_team():
 		if not CUSTOMS_DB.join_user_to_team(username, team_uuid):
 			raise ValueError("Failed to join team.")
 
-		flash(f"{username} successfully joined {team[1]}!", 'success')
 		session['team'] = team_uuid
+		flash(f"{username} successfully joined {team[1]}!", 'success')
 
 		#return jsonify({'status': 'Successfully joined team'}), 200
 

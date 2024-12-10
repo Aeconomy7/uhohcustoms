@@ -33,6 +33,19 @@ html, body {
 	color: white;
 }
 
+.alert-container {
+  position: absolute; /* Float it over the content */
+  /*top: 56px; /* Adjust based on your navbar's height */
+  left: 0;
+  right: 0;
+  z-index: 1050; /* Ensure it sits above other elements */
+}
+
+.alert {
+  margin: 0; /* Remove extra margin */
+}
+
+/* Custom CSS classes */
 .px-bg-dark {
 	background-image: url("../img/px_bg_dark.png");
 	background-repeat: repeat;
@@ -48,7 +61,7 @@ html, body {
 .px-bg-darkpink {
 	background-image: url("../img/px_bg_darkpink.png");
 	background-repeat: repeat;
-	color: yellow;
+	color: white;
 }
 
 .px-bg-darkgreenblue {
@@ -67,6 +80,18 @@ html, body {
 	background-image: url("../img/px_bg_lightcyan.png");
 	background-repeat: repeat;
 	color: black;
+}
+
+.px-bg-danger {
+	background-image: url("../img/px_bg_darkred.png");
+	background-repeat: repeat;
+	color: white;
+}
+
+.px-bg-success {
+	background-image: url("../img/px_bg_darkgreen.png");
+	background-repeat: repeat;
+	color: white;
 }
 
 .px-bg-selected {
