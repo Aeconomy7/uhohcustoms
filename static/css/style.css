@@ -1,9 +1,11 @@
+/* GENERAL CSS */
 /* Ensure the body and html use full height */
 html, body {
 	height: 100%;
 	margin: 0;
 	overflow: hidden; /* Prevent any scrolling */
 	background-color: #333333;
+	font-family: OCR A Std, monospace;
 }
 
 /* Ensure no padding in container-fluid sections */
@@ -26,6 +28,7 @@ html, body {
 	text-align: center;
 }
 
+/* NAVBAR CSS */
 .navbar-text {
 	display: flex;
 	align-items: center; /* Center vertically */
@@ -33,21 +36,58 @@ html, body {
 	color: white;
 }
 
+/* ALERT CSS */
 .alert-container {
-  position: absolute; /* Float it over the content */
-  /*top: 56px; /* Adjust based on your navbar's height */
-  left: 0;
-  right: 0;
-  z-index: 1050; /* Ensure it sits above other elements */
+	position: absolute; /* Float it over the content */
+	left: 0;
+	right: 0;
+	z-index: 1050; /* Ensure it sits above other elements */
 }
 
 .alert {
-  margin: 0; /* Remove extra margin */
+	margin: 0; /* Remove extra margin */
 }
 
-/* Custom CSS classes */
+/* ROW CSS */
+.row {
+	display: flex;
+}
+
+.row > .col-12 {
+	flex: 1; /* Ensures equal height */
+}
+
+/* TABLE CSS */
+.table {
+	word-wrap: break-word;
+	margin: 0;
+}
+
+.table td, .table th {
+	vertical-align: middle;
+}
+
+.table-container {
+	height: 100%;
+	overflow-y: auto;
+}
+
+.table thead th {
+	position: sticky;
+	top: 0;
+	z-index: 2;
+	background-color: #fff;
+}
+
+/* BACKGROUND IMAGE CSS */
 .px-bg-dark {
 	background-image: url("../img/px_bg_dark.png");
+	background-repeat: repeat;
+	color: white;
+}
+
+.px-bg-blue {
+	background-image: url("../img/px_bg_blue.png");
 	background-repeat: repeat;
 	color: white;
 }

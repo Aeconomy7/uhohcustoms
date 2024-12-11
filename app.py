@@ -240,21 +240,75 @@ def index():
 @auth.login_required
 def register_user():
 	if request.method == 'POST':
+		valid = True
+
 		username = request.form['username']
+		if not username.isalnum() or len(username) > 16:
+			flash('Username must be alphanumeric and no longer than 16 characters.', 'danger')
+			valid = False
+
 		email = request.form['email']
+		if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+			flash('Email is not in a valid format.', 'danger')
+			valid = False
+
 		password = request.form['password']
+		if not password or len(password) < 10:
+			flash('Password must be at least 10 characters long.', 'danger')
+			valid = False
+
+		if password != request.form['confirm_password']:
+			flash('Passwords do not match.', 'danger')
+			valid = False
+
+		if not valid:
+			return redirect(url_for('register_user'))
 
 		password_hash = generate_password_hash(password)
 
 		if(CUSTOMS_DB.check_if_user_email_exists(username, email) != None):
-			return jsonify({'status': 'User or email already exists'}), 400
+			flash('User or email already exists.', 'danger')
+			return redirect(url_for('register_user'))
+			#return jsonify({'status': 'User or email already exists'}), 400
 
 		if(CUSTOMS_DB.register_user(username, password_hash, email)):
+			flash('Successfully registered user!', 'success')
 			return redirect(url_for('login'))
 		else:
-			return jsonify({'status': 'Failed to register user'}), 500
+			flash('Failed to register user.', 'danger')
+			#return jsonify({'status': 'Failed to register user'}), 500
 
-	return render_template('register_user.html', username=session.get('username'))
+	return render_template('register_user.html')
+
+
+# Login
+@app.route('/login', methods=['GET','POST'])
+@auth.login_required
+def login():
+	if request.method == 'POST':
+		email = request.form['email']
+		password = request.form['password']
+
+		user = CUSTOMS_DB.get_user_by_email(email)
+
+		if user	and check_password_hash(user[2], password):
+			session['user_id'] = user[0]
+			session['username'] = user[1]
+			session['email'] = user[3]
+			session['team'] = user[4]
+			return redirect(url_for('dashboard'))
+		else:
+			flash('Invalid email or password.', 'danger')
+			#return jsonify({'status': 'Invalid email or password'}), 403
+
+	return render_template('login.html')
+
+
+# Logout
+@app.route('/logout', methods=['GET'])
+def logout():
+	session.clear()
+	return redirect(url_for('index'))
 
 
 # Create team
@@ -374,34 +428,6 @@ def leave_team():
 	return redirect(url_for('dashboard'))
 
 
-# Login
-@app.route('/login', methods=['GET','POST'])
-@auth.login_required
-def login():
-	if request.method == 'POST':
-		email = request.form['email']
-		password = request.form['password']
-
-		user = CUSTOMS_DB.get_user_by_email(email)
-
-		if user	and check_password_hash(user[2], password):
-			session['user_id'] = user[0]
-			session['username'] = user[1]
-			session['email'] = user[3]
-			session['team'] = user[4]
-			return redirect(url_for('dashboard'))
-		else:
-			return jsonify({'status': 'Invalid email or password'}), 403
-
-	return render_template('login.html', username=session.get('username'))
-
-
-# Logout
-@app.route('/logout', methods=['GET'])
-def logout():
-	session.clear()
-	return redirect(url_for('index'))
-
 
 # Dashboard
 @app.route('/dashboard', methods=['GET'])
@@ -412,9 +438,10 @@ def dashboard():
 		return redirect(url_for('login'))
 
 
-	teams = {}
-	games = {}
-	user = {
+	teams 	= {}
+	games 	= {}
+	players	= {}
+	user 	= {
 		'user_id': 	session['user_id'],
 		'username':	session['username'],
 		'email':	session['email'],
@@ -434,8 +461,23 @@ def dashboard():
 	print(f"	|-> teams: {teams}")
 	print(f"	|-> games: {games}")
 
-	return render_template('dashboard.html', USER_DATA=user, GAMES_DATA=games, TEAM_DATA=teams, username=session.get('username'))
+	return render_template('dashboard.html', USER_DATA=user, GAMES_DATA=games, TEAM_DATA=teams, PLAYERS_DATA=players, username=session.get('username'))
 
+
+# Display game stats
+#@app.route('/game/<game_id>')
+#@app_login_required
+#def game_history(game_id):
+	# Fetch the game blob from the database
+#	game_blob = CUSTOMS_DB.get_game_history_by_game_id(game_id)
+
+#	if not game_blob:
+#		flash("Game not found.", "danger")
+#		return redirect(url_for('dashboard'))
+
+#	game_data = json.loads(game_blob)
+
+#	return render_template('game_history.html', game_data=game_data)
 
 
 # Get game events callback
@@ -545,10 +587,10 @@ def live_game():
 #		for event in game_events_raw:
 #			event_no, event_type, game_time, message = handle_event(event)
 #			payload = {
-#				'event_id':     event_no,
+#				'event_id':	 event_no,
 #				'event_type':   event_type,
-#				'game_time':    game_time,
-#				'message':      message
+#				'game_time':	game_time,
+#				'message':	  message
 #			}
 #			game_events.append(game_events)
 

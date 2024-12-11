@@ -5,7 +5,7 @@ from sqlite3 import Error
 
 class CustomsDbHandler:
 	def __init__(self):
-		self.__db_location = "./db/customs_sqlite.db"
+		self.__db_location = "./db/cs.db"
 
 		# Create connection for initiating tables
 		self.__conn = self.__create_connection(self.__db_location)
@@ -400,7 +400,7 @@ class CustomsDbHandler:
 				game_id TEXT NOT NULL,
 				game_data BLOB DEFAULT 'NA',
 				game_state TEXT DEFAULT 'ACTIVE',
-				team_uuiid TEXT NOT NULL,
+				team_uuid TEXT NOT NULL,
 				last_updated TEXT NOT NULL
 			);"""
 
@@ -455,13 +455,13 @@ class CustomsDbHandler:
 
 		try:
 			cursor = self.__conn.cursor()
-			cursor.execute(sql_query, (game_id,))
+			cursor.execute(sql_query, (str(game_id),))
 			row = cursor.fetchone()
 			if row is None:
 				print("[-] Could not find any game history :(")
 				return None
 			else:
-				print("[+] Found game id {game_id} :D")
+				print("[+] Found game id {str(game_id)} :D")
 				return row
 		except Error as e:
 			print(f"[!] get_game_history_by_game_id: {e}")
@@ -472,13 +472,13 @@ class CustomsDbHandler:
 
 		try:
 			cursor = self.__conn.cursor()
-			cursor.execute(sql_query, (team_uuid,))
+			cursor.execute(sql_query, (str(team_uuid),))
 			row = cursor.fetchall()
 			if row is None:
 				print("[-] Could not find any game history :(")
 				return None
 			else:
-				print("[+] Found {str(len(row))} game(s) history for team {team_uuid} :D")
+				print("[+] Found {str(len(row))} game(s) history for team {str(team_uuid)} :D")
 				return row
 		except Error as e:
 			print(f"[!] get_game_history_by_team_id: {e}")

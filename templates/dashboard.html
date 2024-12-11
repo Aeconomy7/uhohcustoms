@@ -57,40 +57,69 @@
 			</div>
 		</div>
 
-		<!-- Main Content: Game History -->
-		<div class="col-md-9 px-bg-darkgreenblue">
-			<div class="p-3">
-			<h3 class="mb-4">Game History</h3>
-			<div class="table-responsive px-bg-inverted">
-				<table class="table table-striped">
-					<thead>
-						<tr>
-							<th>Date</th>
-							<th>Game</th>
-							<th>Kills</th>
-							<th>Deaths</th>
-							<th>Assists</th>
-							<th>Result</th>
-						</tr>
-					</thead>
-					<tbody>
-						{% for game in games %}
-						<tr>
-							<td>{{ game.date }}</td>
-							<td>{{ game.name }}</td>
-							<td>{{ game.kills }}</td>
-							<td>{{ game.deaths }}</td>
-							<td>{{ game.assists }}</td>
-							<td>{{ game.result }}</td>
-						</tr>
-						{% else %}
-						<tr>
-							<td colspan="6" class="text-center">No games found.</td>
-						</tr>
-						{% endfor %}
-					</tbody>
-				</table>
+		<!-- Row 1: Game History -->
+		<div class="row col-md-9 mb-3" style="height: 50%; overflow: hidden;">
+			<div class="col-12">
+				<div class="h-100 border p-2" style="overflow-y: auto;">
+					<h2>Game History</h2>
+					<table class="table table-striped">
+						<thead>
+							<tr>
+								<th>Game ID</th>
+								<th>Date</th>
+								<th>Duration</th>
+								<th>Game Info</th>
+							</tr>
+						</thead>
+						<tbody>
+							{% for game in GAME_DATA %}
+							<tr>
+								<td>{{ game.game_id }}</td>
+								<td>{{ game.date }}</td>
+								<td>{{ game.duration }}</td>
+								<td>
+									<a href="{{ url_for('game_history', game_id=game.game_id) }}" class="btn btn-primary btn-sm">
+										View Stats
+									</a>
+								</td>
+							</tr>
+							{% endfor %}
+						</tbody>
+					</table>
+				</div>
 			</div>
+		</div>
+
+		<!-- Row 2: Player Stats -->
+		<div class="row col-md-9 mb-3" style="height: 50%; overflow: hidden;">
+			<div class="col-12">
+				<div class="h-100 border p-2" style="overflow-y: auto;">
+					<h2>Player Stats</h2>
+					<table class="table table-striped">
+						<thead>
+							<tr>
+								<th>Summoner Name</th>
+								<th>Wins</th>
+								<th>Loses</th>
+								<th>Kills</th>
+								<th>Deaths</th>
+								<th>Assists</th>
+							</tr>
+						</thead>
+						<tbody>
+							{% for player in PLAYER_DATA %}
+							<tr>
+								<td>{{ player.summoner_name }}</td>
+								<td>{{ player.wins }}</td>
+								<td>{{ player.loses }}</td>
+								<td>{{ player.kills }}</td>
+								<td>{{ player.deaths }}</td>
+								<td>{{ player.assists }}</td>
+							</tr>
+							{% endfor %}
+						</tbody>
+					</table>
+				</div>
 			</div>
 		</div>
 	</div>

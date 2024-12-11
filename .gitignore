@@ -1,4 +1,5 @@
 *_game.txt
+games/
 *.swp
 config.py
 venv/
