@@ -19,18 +19,25 @@
 				<ul class="navbar-nav ms-auto">
 					{% if session.get('username') %}
 						<li class="nav-item">
-							<span class="navbar-text">Logged in as {{ session['username'] }}</span>
-						</li>
-						<li class="nav-item">
 							<a class="nav-link" href="{{ url_for('dashboard') }}" style="color: white;">Dashboard</a>
 						</li>
+						<div class="vr"></div>
+						<li class="nav-item">
+							<a class="nav-link" href="{{ url_for('new_game') }}" style="color: white;">New Game</a>
+						</li>
+						<div class="vr"></div>
 						<li class="nav-item">
 							<a class="nav-link" href="{{ url_for('logout') }}" style="color: white;">Logout</a>
+						</li>
+						<div class="vr"></div>
+						<li class="nav-item" style="padding-left: 10px; padding-right: 10px;">
+							<p class="navbar-text">Logged in as:<span style="color: yellow; padding-left: 10px;">{{ session['username'] }}</span></p>
 						</li>
 					{% else %}
 						<li class="nav-item">
 							<a class="nav-link" href="{{ url_for('login') }}" style="color: white;">Login</a>
 						</li>
+						<div class="vr"></div>
 						<li class="nav-item">
 							<a class="nav-link" href="{{ url_for('register_user') }}" style="color: white;">Register</a>
 						</li>
@@ -43,9 +50,16 @@
 		{% block content %}
 		{% endblock %}
 	</div>
-	<footer class="text-center py-3 px-bg-dark">
+	<footer class="p-3 px-bg-dark">
 		<div class="container-fluid">
-			<p class="mb-0">2024 UH OH CUSSMS by Sc00by</p>
+			<div class="row">
+				<div class="text-center col-md-4">
+					<p class="mb-0">2024 UH OH CUSSMS - Made by Sc00by</p>
+				</div>
+				<div class="col-md-8">
+					<small class="mb-0" style="font-size: 10px; text-align: justify !important; text-justify: inter-word !important;">UH OH CUSSMS is not endorsed by Riot Games and does not reflect the views or opinions of Riot Games or anyone officially involved in producing or managing Riot Games properties. Riot Games and all associated properties are trademarks or registered trademarks of Riot Games, Inc</small>
+				</div>
+			</div>
 		</div>
 	</footer>
 	{% block scripts %}{% endblock %}

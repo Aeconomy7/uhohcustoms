@@ -119,7 +119,6 @@ class CustomsDbHandler:
 			return None
 
 
-
 	def register_team(self, team_name, team_uuid):
 		sql_query = "INSERT INTO teams (team_name, team_uuid) VALUES (?, ?);"
 
@@ -141,9 +140,11 @@ class CustomsDbHandler:
 		sql_query = """ CREATE TABLE IF NOT EXISTS users (
 				id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
 				username TEXT NOT NULL,
-				password_hash TEXT NOT NULL,
 				email TEXT NOT NULL,
-				team_uuid TEXT NOT NULL DEFAULT 'None'
+				user_uuid TEXT NOT NULL,
+				password_hash TEXT NOT NULL,
+				team_uuid TEXT NOT NULL DEFAULT 'None',
+				team_status TEXT NOT NULL DEFAULT 'None'
 			);"""
 		try:
 			cursor = self.__conn.cursor()
@@ -172,6 +173,23 @@ class CustomsDbHandler:
 			print(f"[!] get_user_by_id: {e}")
 			return None
 
+
+	def get_user_by_user_uuid(self, user_uuid):
+		sql_query = "SELECT * FROM users WHERE user_uuid = ?;"
+
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query, (str(user_uuid),))
+			row = cursor.fetchone()
+			if row is None:
+				print(f"[-] User with id {str(user_uuid)} does not exist")
+				return None
+			else:
+				print(f"[+] User with id {str(user_uuid)} exists :)")
+				return row
+		except Error as e:
+			print(f"[!] get_user_by_user_uuid: {e}")
+			return None
 
 
 	def get_user_by_username(self, username):
@@ -210,7 +228,7 @@ class CustomsDbHandler:
 
 
 	def get_users_by_team_uuid(self, team_uuid):
-		sql_query = "SELECT username FROM users WHERE team_uuid = ?;"
+		sql_query = "SELECT username, team_status FROM users WHERE team_uuid = ?;"
 
 		try:
 			cursor = self.__conn.cursor()
@@ -224,6 +242,24 @@ class CustomsDbHandler:
 				return row
 		except Error as e:
 			print(f"[!] get_users_by_team_uuid: {e}")
+			return None
+
+
+	def get_users_by_pending_team_invite(self, team_uuid):
+		sql_query = "SELECT username FROM users WHERE team_uuid = ? AND team_status = 'Pending';"
+
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query, (str(team_uuid),))
+			row = cursor.fetchall()
+			if row is None:
+				print(f"[-] Team with uuid {str(team_uuid)} has no pending invited")
+				return None
+			else:
+				print(f"[+] Team with uuid {str(team_uuid)} has {str(len(row))} invites :)")
+				return row
+		except Error as e:
+			print(f"[!] get_users_by_pending_team_invite: {e}")
 			return None
 
 
@@ -244,12 +280,12 @@ class CustomsDbHandler:
 			print(f"[!] check_if_user_email_exists: {e}")
 			return None
 
-	def join_user_to_team(self, username, team_uuid):
-		sql_query = "UPDATE users SET team_uuid = ? WHERE username = ?;"
+	def join_user_to_team(self, username, team_status, team_uuid):
+		sql_query = "UPDATE users SET team_uuid = ?, team_status = ? WHERE username = ?;"
 
 		try:
 			cursor = self.__conn.cursor()
-			cursor.execute(sql_query, (str(team_uuid), username))
+			cursor.execute(sql_query, (str(team_uuid), team_status, username))
 			self.__conn.commit()
 			print(f"[+] Successfully joined user {username} to team {str(team_uuid)} :D")
 			return True
@@ -257,12 +293,12 @@ class CustomsDbHandler:
 			print(f"[!] join_user_to_team: {e}")
 			return False
 
-	def register_user(self, username, password_hash, email):
-		sql_query = "INSERT INTO users (username, password_hash, email) VALUES (?, ?, ?);"
+	def register_user(self, username, user_uuid, email, password_hash):
+		sql_query = "INSERT INTO users (username, user_uuid, email, password_hash) VALUES (?, ?, ?, ?);"
 
 		try:
 			cursor = self.__conn.cursor()
-			cursor.execute(sql_query, (username, password_hash, email))
+			cursor.execute(sql_query, (username, str(user_uuid), email, password_hash))
 			self.__conn.commit()
 			print(f"[+] Successfully registered user {username} :D")
 			return True
@@ -458,30 +494,30 @@ class CustomsDbHandler:
 			cursor.execute(sql_query, (str(game_id),))
 			row = cursor.fetchone()
 			if row is None:
-				print("[-] Could not find any game history :(")
+				print(f"[-] Could not find any game history :(")
 				return None
 			else:
-				print("[+] Found game id {str(game_id)} :D")
+				print(f"[+] Found game id {str(game_id)} :D")
 				return row
 		except Error as e:
 			print(f"[!] get_game_history_by_game_id: {e}")
 			return None
 
 	def get_game_history_by_team_uuid(self, team_uuid):
-		sql_query = "SELECT * FROM game_history WHERE team_id = ?;"
+		sql_query = "SELECT * FROM game_history WHERE team_uuid = ?;"
 
 		try:
 			cursor = self.__conn.cursor()
 			cursor.execute(sql_query, (str(team_uuid),))
 			row = cursor.fetchall()
 			if row is None:
-				print("[-] Could not find any game history :(")
+				print(f"[-] Could not find any game history :(")
 				return None
 			else:
-				print("[+] Found {str(len(row))} game(s) history for team {str(team_uuid)} :D")
+				print(f"[+] Found {str(len(row))} game(s) history for team {str(team_uuid)} :D")
 				return row
 		except Error as e:
-			print(f"[!] get_game_history_by_team_id: {e}")
+			print(f"[!] get_game_history_by_team_uuid: {e}")
 			return None
 
 

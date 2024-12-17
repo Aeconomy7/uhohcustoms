@@ -1,6 +1,8 @@
-# Library imports
+###########
+# LIBRARY #
+###########
 from functools import wraps
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session, send_from_directory
 from flask_httpauth import HTTPBasicAuth
 from flask_socketio import SocketIO, emit
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -10,7 +12,9 @@ import datetime
 import json
 import re
 
-# Custom imports
+##################
+# CUSTOM IMPORTS #
+##################
 from db.customsdb import CustomsDbHandler
 from config import RIOT_API_KEY, FLASK_SECRET_KEY, REGION, USERS, SECRET_HEADER
 
@@ -33,6 +37,15 @@ CUSTOMS_DB.__enter__()
 ###########
 # GLOBALS #
 ###########
+# Riot API configuration
+RIOT_CLIENT_ID		= "your_client_id"
+RIOT_CLIENT_SECRET	= "your_client_secret"
+RIOT_AUTH_URL		= "https://auth.riotgames.com/authorize"
+RIOT_TOKEN_URL		= "https://auth.riotgames.com/token"
+REDIRECT_URI		= "https://uhohcustoms.lol/callback"
+
+DEBUG			= True
+
 PLAYERS_DATA 		= []
 
 ACTIVE_GAME_DATA 	= []
@@ -231,9 +244,16 @@ event_switch = {
 # ROUTES #
 ##########
 @app.route('/')
-@auth.login_required
+#@auth.login_required
 def index():
 	return render_template('index.html', username=session.get('username'))
+
+
+@app.route('/riot.txt')
+def riot_app_verification():
+	return send_from_directory('static', 'riot.txt')
+
+
 
 # User Registration
 @app.route('/register_user', methods=['GET','POST'])
@@ -265,20 +285,26 @@ def register_user():
 			return redirect(url_for('register_user'))
 
 		password_hash = generate_password_hash(password)
+		user_uuid = uuid.uuid4()
 
 		if(CUSTOMS_DB.check_if_user_email_exists(username, email) != None):
 			flash('User or email already exists.', 'danger')
 			return redirect(url_for('register_user'))
-			#return jsonify({'status': 'User or email already exists'}), 400
 
-		if(CUSTOMS_DB.register_user(username, password_hash, email)):
+		if(CUSTOMS_DB.register_user(username, user_uuid, email, password_hash)):
 			flash('Successfully registered user!', 'success')
 			return redirect(url_for('login'))
 		else:
 			flash('Failed to register user.', 'danger')
-			#return jsonify({'status': 'Failed to register user'}), 500
 
 	return render_template('register_user.html')
+
+
+# RSO Login
+@app.route('/login_rso')
+def login_rso():
+	riot_auth_url = f"{RIOT_AUTH_URL}?response_type=code&client_id={RIOT_CLIENT_ID}&redirect_uri={REDIRECT_URI}&scope=openid"
+	return redirect(riot_auth_url)
 
 
 # Login
@@ -291,15 +317,15 @@ def login():
 
 		user = CUSTOMS_DB.get_user_by_email(email)
 
-		if user	and check_password_hash(user[2], password):
-			session['user_id'] = user[0]
-			session['username'] = user[1]
-			session['email'] = user[3]
-			session['team'] = user[4]
+		if user	and check_password_hash(user[4], password):
+			session['user_id'] 	= user[3]
+			session['username'] 	= user[1]
+			session['email'] 	= user[2]
+			session['team']		= user[5]
+			session['status']	= user[6]
 			return redirect(url_for('dashboard'))
 		else:
 			flash('Invalid email or password.', 'danger')
-			#return jsonify({'status': 'Invalid email or password'}), 403
 
 	return render_template('login.html')
 
@@ -308,8 +334,31 @@ def login():
 @app.route('/logout', methods=['GET'])
 def logout():
 	session.clear()
-	return redirect(url_for('index'))
+	return redirect(url_for('login'))
 
+
+# RSO Callback
+@app.route('/callback')
+def callback():
+	code = request.args.get('code')
+
+	token_response = requests.post(
+		RIOT_TOKEN_URL,
+		data = {
+			"grant_type": "authorization_code",
+			"code": code,
+			"redirect_url": REDIRECT_URI,
+			"client_id": RIOT_CLIENT_ID,
+			"client_secret": RIOT_CLIENT_SECRET
+		}
+	)
+
+	if token_response.status_code == 200:
+		token_data = token_response.json()
+		session['access_token'] = token_data['access_token']
+		return redirect(url_for('dashboard'))
+	else:
+		return f"Error fetching token: {token_response.text}", 400
 
 # Create team
 @app.route('/create_team', methods=['POST'])
@@ -331,29 +380,28 @@ def create_team():
 		if CUSTOMS_DB.check_if_team_exists_by_team_name(team_name) != None:
 			raise ValueError("Team name already exists.")
 
-		# Create team uuid
 		team_uuid = uuid.uuid4()
 
 		if not CUSTOMS_DB.register_team(team_name, team_uuid):
 			raise ValueError("Failed to create team.")
 
-		if not CUSTOMS_DB.join_user_to_team(session['username'], team_uuid):
+		if not CUSTOMS_DB.join_user_to_team(session['username'], 'Owner', team_uuid):
 			raise ValueError("Failed to join team.")
 
 		session['team'] = team_uuid
+		session['status'] = 'Owner'
 		flash("Successfully created and joined team!", 'success')
-
-		#return jsonify({'status': 'Successfully created team'}), 201
 
 	except ValueError as e:
 		flash(str(e), 'danger')
-		#return jsonify({'status': 'Failed to create team'}), 400
 
 	except Exception as e:
 		flash('An unexpected error occurred. Please try again.', 'danger')
-		#return jsonify({'status': 'Unexpected error'}), 500
 
 	return redirect(url_for('dashboard'))
+
+
+# Approve team member
 
 
 # Join team
@@ -380,11 +428,11 @@ def join_team():
 		if team == None:
 			raise ValueError("Team code is invalid.")
 
-		if not CUSTOMS_DB.join_user_to_team(username, team_uuid):
+		if not CUSTOMS_DB.join_user_to_team(username, 'Pending', team_uuid):
 			raise ValueError("Failed to join team.")
 
 		session['team'] = team_uuid
-		flash(f"{username} successfully joined {team[1]}!", 'success')
+		flash(f"You are pending joining {team[1]}!", 'success')
 
 		#return jsonify({'status': 'Successfully joined team'}), 200
 
@@ -411,7 +459,7 @@ def leave_team():
 		if session['team'] == 'None':
 			raise ValueError("Not part of a team.")
 
-		if not CUSTOMS_DB.join_user_to_team(session['username'], 'None'):
+		if not CUSTOMS_DB.join_user_to_team(session['username'], 'None', 'None'):
 			raise ValueError("Failed to leave team.")
 
 		flash(f"You have successfully left your team, time to join a new one!", 'success')
@@ -427,6 +475,13 @@ def leave_team():
 
 	return redirect(url_for('dashboard'))
 
+
+# New Game Upload - manual and file upload
+@app.route('/new_game', methods=['GET', 'POST'])
+@auth.login_required
+@app_login_required
+def new_game():
+	return render_template('new_game.html')
 
 
 # Dashboard
@@ -445,21 +500,33 @@ def dashboard():
 		'user_id': 	session['user_id'],
 		'username':	session['username'],
 		'email':	session['email'],
-		'team':		session['team']
+		'team':		session['team'],
+		'status':	session['status']
 	}
 
+
 	if user['team'] != 'None':
+		members = CUSTOMS_DB.get_users_by_team_uuid(user['team'])
+		team_owner = ''
+		if members != None:
+			for mem in members:
+				print(mem)
+				if mem[1] == 'Owner':
+					team_owner = mem[0]
 		games = CUSTOMS_DB.get_game_history_by_team_uuid(user['team'])
+		team_data = CUSTOMS_DB.get_team_by_team_uuid(user['team'])
 		teams = {
-			'members': CUSTOMS_DB.get_users_by_team_uuid(user['team']),
-			'team_name': CUSTOMS_DB.get_team_by_team_uuid(user['team'])[1],
-			'team_uuid': user['team']
+			'members': 	members,
+			'team_name': 	team_data[1],
+			'team_uuid': 	user['team'],
+			'team_owner':	team_owner
 		}
 
-	print(f"[?] Rendering dashboard with the following: ")
-	print(f"	|-> user:  {user}")
-	print(f"	|-> teams: {teams}")
-	print(f"	|-> games: {games}")
+	if DEBUG:
+		print(f"[?] Rendering dashboard with the following: ")
+		print(f"	|-> user:  {user}")
+		print(f"	|-> teams: {teams}")
+		print(f"	|-> games: {games}")
 
 	return render_template('dashboard.html', USER_DATA=user, GAMES_DATA=games, TEAM_DATA=teams, PLAYERS_DATA=players, username=session.get('username'))
 
@@ -518,9 +585,13 @@ def event_callback():
 		# HANDLE PLAYER_DATA
 		elif headers.get('X-Event-Type') == 'PLAYER_DATA':
 			for p in event:
-				print(f"p: {p}")
+				if DEBUG:
+					print(f"p: {p}")
+				player_name	= p['player_name'].split('#')[0]
+				player_tag	= p['player_name'].split('#')[1]
 				PLAYERS_DATA.append(p)
-				CUSTOMS_DB.register_player(p['player_name'].split('#')[0], p['player_name'].split('#')[1])
+				if CUSTOMS_DB.get_player(player_name, player_tag) is None:
+					CUSTOMS_DB.register_player(player_name, player_tag)
 			socketio.emit('add_player_data', event)
 
 

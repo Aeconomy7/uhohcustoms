@@ -2,10 +2,10 @@
 
 {% block content %}
 <div class="d-flex justify-content-center align-items-center vh-100">
-	<div class="card p-4 shadow text-center px-bg-inverted" style="padding: 10px;">
-		<h1>Welcome to UH OH CUSSMS!!</h1>
+	<div class="card col-md-6 p-4 shadow px-bg-inverted" style="padding: 10px;">
+		<h1 class="text-center">Welcome to UH OH CUSSMS!!</h1>
 		<img src="{{ url_for('static', filename='img/wukong_ahri_min.png') }}">
-		<p>Archive you and your friends League of Legends customs game data!</p>
+		<p style="text-align: justify;">UH OH CUSSMS is an application aimed at archiving and tracking League of Legends customs game data for friends who play League of Legends. This application was inspired by the many friend groups who treat Customs game data as a telltale sign of skill and honor amongst their gameplaying peers.</p>
 	</div>
 </div>
 {% endblock %}
