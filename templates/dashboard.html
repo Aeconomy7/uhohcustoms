@@ -29,8 +29,15 @@
 				{% else %}
 					<h4>Team Information</h4>
 					<p><strong>Name:</strong> {{ TEAM_DATA.team_name }}</p>
-					<p><strong>Team captain:</strong> {{ TEAM_DATA.team_owner }}</p>
-					<p><strong>Team code:</strong> {{ TEAM_DATA.team_uuid }}</p>
+					<p><strong>Team Captain:</strong> {{ TEAM_DATA.team_owner }}</p>
+					<div class="team-code-container">
+						<label for="teamCode" class="form-label"><strong>Team Invite Code:</strong></label>
+						<div class="input-group">
+							<input type="text" id="teamCode" class="form-control" value="{{ TEAM_DATA.team_uuid }}" readonly>
+							<button id="copyButton" class="btn btn-outline-secondary" style="padding-left: 10px;"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#F"><path d="M360-240q-33 0-56.5-23.5T280-320v-480q0-33 23.5-56.5T360-880h360q33 0 56.5 23.5T800-800v480q0 33-23.5 56.5T720-240H360Zm0-80h360v-480H360v480ZM200-80q-33 0-56.5-23.5T120-160v-560h80v560h440v80H200Zm160-240v-480 480Z"/></svg></button>
+						</div>
+					</div>
+					<!-- <span id="teamCode">{{ TEAM_DATA.team_uuid }}</span><button id="copyButton" class="btn btn-outline-secondary" style="padding-left: 10px;">Copy</button></p> -->
 					<hr>
 					<h5>Team Members:</h5>
 					<ul>
@@ -136,4 +143,34 @@
 		</div>
 	</div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+{% if TEAM_DATA and USER_DATA.status != 'Pending' %}
+<!-- Clipboard functionality for team code -->
+<script>
+	document.addEventListener('DOMContentLoaded', function() {
+
+		const copyButton = document.getElementById('copyButton');
+		const teamCodeInput = document.getElementById('teamCode');
+
+		copyButton.addEventListener('click', function() {
+
+			// Select and copy the team code
+			navigator.clipboard.writeText(teamCodeInput.value)
+				.then(() => {
+
+					copyButton.textContent = 'Copied!';
+					setTimeout(() => {
+						copyButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#F"><path d="M360-240q-33 0-56.5-23.5T280-320v-480q0-33 23.5-56.5T360-880h360q33 0 56.5 23.5T800-800v480q0 33-23.5 56.5T720-240H360Zm0-80h360v-480H360v480ZM200-80q-33 0-56.5-23.5T120-160v-560h80v560h440v80H200Zm160-240v-480 480Z"/></svg>';
+					}, 2000);
+
+				})
+				.catch(err => {
+					console.error('Failed to copy text: ', err);
+				});
+		});
+	});
+</script>
+{% endif %}
 {% endblock %}
