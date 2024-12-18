@@ -14,9 +14,9 @@ from config import LOCAL_HOST, LOCAL_PORT, LC_EVENT_URL, CUSTOMS_HOST, CUSTOMS_P
 CUSTOMS_SERVER_STATUS = False # tracks if uhohcustoms is online, True if it is, False if it isnt
 PLAYERS_DATA = []
 LC_PROXIES = None
-#WEB_PROXIES = None
+WEB_PROXIES = None
 #LC_PROXIES = { "http": "http://127.0.0.1:8080", "https": "http://127.0.0.1:8080" }
-WEB_PROXIES = { "http": "http://127.0.0.1:8080", "https": "http://127.0.0.1:8080" }
+#WEB_PROXIES = { "http": "http://127.0.0.1:8080", "https": "http://127.0.0.1:8080" }
 
 
 ################### UTILITY FUNCTIONS ###################
@@ -85,7 +85,7 @@ def execute_game(game_id=None):
 				print(f"[!] Request failed: {e}")
 	
 	event_id = 0
-	file_path = f"./{game_id}"
+	file_path = f"./games/{game_id}"
 		
 	# open log file
 	with open(file_path, 'a', encoding='utf-8') as file:
@@ -274,7 +274,7 @@ if __name__ == "__main__":
 		# wait for game port to be open
 		print(f"[?] Waiting for game port to be open...")
 		wait_for_port(LOCAL_HOST, LOCAL_PORT)
-		print("[+] Game port open, sleeping for 3 seconds before commence")
+		print("[+] Game port open, sleeping for 4 seconds before commence")
 		time.sleep(4)
 
 		# execute game event loop
