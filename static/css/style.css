@@ -28,6 +28,42 @@ html, body {
 	text-align: center;
 }
 
+.vr {
+	width: 3px;
+	background-color: white;
+}
+
+/* INDEX CSS */
+/* Ensure the card scales appropriately */
+.index-card {
+	max-width: 90%; /* Keeps the card width constrained */
+	max-height: 80vh; /* Prevents the card from being too tall */
+	margin: auto; /* Centers the card horizontally */
+	display: flex; /* Enables flexbox for alignment */
+	justify-content: center; /* Centers content horizontally */
+	align-items: center; /* Centers content vertically */
+	overflow: hidden; /* Prevents overflow */
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Optional: Adds a shadow */
+	border-radius: 10px; /* Optional: Rounded corners */
+	background-color: #fff; /* Optional: Adds a background color */
+}
+
+/* Ensure the image scales appropriately */
+.index-card img {
+	width: 80%; /* Ensure the image fills the card's width */
+	height: auto; /* Maintain aspect ratio */
+	max-height: 80%; /* Prevent the image from exceeding the card's height */
+	object-fit: contain; /* Ensure the image stays within bounds */
+	align: center;
+	border: 1px solid black;
+}
+
+/* Navbar and footer positioning */
+.navbar, .footer {
+	z-index: 10; /* Keeps the navbar and footer above the content */
+	position: relative; /* Ensures proper stacking context */
+}
+
 /* NAVBAR CSS */
 .navbar-text {
 	display: flex;
@@ -140,6 +176,7 @@ html, body {
 	color: black;
 }
 
+/* ETC CSS */
 tr.ORDER {
 	border: 1px solid blue !important;
 }

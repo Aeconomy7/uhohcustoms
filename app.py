@@ -38,13 +38,13 @@ CUSTOMS_DB.__enter__()
 # GLOBALS #
 ###########
 # Riot API configuration
-RIOT_CLIENT_ID		= "your_client_id"
-RIOT_CLIENT_SECRET	= "your_client_secret"
+RIOT_CLIENT_ID		= "PLACEHOLDER"
+RIOT_CLIENT_SECRET	= "PLACEHOLDER"
 RIOT_AUTH_URL		= "https://auth.riotgames.com/authorize"
 RIOT_TOKEN_URL		= "https://auth.riotgames.com/token"
 REDIRECT_URI		= "https://uhohcustoms.lol/callback"
 
-DEBUG			= True
+DEBUG			= False
 
 PLAYERS_DATA 		= []
 
@@ -66,7 +66,7 @@ ACTIVE_GAME_DATA 	= []
 def app_login_required(f):
 	@wraps(f)
 	def decorated_function(*args, **kwargs):
-		if 'user_id' not in session:
+		if 'user_uuid' not in session:
 			return redirect(url_for('login'))
 		return f(*args, **kwargs)
 	return decorated_function
@@ -311,6 +311,7 @@ def login_rso():
 @app.route('/login', methods=['GET','POST'])
 @auth.login_required
 def login():
+
 	if request.method == 'POST':
 		email = request.form['email']
 		password = request.form['password']
@@ -318,12 +319,27 @@ def login():
 		user = CUSTOMS_DB.get_user_by_email(email)
 
 		if user	and check_password_hash(user[4], password):
-			session['user_id'] 	= user[3]
+			session['user_uuid'] 	= user[3]
 			session['username'] 	= user[1]
-			session['email'] 	= user[2]
-			session['team']		= user[5]
-			session['status']	= user[6]
-			return redirect(url_for('dashboard'))
+
+			user_teams = CUSTOMS_DB.get_teams_for_user(session['user_uuid'])
+
+			session['user_teams'] = [{'team_uuid': team[0], 'team_name': team[1]} for team in user_teams]
+			session['active_team_uuid'] = str(user_teams[0][0]) if user_teams else 'None'
+			session['active_team_name'] = str(user_teams[0][1]) if user_teams else 'None'
+
+#			active_team_uuid = 'None'
+
+#			if user_teams:
+#				active_team_uuid = user_teams[0]['team_uuid']
+
+#			session['active_team_uuid'] = active_team_uuid
+
+			if DEBUG:
+				print(f"[?][login][{session['username']}] login - user_teams: {str(session['user_teams'])}")
+				print(f"[?][login][{session['username']}] login - active_team_uuid: {str(session['active_team_uuid'])}")
+
+			return redirect(url_for('dashboard', team_uuid=str(session['active_team_uuid'])))
 		else:
 			flash('Invalid email or password.', 'danger')
 
@@ -356,9 +372,33 @@ def callback():
 	if token_response.status_code == 200:
 		token_data = token_response.json()
 		session['access_token'] = token_data['access_token']
-		return redirect(url_for('dashboard'))
+		return redirect(url_for('dashboard', team_uuid=str(session['active_team_uuid'])))
 	else:
 		return f"Error fetching token: {token_response.text}", 400
+
+
+# Manage Teams
+@app.route('/teams', methods=['GET', 'POST'])
+@auth.login_required
+@app_login_required
+def teams():
+	# Get the user's current teams
+	user_teams = session.get('user_teams', [])
+	active_team_uuid = session.get('active_team_uuid')
+
+	# Fetch details about the active team (if any)
+	active_team = None
+	team_members = []
+	if active_team_uuid:
+		active_team = CUSTOMS_DB.get_team_by_team_uuid(active_team_uuid)
+		team_members = CUSTOMS_DB.get_team_members(active_team_uuid)
+
+	if DEBUG:
+		print(f"[?][teams][{session['username']}] active_team 	: {active_team}")
+		print(f"[?][teams][{session['username']}] team_members : {team_members}")
+
+	return render_template('teams.html', user_teams=user_teams, active_team=active_team, team_members=team_members)
+
 
 # Create team
 @app.route('/create_team', methods=['POST'])
@@ -368,28 +408,37 @@ def create_team():
 	team_name = request.form['team_name']
 
 	try:
-		if 'username' not in session:
+		if 'user_uuid' not in session:
 			raise ValueError("Invalid session.")
 
 		if not team_name:
 			raise ValueError("Team name cannot be empty.")
 
-		if session['team'] != 'None':
-			raise ValueError("You cannot create a team if you have already joined a team.")
+		# check if already a team captain
+		if CUSTOMS_DB.is_user_captain(session['user_uuid']):
+			raise ValueError("You are already the captain of a team.")
 
 		if CUSTOMS_DB.check_if_team_exists_by_team_name(team_name) != None:
 			raise ValueError("Team name already exists.")
 
 		team_uuid = uuid.uuid4()
 
-		if not CUSTOMS_DB.register_team(team_name, team_uuid):
+		if not CUSTOMS_DB.register_team(team_name, team_uuid, session['user_uuid']):
 			raise ValueError("Failed to create team.")
 
-		if not CUSTOMS_DB.join_user_to_team(session['username'], 'Owner', team_uuid):
+		if not CUSTOMS_DB.join_user_to_team(session['user_uuid'], team_uuid):
 			raise ValueError("Failed to join team.")
 
-		session['team'] = team_uuid
-		session['status'] = 'Owner'
+#		user_teams = CUSTOMS_DB.get_teams_for_user(session['user_uuid'])
+#		session['user_teams'] = [{'team_uuid': team[0], 'team_name': team[1]} for team in user_teams]
+
+		session['user_teams'].append({'team_name': team_name, 'team_uuid': team_uuid})
+		session['active_team_uuid'] = team_uuid
+		session['active_team_name'] = team_name
+
+		if DEBUG:
+			print(f"[?][create_team][{session['username']}] Successfully created team {team_name}:{session['active_team_uuid']}")
+
 		flash("Successfully created and joined team!", 'success')
 
 	except ValueError as e:
@@ -398,7 +447,7 @@ def create_team():
 	except Exception as e:
 		flash('An unexpected error occurred. Please try again.', 'danger')
 
-	return redirect(url_for('dashboard'))
+	return redirect(url_for('dashboard', team_uuid=str(session['active_team_uuid'])))
 
 
 # Approve team member
@@ -409,30 +458,38 @@ def create_team():
 @auth.login_required
 @app_login_required
 def join_team():
-	team_uuid = request.form['team_code']
+	team_uuid = request.form['team_uuid']
 
 	try:
-		if 'username' not in session:
+		if 'user_uuid' not in session:
 			raise ValueError("Invalid session.")
 
-		if session['team'] != 'None':
-			raise ValueError("Already joined a team.")
-
-		username = session['username']
+		# UPDATE to check DB instead
+		#if session['team'] != 'None':
+		#	raise ValueError("Already joined a team.")
 
 		if not team_uuid:
 			raise ValueError("Team code cannot be empty.")
 
-		team = CUSTOMS_DB.check_if_team_exists_by_team_uuid(team_uuid)
-
-		if team == None:
+		# Check if team exists by uuid and if they are already a team member
+		teamcheck = CUSTOMS_DB.check_if_team_exists_by_team_uuid(team_uuid)
+		if teamcheck == None:
 			raise ValueError("Team code is invalid.")
 
-		if not CUSTOMS_DB.join_user_to_team(username, 'Pending', team_uuid):
+		userteamcheck = CUSTOMS_DB.get_teams_for_user(session['user_uuid'])
+		for team in userteamcheck:
+			if team[0] == str(team_uuid):
+				raise ValueError("User is already a member of this team.")
+
+		# perform the team join
+		if not CUSTOMS_DB.join_user_to_team(session['user_uuid'], team_uuid):
 			raise ValueError("Failed to join team.")
 
-		session['team'] = team_uuid
-		flash(f"You are pending joining {team[1]}!", 'success')
+		session['user_teams'].append({'team_name': team_name, 'team_uuid': team_uuid})
+		session['active_team_uuid'] = team_uuid
+		session['active_team_name'] = team_name
+
+		flash(f"You are have joined {team[1]}!", 'success')
 
 		#return jsonify({'status': 'Successfully joined team'}), 200
 
@@ -444,7 +501,8 @@ def join_team():
 		flash('An unexpected error occurred. Please try again.', 'danger')
 		#return jsonify({'status': 'Unexpected error'}), 500
 
-	return redirect(url_for('dashboard'))
+	return dashboard(team_uuid)
+	#return redirect(url_for('dashboard', team_uuid=str(session['active_team_uuid'])))
 
 
 # Leave Team
@@ -452,18 +510,27 @@ def join_team():
 @auth.login_required
 @app_login_required
 def leave_team():
+	team_uuid = request.form['team_uuid']
+
 	try:
-		if 'username' not in session:
+		if team_uuid == 'None':
+			raise ValueError("Invalid team to leave")
+
+		if 'user_uuid' not in session:
 			raise ValueError("Invalid session.")
 
-		if session['team'] == 'None':
-			raise ValueError("Not part of a team.")
+		#if not CUSTOMS_DB.join_user_to_team(session['username'], 'None', 'None'):
+		#	raise ValueError("Failed to leave team.")
 
-		if not CUSTOMS_DB.join_user_to_team(session['username'], 'None', 'None'):
+		if not CUSTOMS_DB.remove_user_from_team(session['user_uuid'], team_uuid):
 			raise ValueError("Failed to leave team.")
 
-		flash(f"You have successfully left your team, time to join a new one!", 'success')
-		session['team'] = 'None'
+		user_teams = CUSTOMS_DB.get_teams_for_user(session['user_uuid'])
+		session['user_teams'] = [{'team_uuid': team[0], 'team_name': team[1]} for team in user_teams]
+		session['active_team_uuid'] = str(user_teams[0][0]) if user_teams else 'None'
+		session['active_team_name'] = str(user_teams[0][1]) if user_teams else 'None'
+
+		flash(f"You have left team!", 'success')
 
 	except ValueError as e:
 		flash(str(e), 'danger')
@@ -473,7 +540,34 @@ def leave_team():
 		flash('An unexpected error occurred. Please try again.', 'danger')
 		#return jsonify({'status': 'Unexpected error'}), 500
 
-	return redirect(url_for('dashboard'))
+	return redirect(url_for('dashboard', team_uuid=str(session['active_team_uuid'])))
+
+
+# Set Active Team
+@app.route('/set_active_team/<team_uuid>')
+@auth.login_required
+@app_login_required
+def set_active_team(team_uuid):
+	next_url = request.form.get('next') or url_for('dashboard', team_uuid=team_uuid)
+
+	try:
+		if 'user_uuid' not in session:
+			return redirect(url_for('login'))
+
+		user_teams = CUSTOMS_DB.get_teams_for_user(session['user_uuid'])
+		active_team = next((team for team in user_teams if team['team_uuid'] == team_uuid), None)
+
+		if not active_team:
+			abort(403)
+
+		session['user_teams'] = [{'team_uuid': team['team_uuid'], 'team_name': team['team_name']} for team in user_teams]
+		session['active_team_name'] = active_team['team_name']  # Set the proper team name
+		session['active_team_uuid'] = team_uuid
+
+	except Exception as e:
+		flash('An unexpected error occurred. Please try again.', 'danger')
+
+	return redirect(next_url)
 
 
 # New Game Upload - manual and file upload
@@ -485,50 +579,102 @@ def new_game():
 
 
 # Dashboard
-@app.route('/dashboard', methods=['GET'])
+#@app.route('/dashboard', methods=['GET'])
+#@auth.login_required
+#@app_login_required
+#def dashboard():
+#	if 'user_id' not in session:
+#		return redirect(url_for('login'))
+
+
+#	teams 	= {}
+#	games 	= {}
+#	players	= {}
+#	user 	= {
+#		'user_id': 	session['user_id'],
+#		'username':	session['username'],
+#		'email':	session['email'],
+#		'team':		session['team'],
+#		'status':	session['status']
+#	}
+
+
+#	if user['team'] != 'None':
+#		members = CUSTOMS_DB.get_users_by_team_uuid(user['team'])
+		#team_owner = ''
+		#if members != None:
+		#	for mem in members:
+		#		print(mem)
+		#		if mem[1] == 'Owner':
+		#			team_owner = mem[0]
+#		games = CUSTOMS_DB.get_game_history_by_team_uuid(user['team'])
+#		team_data = CUSTOMS_DB.get_team_by_team_uuid(user['team'])
+#		teams = {
+#			'members': 	members,
+#			'team_name': 	team_data[1],
+#			'team_uuid': 	user['team'],
+#			'team_owner':	team_owner
+#		}
+
+#	if DEBUG:
+#		print(f"[?] Rendering dashboard with the following: ")
+#		print(f"	|-> user:  {user}")
+#		print(f"	|-> teams: {teams}")
+#		print(f"	|-> games: {games}")
+
+#	return render_template('dashboard.html', USER_DATA=user, GAMES_DATA=games, TEAM_DATA=teams, PLAYERS_DATA=players, username=session.get('username'))
+
+
+# Team Dashboard
+#@app.route('/dashboard/', defaults={'team_uuid': 'None'})
+@app.route('/dashboard/<team_uuid>', methods=['GET'])
 @auth.login_required
 @app_login_required
-def dashboard():
-	if 'user_id' not in session:
+def dashboard(team_uuid):
+	if 'user_uuid' not in session:
+		flash(f"You must authenticate.", 'danger')
 		return redirect(url_for('login'))
 
+	if DEBUG:
+		print(f"[?][dashboard][{session['username']}] dashboard team_uuid: {team_uuid}")
 
-	teams 	= {}
-	games 	= {}
-	players	= {}
-	user 	= {
-		'user_id': 	session['user_id'],
+	teams   = {}
+	games   = {}
+	players = {}
+	user	= {
+		'user_uuid':	session['user_uuid'],
 		'username':	session['username'],
-		'email':	session['email'],
-		'team':		session['team'],
-		'status':	session['status']
+		'team':		session['active_team_uuid'],
+		#'status':	   session['status']
 	}
 
-
-	if user['team'] != 'None':
-		members = CUSTOMS_DB.get_users_by_team_uuid(user['team'])
-		team_owner = ''
+	if team_uuid != 'None':
+		members = CUSTOMS_DB.get_team_members(team_uuid)
+		team_captain = ''
 		if members != None:
-			for mem in members:
-				print(mem)
-				if mem[1] == 'Owner':
-					team_owner = mem[0]
-		games = CUSTOMS_DB.get_game_history_by_team_uuid(user['team'])
-		team_data = CUSTOMS_DB.get_team_by_team_uuid(user['team'])
+			   for mem in members:
+				   if mem[3] == 'Captain':
+					   team_captain = mem[0]
+		games = CUSTOMS_DB.get_game_history_by_team_uuid(team_uuid)
+		team_data = CUSTOMS_DB.get_team_by_team_uuid(team_uuid)
 		teams = {
-			'members': 	members,
-			'team_name': 	team_data[1],
-			'team_uuid': 	user['team'],
-			'team_owner':	team_owner
+			'members':	  members,
+			'team_name':	team_data[1],
+			'team_uuid':	team_uuid,
+			'team_captain':	team_captain
 		}
 
+	#print(f"[?] SESSION: {str(session)}")
+
 	if DEBUG:
-		print(f"[?] Rendering dashboard with the following: ")
+		print(f"[?][dashboard][{session['username']}] Rendering dashboard with the following: ")
 		print(f"	|-> user:  {user}")
 		print(f"	|-> teams: {teams}")
 		print(f"	|-> games: {games}")
 
-	return render_template('dashboard.html', USER_DATA=user, GAMES_DATA=games, TEAM_DATA=teams, PLAYERS_DATA=players, username=session.get('username'))
+	return render_template('dashboard.html', GAMES_DATA=games, TEAM_DATA=teams, PLAYERS_DATA=players, username=session.get('username'))
+
+
 
 
 # Display game stats
@@ -585,8 +731,6 @@ def event_callback():
 		# HANDLE PLAYER_DATA
 		elif headers.get('X-Event-Type') == 'PLAYER_DATA':
 			for p in event:
-				if DEBUG:
-					print(f"p: {p}")
 				player_name	= p['player_name'].split('#')[0]
 				player_tag	= p['player_name'].split('#')[1]
 				PLAYERS_DATA.append(p)

@@ -5,7 +5,7 @@
 	<div class="row h-100">
 
 		<!-- Alert messages -->
-		<div class="alert-container">
+<!-- 		<div class="alert-container">
 		{% with messages = get_flashed_messages(with_categories=true) %}
 			{% if messages %}
 				{% for message in messages %}
@@ -16,62 +16,10 @@
 				{% endfor %}
 			{% endif %}
 		{% endwith %}
-		</div>
+		</div> -->
 		
-		<!-- Sidebar: Create/Join Team -->
-		<div class="col-md-3 bg-light border-end px-bg-inverted">
-			<div class="p-3"> 
-			{% if TEAM_DATA %}
-				{% if USER_DATA.status == 'Pending' %}
-					<h4>Pending Team</h4>
-					<p><strong>Name:</strong> {{ TEAM_DATA.team_name }}</p>
-					<p>The team owner will approve or deny your request to join.</p>
-				{% else %}
-					<h4>Team Information</h4>
-					<p><strong>Name:</strong> {{ TEAM_DATA.team_name }}</p>
-					<p><strong>Team Captain:</strong> {{ TEAM_DATA.team_owner }}</p>
-					<div class="team-code-container">
-						<label for="teamCode" class="form-label"><strong>Team Invite Code:</strong></label>
-						<div class="input-group">
-							<input type="text" id="teamCode" class="form-control" value="{{ TEAM_DATA.team_uuid }}" readonly>
-							<button id="copyButton" class="btn btn-outline-secondary" style="padding-left: 10px;"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#F"><path d="M360-240q-33 0-56.5-23.5T280-320v-480q0-33 23.5-56.5T360-880h360q33 0 56.5 23.5T800-800v480q0 33-23.5 56.5T720-240H360Zm0-80h360v-480H360v480ZM200-80q-33 0-56.5-23.5T120-160v-560h80v560h440v80H200Zm160-240v-480 480Z"/></svg></button>
-						</div>
-					</div>
-					<!-- <span id="teamCode">{{ TEAM_DATA.team_uuid }}</span><button id="copyButton" class="btn btn-outline-secondary" style="padding-left: 10px;">Copy</button></p> -->
-					<hr>
-					<h5>Team Members:</h5>
-					<ul>
-					{% for member in TEAM_DATA.members %}
-						<li>{{ member[0] }}</li>
-					{% endfor %}
-					</ul>
-				{% endif %}
-				<form action="{{ url_for('leave_team') }}" method="post" class="mb-3">
-					<button type="submit" class="btn btn-danger w-100 px-bg-danger">Leave Team</button>
-				</form>
-			{% else %}
-				<h4>Create / Join Team</h4>
-				<form action="{{ url_for('create_team') }}" method="post" class="mb-3">
-					<div class="mb-3">
-						<label for="teamName" class="form-label">Team Name</label>
-						<input type="text" name="team_name" id="teamName" class="form-control" placeholder="Enter team name" required>
-					</div>
-					<button type="submit" class="btn btn-primary w-100 px-bg-success">Create Team</button>
-				</form>
-				<hr>
-				<form action="{{ url_for('join_team') }}" method="post">
-					<div class="mb-3">
-						<label for="joinTeamId" class="form-label">Team Code</label>
-						<input type="text" name="team_code" id="joinTeamId" class="form-control" placeholder="Enter team code" required>
-					</div>
-					<button type="submit" class="btn btn-success w-100 px-bg-blue">Join Team</button>
-				</form>
-			{% endif %}
-			</div>
-		</div>
-
 		<!-- Row 1: Game History -->
-		<div class="col-md-9">
+		<div class="col-md-11">
 		<div class="row h-50" style="height: 50%; overflow: hidden;">
 			<div class="col-12">
 				<div class="h-100 p-2" style="overflow-y: auto;">
@@ -146,7 +94,7 @@
 {% endblock %}
 
 {% block scripts %}
-{% if TEAM_DATA and USER_DATA.status != 'Pending' %}
+{% if TEAM_DATA %}
 <!-- Clipboard functionality for team code -->
 <script>
 	document.addEventListener('DOMContentLoaded', function() {

@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block content %}
+	<div class="container mt-0">
+		<div class="row">
+			<!-- Left Section: Join/Create a Team -->
+			<div class="col-md-6">
+				<h3>Manage Teams</h3>
+				<div class="card mb-3 px-bg-inverted">
+					<div class="card-body">
+						<h5 class="card-title">Create a New Team</h5>
+						<form action="{{ url_for('create_team') }}" method="POST">
+							<div class="mb-3">
+								<label for="team_name" class="form-label">Team Name</label>
+								<input type="text" class="form-control" id="team_name" name="team_name" required>
+							</div>
+							<button type="submit" class="btn btn-primary px-bg-blue">Create Team</button>
+						</form>
+					</div>
+				</div>
+
+				<div class="card mb-3 px-bg-inverted">
+					<div class="card-body">
+						<h5 class="card-title">Join a Team</h5>
+						<form action="{{ url_for('join_team') }}" method="POST">
+							<div class="mb-3">
+								<label for="team_uuid" class="form-label">Team Code</label>
+								<input type="text" class="form-control" id="team_uuid" name="team_uuid" required>
+							</div>
+							<button type="submit" class="btn btn-success px-bg-success">Join Team</button>
+						</form>
+					</div>
+				</div>
+
+				<div class="card px-bg-inverted">
+					<div class="card-body">
+						<h5 class="card-title">Leave a Team</h5>
+						<form action="{{ url_for('join_team') }}" method="POST">
+							<div class="mb-3">
+								<label for="team_uuid" class="form-label">Enter Team Code</label>
+								<input type="text" class="form-control" id="team_uuid" name="team_uuid" required>
+							</div>
+							<button type="submit" class="btn btn-danger px-bg-danger">Leave Team</button>
+						</form>
+					</div>
+				</div>
+			</div>
+
+			<!-- Vertical Divider -->
+			<div class="col-md-1 d-flex justify-content-center">
+				<div class="vr" style="height: 100%;"></div>
+			</div>
+
+			<!-- Right Section: Team Information -->
+			<div class="col-md-5">
+				{% if active_team %}
+				<h3>Team Information</h3>
+				<div class="card px-bg-inverted">
+					<div class="card-body">
+						<h5 class="card-title">{{ active_team[1] }}</h5>
+						<div class="team-code-container">
+							<label for="teamCode" class="form-label"><strong>Team Invite Code:</strong></label>
+							<div class="input-group">
+								<input type="text" id="teamCode" class="form-control" value="{{ active_team[2] }}" readonly>
+								<button id="copyButton" class="btn btn-outline-secondary" style="padding-left: 10px;"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#F"><path d="M360-240q-33 0-56.5-23.5T280-320v-480q0-33 23.5-56.5T360-880h360q33 0 56.5 23.5T800-800v480q0 33-23.5 56.5T720-240H360Zm0-80h360v-480H360v480ZM200-80q-33 0-56.5-23.5T120-160v-560h80v560h440v80H200Zm160-240v-480 480Z"/></svg></button>
+							</div>
+						</div>
+						<!-- <p><strong>Team Invite Code:</strong> {{ active_team[2] }}</p> -->
+						<p class="mt-1 mb-0"><strong>Members:</strong></p>
+						<ul>
+							{% for member in team_members %}
+								<span><li>{{ member[0] }}</li>
+								{% if member[3] == 'Captain' %}
+									<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#ffbf04"><path d="M200-160v-80h560v80H200Zm0-140-51-321q-2 0-4.5.5t-4.5.5q-25 0-42.5-17.5T80-680q0-25 17.5-42.5T140-740q25 0 42.5 17.5T200-680q0 7-1.5 13t-3.5 11l125 56 125-171q-11-8-18-21t-7-28q0-25 17.5-42.5T480-880q25 0 42.5 17.5T540-820q0 15-7 28t-18 21l125 171 125-56q-2-5-3.5-11t-1.5-13q0-25 17.5-42.5T820-740q25 0 42.5 17.5T880-680q0 25-17.5 42.5T820-620q-2 0-4.5-.5t-4.5-.5l-51 321H200Zm68-80h424l26-167-105 46-133-183-133 183-105-46 26 167Zm212 0Z"/></svg>
+								{% endif %}</span>
+							{% endfor %}
+						</ul>
+					</div>
+				</div>
+				{% else %}
+				<h3>No Active Team</h3>
+				<p>You are not currently in an active team. Create or join a team to see details here.</p>
+				{% endif %}
+			</div>
+		</div>
+	</div>
+
+{% endblock %}
+
+{% block scripts %}
+{% if active_team %}
+<!-- Clipboard functionality for team code -->
+<script>
+	document.addEventListener('DOMContentLoaded', function() {
+
+		const copyButton = document.getElementById('copyButton');
+		const teamCodeInput = document.getElementById('teamCode');
+
+		copyButton.addEventListener('click', function() {
+
+			// Select and copy the team code
+			navigator.clipboard.writeText(teamCodeInput.value)
+				.then(() => {
+
+					copyButton.textContent = 'Copied!';
+					setTimeout(() => {
+						copyButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#F"><path d="M360-240q-33 0-56.5-23.5T280-320v-480q0-33 23.5-56.5T360-880h360q33 0 56.5 23.5T800-800v480q0 33-23.5 >
+					}, 2000);
+
+				})
+				.catch(err => {
+					console.error('Failed to copy text: ', err);
+				});
+		});
+	});
+</script>
+{% endif %}
+{% endblock %}
