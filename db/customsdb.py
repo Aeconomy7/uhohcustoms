@@ -195,6 +195,27 @@ class CustomsDbHandler:
 			return None
 
 
+	def is_user_captain_of_team(self, user_uuid, team_uuid):
+		sql_query = "SELECT 1 FROM teams WHERE team_captain_uuid = ? AND team_uuid = ? LIMIT 1;"
+
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query, (str(user_uuid), str(team_uuid)))
+			row = cursor.fetchone()
+			if row is None:
+				if self.__DEBUG:
+					print(f"[-] User {str(user_uuid)} is NOT captain of team {str(team_uuid)}")
+				return None
+			else:
+				if self.__DEBUG:
+					print(f"[+] User {str(user_uuid)} is captain of team {str(team_uuid)}")
+				return row
+
+		except Error as e:
+			print(f"[!] is_user_captain_of_team: {e}")
+			return None
+
+
 	def register_team(self, team_name, team_uuid, team_captain_uuid):
 		sql_query = "INSERT INTO teams (team_name, team_uuid, team_captain_uuid) VALUES (?, ?, ?);"
 

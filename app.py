@@ -16,7 +16,7 @@ import re
 # CUSTOM IMPORTS #
 ##################
 from db.customsdb import CustomsDbHandler
-from config import RIOT_API_KEY, FLASK_SECRET_KEY, REGION, USERS, SECRET_HEADER
+from config import *
 
 #########
 # FLASK #
@@ -37,14 +37,7 @@ CUSTOMS_DB.__enter__()
 ###########
 # GLOBALS #
 ###########
-# Riot API configuration
-RIOT_CLIENT_ID		= "PLACEHOLDER"
-RIOT_CLIENT_SECRET	= "PLACEHOLDER"
-RIOT_AUTH_URL		= "https://auth.riotgames.com/authorize"
-RIOT_TOKEN_URL		= "https://auth.riotgames.com/token"
-REDIRECT_URI		= "https://uhohcustoms.lol/callback"
-
-DEBUG			= False
+DEBUG			= True
 
 PLAYERS_DATA 		= []
 
@@ -79,6 +72,7 @@ def verify_password(username, password):
 @auth.get_user_roles
 def get_user_roles(username):
 	return USERS[username]["role"] if username in USERS else None
+
 
 # Event handlers
 def handle_event(event):
@@ -555,14 +549,22 @@ def set_active_team(team_uuid):
 			return redirect(url_for('login'))
 
 		user_teams = CUSTOMS_DB.get_teams_for_user(session['user_uuid'])
-		active_team = next((team for team in user_teams if team['team_uuid'] == team_uuid), None)
+		active_team = next((team for team in user_teams if team[0] == str(team_uuid)), "")
+#		active_team = ""
+#		for team in user_teams:
+#			if team[0] == str(team_uuid):
+#				active_team = team
+
+		if DEBUG:
+			print(f"[?][set_active_team][{session.get('username')}] user_teams: {user_teams}")
+			print(f"[?][set_active_team][{session.get('username')}] active_team: {active_team}")
 
 		if not active_team:
 			abort(403)
 
-		session['user_teams'] = [{'team_uuid': team['team_uuid'], 'team_name': team['team_name']} for team in user_teams]
-		session['active_team_name'] = active_team['team_name']  # Set the proper team name
-		session['active_team_uuid'] = team_uuid
+		session['user_teams'] = [{'team_uuid': team[0], 'team_name': team[1]} for team in user_teams]
+		session['active_team_name'] = active_team[1]
+		session['active_team_uuid'] = active_team[0]
 
 	except Exception as e:
 		flash('An unexpected error occurred. Please try again.', 'danger')

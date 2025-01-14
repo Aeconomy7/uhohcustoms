@@ -74,10 +74,12 @@ html, body {
 
 /* ALERT CSS */
 .alert-container {
-	position: absolute; /* Float it over the content */
-	left: 0;
-	right: 0;
-	z-index: 1050; /* Ensure it sits above other elements */
+	position: fixed; 
+	top: 40px; 
+	right: 0; 
+	z-index: 1050; 
+	width: 250px; 
+	padding: 1rem;
 }
 
 .alert {

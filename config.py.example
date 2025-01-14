@@ -1,5 +1,14 @@
 from werkzeug.security import generate_password_hash
 
+# RIOT API CONFIGURATIONS
+RIOT_API_KEY		= "RGAPI-XXXX"
+RIOT_CLIENT_ID		= "PLACEHOLDER"
+RIOT_CLIENT_SECRET	= "PLACEHOLDER"
+RIOT_AUTH_URL		= "https://auth.riotgames.com/authorize"
+RIOT_TOKEN_URL		= "https://auth.riotgames.com/token"
+REDIRECT_URL		= "https://example.com/callback"
+REGION			= "AMERICAS"
+
 # NETWORK INFO
 LOCAL_HOST		= "127.0.0.1"
 LOCAL_PORT		= 2999
@@ -9,10 +18,7 @@ CUSTOMS_HOST		= "127.0.0.1"
 CUSTOMS_PORT		= 8000
 CUSTOMS_DATA_CALLBACK	= f"http://{CUSTOMS_HOST}:{CUSTOMS_PORT}/data_callback"
 
-REGION			= "AMERICAS"
-
 # SECRETS
-RIOT_API_KEY		= "RGAPI-XXXX"
 FLASK_SECRET_KEY	= "<flask_secret_key>"
 SECRET_HEADER		= "<secret_header>"
 USERS = {

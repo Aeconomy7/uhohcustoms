@@ -4,7 +4,7 @@
 	<div class="container mt-0">
 		<div class="row">
 			<!-- Left Section: Join/Create a Team -->
-			<div class="col-md-6">
+			<div class="col-md-5 m-3 overflow-auto">
 				<h3>Manage Teams</h3>
 				<div class="card mb-3 px-bg-inverted">
 					<div class="card-body">
@@ -52,7 +52,7 @@
 			</div>
 
 			<!-- Right Section: Team Information -->
-			<div class="col-md-5">
+			<div class="col-md-5 m-3 overflow-auto">
 				{% if active_team %}
 				<h3>Team Information</h3>
 				<div class="card px-bg-inverted">
@@ -66,15 +66,39 @@
 							</div>
 						</div>
 						<!-- <p><strong>Team Invite Code:</strong> {{ active_team[2] }}</p> -->
-						<p class="mt-1 mb-0"><strong>Members:</strong></p>
-						<ul>
+						<p class="mt-3 mb-0"><strong>Team Members:</strong></p>
+						<div class="table-responsive">
+							<table class="table table-bordered table-striped">
+								<thead>
+									<tr>
+										<th>Username</th>
+										<th>Role</th>
+									</tr>
+								</thead>
+								<tbody>
+									{% for member in team_members %}
+									<tr>
+										<td>{{ member[0] }}</td>
+										<td>
+											{% if member[] == 'Captain' %}
+												Captain <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#ffbf04"><path d="M200-160v-80h560v80H200Zm0-140-51-321q-2 0-4.5.5t-4.5.5q-25 0-42.5-17.5T80-680q0-25 17.5-42.5T140-740q25 0 42.5 17.5T200-680q0 7-1.5 13t-3.5 11l125 56 125-171q-11-8-18-21t-7-28q0-25 17.5-42.5T480-880q25 0 42.5 17.5T540-820q0 15-7 28t-18 21l125 171 125-56q-2-5-3.5-11t-1.5-13q0-25 17.5-42.5T820-740q25 0 42.5 17.5T880-680q0 25-17.5 42.5T820-620q-2 0-4.5-.5t-4.5-.5l-51 321H200Zm68-80h424l26-167-105 46-133-183-133 183-105-46 26 167Zm212 0Z"/></svg>
+											{% else %}
+												Member
+											{% endif %}
+										</td>
+									</tr>
+									{% endfor %}
+								</tbody>
+							</table>
+						</div>
+						<!-- <ul>
 							{% for member in team_members %}
-								<span><li>{{ member[0] }}</li>
+								<li>{{ member[0] }}</li>
 								{% if member[3] == 'Captain' %}
 									<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#ffbf04"><path d="M200-160v-80h560v80H200Zm0-140-51-321q-2 0-4.5.5t-4.5.5q-25 0-42.5-17.5T80-680q0-25 17.5-42.5T140-740q25 0 42.5 17.5T200-680q0 7-1.5 13t-3.5 11l125 56 125-171q-11-8-18-21t-7-28q0-25 17.5-42.5T480-880q25 0 42.5 17.5T540-820q0 15-7 28t-18 21l125 171 125-56q-2-5-3.5-11t-1.5-13q0-25 17.5-42.5T820-740q25 0 42.5 17.5T880-680q0 25-17.5 42.5T820-620q-2 0-4.5-.5t-4.5-.5l-51 321H200Zm68-80h424l26-167-105 46-133-183-133 183-105-46 26 167Zm212 0Z"/></svg>
-								{% endif %}</span>
+								{% endif %}
 							{% endfor %}
-						</ul>
+						</ul> -->
 					</div>
 				</div>
 				{% else %}
@@ -104,7 +128,7 @@
 
 					copyButton.textContent = 'Copied!';
 					setTimeout(() => {
-						copyButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#F"><path d="M360-240q-33 0-56.5-23.5T280-320v-480q0-33 23.5-56.5T360-880h360q33 0 56.5 23.5T800-800v480q0 33-23.5 >
+						copyButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#F"><path d="M360-240q-33 0-56.5-23.5T280-320v-480q0-33 23.5-56.5T360-880h360q33 0 56.5 23.5T800-800v480q0 33-23.5 56.5T720-240H360Zm0-80h360v-480H360v480ZM200-80q-33 0-56.5-23.5T120-160v-560h80v560h440v80H200Zm160-240v-480 480Z"/></svg>'
 					}, 2000);
 
 				})
