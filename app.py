@@ -400,6 +400,7 @@ def teams():
 @app_login_required
 def create_team():
 	team_name = request.form['team_name']
+	next_url = request.args.get('next', url_for('dashboard', team_uuid=session.get('active_team_uuid', 'None')))
 
 	try:
 		if 'user_uuid' not in session:
@@ -423,9 +424,6 @@ def create_team():
 		if not CUSTOMS_DB.join_user_to_team(session['user_uuid'], team_uuid):
 			raise ValueError("Failed to join team.")
 
-#		user_teams = CUSTOMS_DB.get_teams_for_user(session['user_uuid'])
-#		session['user_teams'] = [{'team_uuid': team[0], 'team_name': team[1]} for team in user_teams]
-
 		session['user_teams'].append({'team_name': team_name, 'team_uuid': team_uuid})
 		session['active_team_uuid'] = team_uuid
 		session['active_team_name'] = team_name
@@ -441,7 +439,7 @@ def create_team():
 	except Exception as e:
 		flash('An unexpected error occurred. Please try again.', 'danger')
 
-	return redirect(url_for('dashboard', team_uuid=str(session['active_team_uuid'])))
+	return redirect(next_url)
 
 
 # Approve team member
@@ -453,6 +451,7 @@ def create_team():
 @app_login_required
 def join_team():
 	team_uuid = request.form['team_uuid']
+	next_url = request.args.get('next', url_for('dashboard', team_uuid=team_uuid))
 
 	try:
 		if 'user_uuid' not in session:
@@ -495,8 +494,7 @@ def join_team():
 		flash('An unexpected error occurred. Please try again.', 'danger')
 		#return jsonify({'status': 'Unexpected error'}), 500
 
-	return dashboard(team_uuid)
-	#return redirect(url_for('dashboard', team_uuid=str(session['active_team_uuid'])))
+	return redirect(next_url)
 
 
 # Leave Team
@@ -505,6 +503,7 @@ def join_team():
 @app_login_required
 def leave_team():
 	team_uuid = request.form['team_uuid']
+	next_url = request.args.get('next', url_for('dashboard', team_uuid=team_uuid))
 
 	try:
 		if team_uuid == 'None':
@@ -515,6 +514,10 @@ def leave_team():
 
 		#if not CUSTOMS_DB.join_user_to_team(session['username'], 'None', 'None'):
 		#	raise ValueError("Failed to leave team.")
+
+		# check if user is team captain and disallow if so
+		if CUSTOMS_DB.is_user_captain_of_team(session.get('user_uuid'), team_uuid):
+			raise ValueError("Cannot abandon team as the captain of the ship!")
 
 		if not CUSTOMS_DB.remove_user_from_team(session['user_uuid'], team_uuid):
 			raise ValueError("Failed to leave team.")
@@ -534,7 +537,7 @@ def leave_team():
 		flash('An unexpected error occurred. Please try again.', 'danger')
 		#return jsonify({'status': 'Unexpected error'}), 500
 
-	return redirect(url_for('dashboard', team_uuid=str(session['active_team_uuid'])))
+	return redirect(next_url)
 
 
 # Set Active Team
@@ -542,7 +545,7 @@ def leave_team():
 @auth.login_required
 @app_login_required
 def set_active_team(team_uuid):
-	next_url = request.form.get('next') or url_for('dashboard', team_uuid=team_uuid)
+	next_url = request.args.get('next', url_for('dashboard', team_uuid=team_uuid))
 
 	try:
 		if 'user_uuid' not in session:
@@ -556,8 +559,9 @@ def set_active_team(team_uuid):
 #				active_team = team
 
 		if DEBUG:
-			print(f"[?][set_active_team][{session.get('username')}] user_teams: {user_teams}")
-			print(f"[?][set_active_team][{session.get('username')}] active_team: {active_team}")
+			print(f"[?][set_active_team][{session.get('username')}] user_teams	: {user_teams}")
+			print(f"[?][set_active_team][{session.get('username')}] active_team	: {active_team}")
+			print(f"[?][set_active_team][{session.get('username')}] next_url	: {next_url}")
 
 		if not active_team:
 			abort(403)
@@ -568,6 +572,7 @@ def set_active_team(team_uuid):
 
 	except Exception as e:
 		flash('An unexpected error occurred. Please try again.', 'danger')
+
 
 	return redirect(next_url)
 

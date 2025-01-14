@@ -9,7 +9,7 @@
 				<div class="card mb-3 px-bg-inverted">
 					<div class="card-body">
 						<h5 class="card-title">Create a New Team</h5>
-						<form action="{{ url_for('create_team') }}" method="POST">
+						<form action="{{ url_for('create_team', next=request.path) }}" method="POST">
 							<div class="mb-3">
 								<label for="team_name" class="form-label">Team Name</label>
 								<input type="text" class="form-control" id="team_name" name="team_name" required>
@@ -22,7 +22,7 @@
 				<div class="card mb-3 px-bg-inverted">
 					<div class="card-body">
 						<h5 class="card-title">Join a Team</h5>
-						<form action="{{ url_for('join_team') }}" method="POST">
+						<form action="{{ url_for('join_team', next=request.path) }}" method="POST">
 							<div class="mb-3">
 								<label for="team_uuid" class="form-label">Team Code</label>
 								<input type="text" class="form-control" id="team_uuid" name="team_uuid" required>
@@ -35,7 +35,7 @@
 				<div class="card px-bg-inverted">
 					<div class="card-body">
 						<h5 class="card-title">Leave a Team</h5>
-						<form action="{{ url_for('join_team') }}" method="POST">
+						<form action="{{ url_for('leave_team', next=request.path) }}" method="POST">
 							<div class="mb-3">
 								<label for="team_uuid" class="form-label">Enter Team Code</label>
 								<input type="text" class="form-control" id="team_uuid" name="team_uuid" required>
@@ -80,7 +80,7 @@
 									<tr>
 										<td>{{ member[0] }}</td>
 										<td>
-											{% if member[] == 'Captain' %}
+											{% if member[3] == 'Captain' %}
 												Captain <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#ffbf04"><path d="M200-160v-80h560v80H200Zm0-140-51-321q-2 0-4.5.5t-4.5.5q-25 0-42.5-17.5T80-680q0-25 17.5-42.5T140-740q25 0 42.5 17.5T200-680q0 7-1.5 13t-3.5 11l125 56 125-171q-11-8-18-21t-7-28q0-25 17.5-42.5T480-880q25 0 42.5 17.5T540-820q0 15-7 28t-18 21l125 171 125-56q-2-5-3.5-11t-1.5-13q0-25 17.5-42.5T820-740q25 0 42.5 17.5T880-680q0 25-17.5 42.5T820-620q-2 0-4.5-.5t-4.5-.5l-51 321H200Zm68-80h424l26-167-105 46-133-183-133 183-105-46 26 167Zm212 0Z"/></svg>
 											{% else %}
 												Member
