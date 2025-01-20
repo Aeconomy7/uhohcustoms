@@ -8,8 +8,8 @@ class CustomsDbHandler:
 		self.__db_location = "./db/cs.db"
 
 		# DEBUG MODE
-		self.__DEBUG = False
-		print(f"[+] DEBUG MODE: {self.__DEBUG}")
+		self.__DEBUG = True
+		print(f"[?] DB DEBUG MODE: {self.__DEBUG}")
 
 		# Create connection for initiating tables
 		self.__conn = self.__create_connection(self.__db_location)

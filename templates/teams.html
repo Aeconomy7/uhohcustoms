@@ -1,49 +1,11 @@
 {% extends "base.html" %}
 
 {% block content %}
-	<div class="container mt-0">
-		<div class="row">
+	<div class="container h-100">
+		<div class="row m-1">
 			<!-- Left Section: Join/Create a Team -->
 			<div class="col-md-5 m-3 overflow-auto">
-				<h3>Manage Teams</h3>
-				<div class="card mb-3 px-bg-inverted">
-					<div class="card-body">
-						<h5 class="card-title">Create a New Team</h5>
-						<form action="{{ url_for('create_team', next=request.path) }}" method="POST">
-							<div class="mb-3">
-								<label for="team_name" class="form-label">Team Name</label>
-								<input type="text" class="form-control" id="team_name" name="team_name" required>
-							</div>
-							<button type="submit" class="btn btn-primary px-bg-blue">Create Team</button>
-						</form>
-					</div>
-				</div>
-
-				<div class="card mb-3 px-bg-inverted">
-					<div class="card-body">
-						<h5 class="card-title">Join a Team</h5>
-						<form action="{{ url_for('join_team', next=request.path) }}" method="POST">
-							<div class="mb-3">
-								<label for="team_uuid" class="form-label">Team Code</label>
-								<input type="text" class="form-control" id="team_uuid" name="team_uuid" required>
-							</div>
-							<button type="submit" class="btn btn-success px-bg-success">Join Team</button>
-						</form>
-					</div>
-				</div>
-
-				<div class="card px-bg-inverted">
-					<div class="card-body">
-						<h5 class="card-title">Leave a Team</h5>
-						<form action="{{ url_for('leave_team', next=request.path) }}" method="POST">
-							<div class="mb-3">
-								<label for="team_uuid" class="form-label">Enter Team Code</label>
-								<input type="text" class="form-control" id="team_uuid" name="team_uuid" required>
-							</div>
-							<button type="submit" class="btn btn-danger px-bg-danger">Leave Team</button>
-						</form>
-					</div>
-				</div>
+				
 			</div>
 
 			<!-- Vertical Divider -->
@@ -61,7 +23,7 @@
 						<div class="team-code-container">
 							<label for="teamCode" class="form-label"><strong>Team Invite Code:</strong></label>
 							<div class="input-group">
-								<input type="text" id="teamCode" class="form-control" value="{{ active_team[2] }}" readonly>
+								<input type="text" id="teamCode" class="form-control" value="{{ active_team[0] }}" readonly>
 								<button id="copyButton" class="btn btn-outline-secondary" style="padding-left: 10px;"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#F"><path d="M360-240q-33 0-56.5-23.5T280-320v-480q0-33 23.5-56.5T360-880h360q33 0 56.5 23.5T800-800v480q0 33-23.5 56.5T720-240H360Zm0-80h360v-480H360v480ZM200-80q-33 0-56.5-23.5T120-160v-560h80v560h440v80H200Zm160-240v-480 480Z"/></svg></button>
 							</div>
 						</div>

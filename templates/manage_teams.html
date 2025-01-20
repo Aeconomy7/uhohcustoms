@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block content %}
+    <div class="container h-100">
+        <div class="row m-1 h-100">
+        <!-- Left Section: Join/Create a Team -->
+			<div class="col-md-5 m-3 overflow-auto">
+				<div class="card mb-3 px-bg-inverted">
+                    <div class="card-body">
+                        <h5 class="card-title">Create a New Team</h5>
+                        <form action="{{ url_for('create_team', next=request.path) }}" method="POST">
+                            <div class="mb-3">
+                                <label for="team_name" class="form-label">Team Name</label>
+                                <input type="text" class="form-control" id="team_name" name="team_name" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary px-bg-blue">Create Team</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card mb-3 px-bg-inverted">
+                    <div class="card-body">
+                        <h5 class="card-title">Join a Team</h5>
+                        <form action="{{ url_for('join_team', team_uuid='None', next=request.path) }}" method="POST">
+                            <div class="mb-3">
+                                <label for="team_uuid" class="form-label">Team Code</label>
+                                <input type="text" class="form-control" id="team_uuid" name="team_uuid" required>
+                            </div>
+                            <button type="submit" class="btn btn-success px-bg-success">Join Team</button>
+                        </form>
+                    </div>
+                </div>
+			</div>
+
+			<!-- Vertical Divider -->
+			<div class="col-md-1 d-flex justify-content-center">
+				<div class="vr h-100"></div>
+			</div>
+            
+            <div class="col-md-5 m-3 overflow-auto">
+                <div class="card mb-3 px-bg-inverted">
+                    <div class="card-body">
+                        {% if captain_team %}
+                        <h5 class="card-title">Your Team</h5>
+                        
+                        <hr>
+                        {% endif %}
+                        <table class="table table-bordered table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Team Name</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            {% for team in user_teams %}
+                            <tr>
+                                <td>{{ team[1] }}</td>
+                                <td>
+                                    <form action="{{ url_for('leave_team', team_uuid=team[0], next=request.path) }}" method="POST">
+                                        <button type="submit" class="btn btn-primary px-bg-danger">Leave</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

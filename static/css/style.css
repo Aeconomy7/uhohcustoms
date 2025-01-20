@@ -8,6 +8,13 @@ html, body {
 	font-family: OCR A Std, monospace;
 }
 
+/* A tag styling */
+.dropdown-menu a:hover {
+	background-image: url("../img/px_bg_lightcyan.png");
+	background-repeat: repeat;
+	color: black;
+}
+
 /* Ensure no padding in container-fluid sections */
 .container-fluid {
 	padding-left: 0;
@@ -19,7 +26,7 @@ html, body {
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	overflow: hidden; /* Prevent any scroll bars */
+	overflow: hidden;
 }
 
 /* Make inner content vertically and horizontally centered */

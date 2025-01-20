@@ -3,23 +3,9 @@
 {% block content %}
 <div class="container-fluid vh-100">
 	<div class="row h-100">
-
-		<!-- Alert messages -->
-<!-- 		<div class="alert-container">
-		{% with messages = get_flashed_messages(with_categories=true) %}
-			{% if messages %}
-				{% for message in messages %}
-					<div class="alert alert-{{ message[0] }} px-bg-{{ message[0] }} alert-dismissible fade show" role="alert">
-						{{ message[1] }}
-						<button type="button" class="px-bg-inverted" data-bs-dismiss="alert" aria-label="Close">Dismiss</button>
-					</div>
-				{% endfor %}
-			{% endif %}
-		{% endwith %}
-		</div> -->
+		
 		
 		<!-- Row 1: Game History -->
-		<div class="col-md-12">
 		<div class="row h-50 overflow-auto" style="height: 50%; overflow: hidden;">
 			<div class="col-12">
 				<div class="h-100 p-2" style="overflow-y: auto;">
@@ -28,22 +14,22 @@
 						<thead>
 							<tr>
 								<th>Game ID</th>
-								<th>Date</th>
-								<th>Duration</th>
-								<th>Game Info</th>
+								<th>Game Date</th>
+								<th>Game Time</th>
+								<th>Game Duration</th>
+								<th>Game Mode</th>
+								<th>Game Result</th>
 							</tr>
 						</thead>
 						<tbody>
 							{% for game in GAME_DATA %}
 							<tr>
 								<td>{{ game.game_id }}</td>
-								<td>{{ game.date }}</td>
-								<td>{{ game.duration }}</td>
-								<td>
-									<a href="{{ url_for('game_history', game_id=game.game_id) }}" class="btn btn-primary btn-sm">
-										View Stats
-									</a>
-								</td>
+								<td>{{ game.game_date }}</td>
+								<td>{{ game.game_time }}</td>
+								<td>{{ game.game_duration }}</td>
+								<td>{{ game.game_mode }}</td>
+								<td>{{ game.game_result }}</td>
 							</tr>
 							{% endfor %}
 						</tbody>

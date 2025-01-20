@@ -4,6 +4,7 @@ games/
 config.py
 venv/
 __pycache__/
+.vscode/
 *.db
 *-*-*-*-*
 *.bak
