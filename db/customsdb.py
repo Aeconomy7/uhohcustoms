@@ -20,7 +20,8 @@ class CustomsDbHandler:
 		# Create tables if not exist
 		self.__create_users_table()
 		self.__create_teams_table()
-		self.__create_users_teams_table()
+		self.__create_user_teams_table()
+		self.__create_content_table()
 		self.__create_players_table()
 		self.__create_game_events_table()
 		self.__create_game_history_table()
@@ -252,7 +253,7 @@ class CustomsDbHandler:
 			return False
 
 
-	def __create_users_teams_table(self):
+	def __create_user_teams_table(self):
 		sql_query = """ CREATE TABLE IF NOT EXISTS user_teams (
 				id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
 				user_uuid TEXT NOT NULL,
@@ -430,6 +431,26 @@ class CustomsDbHandler:
 			return True
 		except Error as e:
 			print(f"[!] register_user: {e}")
+			return False
+
+
+	###########
+	# CONTENT #
+	###########
+	def __create_content_table(self):
+		sql_query = """ CREATE TABLE IF NOT EXISTS content (
+				id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+				content_id TEXT NOT NULL,
+				last_updated_patch TEXT NOT NULL,
+				content_data TEXT NOT NULL
+			);"""
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query)
+			self.__conn.commit()
+			return True
+		except Error as e:
+			print(f"[!] __create_content_table {e}")
 			return False
 
 

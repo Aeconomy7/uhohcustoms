@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container h-100">
+    <h1>Admin Dashboard</h1>
+    <ul class="nav nav-tabs" id="adminTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <a class="nav-link" id="config-tab" data-bs-toggle="tab" href="#config" role="tab" aria-controls="config" aria-selected="true">Config</a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link active" id="images-tab" data-bs-toggle="tab" href="#images" role="tab" aria-controls="images" aria-selected="false">Images</a>
+        </li>
+    </ul>
+    <div class="tab-content" id="adminTabContent">
+        <div class="tab-pane fade show active" id="images" role="tabpanel" aria-labelledby="images-tab">
+            <h2>All Images</h2>
+            <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link active" id="pills-champions-tab" data-bs-toggle="pill" href="#pills-champions" role="tab" aria-controls="pills-champions" aria-selected="true">Champions</a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" id="pills-items-tab" data-bs-toggle="pill" href="#pills-items" role="tab" aria-controls="pills-items" aria-selected="false">Items</a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" id="pills-summoner-spells-tab" data-bs-toggle="pill" href="#pills-summoner-spells" role="tab" aria-controls="pills-summoner-spells" aria-selected="false">Summoner Spells</a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" id="pills-other-tab" data-bs-toggle="pill" href="#pills-other" role="tab" aria-controls="pills-other" aria-selected="false">Other</a>
+                </li>
+            </ul>
+            <div class="tab-content" id="pills-tabContent">
+                <div class="tab-pane fade show active" id="pills-champions" role="tabpanel" aria-labelledby="pills-champions-tab">
+                    <div class="row">
+                        {% for image in champions %}
+                        <div class="col-md-2">
+                            <div class="card mb-1">
+                                <img src="{{ url_for('static', filename='img/game/champions/' ~ image) }}" class="card-img-top" alt="{{ image }}">
+                                <div class="card-body">
+                                    <p class="card-text">{{ image }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="pills-items" role="tabpanel" aria-labelledby="pills-items-tab">
+                    <div class="row">
+                        {% for image in items %}
+                        <div class="col-md-2">
+                            <div class="card mb-1">
+                                <img src="{{ url_for('static', filename='img/game/items/' ~ image) }}" class="card-img-top" alt="{{ image }}">
+                                <div class="card-body">
+                                    <p class="card-text">{{ image }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="pills-summoner-spells" role="tabpanel" aria-labelledby="pills-summoner-spells-tab">
+                    <div class="row">
+                        {% for image in summoner_spells %}
+                        <div class="col-md-2">
+                            <div class="card mb-1">
+                                <img src="{{ url_for('static', filename='img/game/summoner_spells/' ~ image) }}" class="card-img-top" alt="{{ image }}">
+                                <div class="card-body">
+                                    <p class="card-text">{{ image }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="pills-other" role="tabpanel" aria-labelledby="pills-other-tab">
+                    <div class="row">
+                        {% for image in other %}
+                        <div class="col-md-2">
+                            <div class="card mb-1">
+                                <img src="{{ url_for('static', filename='img/game/other/' ~ image) }}" class="card-img-top" alt="{{ image }}">
+                                <div class="card-body">
+                                    <p class="card-text">{{ image }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Add more tab panes here for other sections -->
+    </div>
+</div>
+{% endblock %}

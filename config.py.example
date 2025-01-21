@@ -21,6 +21,7 @@ CUSTOMS_DATA_CALLBACK	= f"http://{CUSTOMS_HOST}:{CUSTOMS_PORT}/data_callback"
 # SECRETS
 FLASK_SECRET_KEY	= "<flask_secret_key>"
 SECRET_HEADER		= "<secret_header>"
+ADMINS = ['<admin_username>', '<admin_username2>']
 USERS = {
 	"user": {
 		"password": generate_password_hash("<user_password>"),

@@ -11,6 +11,8 @@ import requests
 import datetime
 import json
 import re
+import os
+import random
 
 ##################
 # CUSTOM IMPORTS #
@@ -807,6 +809,57 @@ def live_game():
 
 #	return render_template('live_game.html', game_events=game_events)
 	return render_template('live_game.html', player_data=PLAYERS_DATA)
+
+
+# ADMIN ROUTES
+@app.route('/uhohadmin')
+@auth.login_required
+@app_login_required
+def admin_images():
+	if session.get('username') not in ADMINS:
+		return redirect(url_for('uhoh', error_code=403))
+	
+	def get_images(folder):
+		image_folder = os.path.join(app.static_folder, 'img', 'game', folder)
+		return os.listdir(image_folder) if os.path.exists(image_folder) else []
+
+	champions = get_images('champions')
+	items = get_images('items')
+	summoner_spells = get_images('summoner_spells')
+	other = get_images('other')
+
+	return render_template('uhohadmin.html', champions=champions, items=items, summoner_spells=summoner_spells, other=other)
+
+# ERROR ROUTES
+@app.route('/uhoh/<int:error_code>')
+@auth.login_required
+@app_login_required
+def uhoh(error_code):
+	error_image_folder = os.path.join(app.static_folder, 'img', 'error')
+	error_images = os.listdir(error_image_folder)
+	random_image = random.choice(error_images)
+	
+	return render_template('uhoh.html', error_code=error_code, error_image=random_image)
+
+@app.errorhandler(400)
+def bad_request(e):
+	return redirect(url_for('uhoh', error_code=400))
+
+@app.errorhandler(401)
+def unauthorized(e):
+	return redirect(url_for('uhoh', error_code=401))
+
+@app.errorhandler(403)
+def forbidden(e):
+	return redirect(url_for('uhoh', error_code=403))
+
+@app.errorhandler(404)
+def page_not_found(e):
+	return redirect(url_for('uhoh', error_code=404))
+
+@app.errorhandler(500)
+def internal_server_error(e):
+	return redirect(url_for('uhoh', error_code=500))
 
 
 #################
