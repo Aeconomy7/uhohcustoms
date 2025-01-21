@@ -9,12 +9,12 @@ class CustomsDbHandler:
 
 		# DEBUG MODE
 		self.__DEBUG = True
-		print(f"[?] DB DEBUG MODE: {self.__DEBUG}")
+		print(f"[?][CUSTOMS_DB][__init__] DB DEBUG MODE: {self.__DEBUG}")
 
 		# Create connection for initiating tables
 		self.__conn = self.__create_connection(self.__db_location)
 		if self.__conn is None:
-			print("[-] Could not connect to Customs DB")
+			print("[-][CUSTOMS_DB][__init__] Could not connect to Customs DB")
 			return
 
 		# Create tables if not exist
@@ -25,7 +25,8 @@ class CustomsDbHandler:
 		self.__create_players_table()
 		self.__create_game_events_table()
 		self.__create_game_history_table()
-		print("[+] Successfully initiated Customs database tables!")
+		self.__create_current_patch_table()
+		print("[+][CUSTOMS_DB][__init__] Successfully initiated Customs database tables!")
 
 		# Close connection
 		self.__conn.close()
@@ -33,7 +34,7 @@ class CustomsDbHandler:
 	def __enter__(self):
 		#Establish connection with Customs DB
 		self.__conn = self.__create_connection(self.__db_location)
-		print("[+] Connected to Customs DB")
+		print("[+][CUSTOMS_DB][__enter__] Connected to Customs DB")
 
 	def __exit__(self):
 		# Commit changes to DB
@@ -68,7 +69,7 @@ class CustomsDbHandler:
 			self.__conn.commit()
 			return True
 		except Error as e:
-			print(f"[!] __create_users_table {e}")
+			print(f"[!][CUSTOMS_DB][__create_users_table] ERROR:  {e}")
 			return False
 
 
@@ -81,14 +82,14 @@ class CustomsDbHandler:
 			row = cursor.fetchone()
 			if row is None:
 				if self.__DEBUG:
-					print(f"[-] Team with UUID {team_uuid} does not exist")
+					print(f"[-][CUSTOMS_DB][get_team_by_team_uuid] Team with UUID {team_uuid} does not exist")
 				return None
 			else:
 				if self.__DEBUG:
-					print(f"[+] Team with UUID {team_uuid} exists :)")
+					print(f"[+][CUSTOMS_DB][get_team_by_team_uuid] Team with UUID {team_uuid} exists :)")
 				return row
 		except Error as e:
-			print(f"[!] get_team_by_team_uuid: {e}")
+			print(f"[!][CUSTOMS_DB][get_team_by_team_uuid] ERROR: {e}")
 			return None
 
 
@@ -109,10 +110,10 @@ class CustomsDbHandler:
 			cursor.execute(sql_query, (str(team_uuid),))
 			row = cursor.fetchall()
 			if self.__DEBUG:
-				print(f"[+] get_team_members found {str(len(row))} members")
+				print(f"[+][CUSTOMS_DB][get_team_members] Found {str(len(row))} members of team {str(team_uuid)}")
 			return row
 		except Error as e:
-			print(f"[!] get_team_members {e}")
+			print(f"[!][CUSTOMS_DB][get_team_members] ERROR: {e}")
 			return None
 
 
@@ -129,10 +130,10 @@ class CustomsDbHandler:
 			cursor.execute(query, (str(user_uuid),))
 			row = cursor.fetchall()
 			if self.__DEBUG:
-				print(f"[+] get_teams_for_user found {str(len(row))} teams for user uuid {user_uuid}")
+				print(f"[+][CUSTOMS_DB][get_teams_for_user] Found {str(len(row))} teams for user uuid {user_uuid}")
 			return row
 		except Error as e:
-			print(f"[!] get_teams_for_user {e}")
+			print(f"[!][CUSTOMS_DB][get_teams_for_user] ERROR: {e}")
 			return None
 
 
@@ -145,14 +146,14 @@ class CustomsDbHandler:
 			row = cursor.fetchone()
 			if row is None:
 				if self.__DEBUG:
-					print(f"[+] Team {team_name} does not exist")
+					print(f"[+][CUSTOMS_DB][check_if_team_exists_by_team_name] Team {team_name} does not exist")
 				return None
 			else:
 				if self.__DEBUG:
-					print(f"[-] Team {team_name} exists :)")
+					print(f"[-][CUSTOMS_DB][check_if_team_exists_by_team_name] Team {team_name} exists :)")
 				return row
 		except Error as e:
-			print(f"[!] check_if_team_exists_by_team_name: {e}")
+			print(f"[!][CUSTOMS_DB][check_if_team_exists_by_team_name] ERROR: {e}")
 			return None
 
 
@@ -165,14 +166,14 @@ class CustomsDbHandler:
 			row = cursor.fetchone()
 			if row is None:
 				if self.__DEBUG:
-					print(f"[+] Team with uuid {str(team_uuid)} does not exist")
+					print(f"[+][CUSTOMS_DB][check_if_team_exists_by_team_uuid] Team with uuid {str(team_uuid)} does not exist")
 				return None
 			else:
 				if self.__DEBUG:
-					print(f"[-] Team with uuid {str(team_uuid)} exists :)")
+					print(f"[-][CUSTOMS_DB][check_if_team_exists_by_team_uuid] Team with uuid {str(team_uuid)} exists :)")
 				return row
 		except Error as e:
-			print(f"[!] check_if_team_exists_by_team_uuid: {e}")
+			print(f"[!][CUSTOMS_DB][check_if_team_exists_by_team_uuid] ERROR: {e}")
 			return None
 
 
@@ -185,14 +186,14 @@ class CustomsDbHandler:
 			row = cursor.fetchone()
 			if row is None:
 				if self.__DEBUG:
-					print(f"[+] User is not a captain!")
+					print(f"[+][CUSTOMS_DB][is_user_captain] User {str(user_uuid)} is not a captain!")
 				return None
 			else:
 				if self.__DEBUG:
-					print(f"[-] User is already a team captain!")
+					print(f"[-][CUSTOMS_DB][is_user_captain] User {str(user_uuid)} is already a team captain!")
 				return row
 		except Error as e:
-			print(f"[!] is_user_captain: {e}")
+			print(f"[!][CUSTOMS_DB][is_user_captain] ERROR: {e}")
 			return None
 
 
@@ -205,15 +206,15 @@ class CustomsDbHandler:
 			row = cursor.fetchone()
 			if row is None:
 				if self.__DEBUG:
-					print(f"[-] User {str(user_uuid)} is NOT captain of team {str(team_uuid)}")
+					print(f"[-][CUSTOMS_DB][is_user_captain_of_team] User {str(user_uuid)} is NOT captain of team {str(team_uuid)}")
 				return None
 			else:
 				if self.__DEBUG:
-					print(f"[+] User {str(user_uuid)} is captain of team {str(team_uuid)}")
+					print(f"[+][CUSTOMS_DB][is_user_captain_of_team] User {str(user_uuid)} is captain of team {str(team_uuid)}")
 				return row
 
 		except Error as e:
-			print(f"[!] is_user_captain_of_team: {e}")
+			print(f"[!][CUSTOMS_DB][is_user_captain_of_team] ERROR: {e}")
 			return None
 
 
@@ -225,10 +226,10 @@ class CustomsDbHandler:
 			cursor.execute(sql_query, (team_name, str(team_uuid), str(team_captain_uuid)))
 			self.__conn.commit()
 			if self.__DEBUG:
-				print(f"[+] Successfully registered team {team_name} :D")
+				print(f"[+][CUSTOMS_DB][register_team] Successfully registered team {team_name} :D")
 			return True
 		except Error as e:
-			print(f"[!] register_team: {e}")
+			print(f"[!][CUSTOMS_DB][register_team] ERROR: {e}")
 			return False
 
 
@@ -241,7 +242,10 @@ class CustomsDbHandler:
 				username TEXT NOT NULL UNIQUE,
 				email TEXT NOT NULL UNIQUE,
 				user_uuid TEXT NOT NULL UNIQUE,
-				password_hash TEXT NOT NULL
+				password_hash TEXT NOT NULL,
+				riot_id TEXT,
+				riot_access_token,
+				riot_refresh_token
 			);"""
 		try:
 			cursor = self.__conn.cursor()
@@ -249,7 +253,7 @@ class CustomsDbHandler:
 			self.__conn.commit()
 			return True
 		except Error as e:
-			print(f"[!] __create_users_table {e}")
+			print(f"[!][CUSTOMS_DB][__create_users_table] ERROR: {e}")
 			return False
 
 
@@ -267,7 +271,7 @@ class CustomsDbHandler:
 			self.__conn.commit()
 			return True
 		except Error as e:
-			print(f"[!] __create_users_table {e}")
+			print(f"[!][CUSTOMS_DB][__create_user_teams_table] ERROR: {e}")
 			return False
 
 
@@ -280,14 +284,14 @@ class CustomsDbHandler:
 			row = cursor.fetchone()
 			if row is None:
 				if self.__DEBUG:
-					print(f"[-] User with id {id} does not exist")
+					print(f"[-][CUSTOMS_DB][get_user_by_id] User with id {id} does not exist")
 				return None
 			else:
 				if self.__DEBUG:
-					print(f"[+] User with id {id} exists :)")
+					print(f"[+][CUSTOMS_DB][get_user_by_id] User with id {id} exists :)")
 				return row
 		except Error as e:
-			print(f"[!] get_user_by_id: {e}")
+			print(f"[!][CUSTOMS_DB][get_user_by_id] ERROR: {e}")
 			return None
 
 
@@ -300,14 +304,14 @@ class CustomsDbHandler:
 			row = cursor.fetchone()
 			if row is None:
 				if self.__DEBUG:
-					print(f"[-] User with id {str(user_uuid)} does not exist")
+					print(f"[-][CUSTOMS_DB][get_user_by_user_uuid] User with id {str(user_uuid)} does not exist")
 				return None
 			else:
 				if self.__DEBUG:
-					print(f"[+] User with id {str(user_uuid)} exists :)")
+					print(f"[+][CUSTOMS_DB][get_user_by_user_uuid] User with id {str(user_uuid)} exists :)")
 				return row
 		except Error as e:
-			print(f"[!] get_user_by_user_uuid: {e}")
+			print(f"[!][CUSTOMS_DB][get_user_by_user_uuid] ERROR: {e}")
 			return None
 
 
@@ -320,14 +324,14 @@ class CustomsDbHandler:
 			row = cursor.fetchone()
 			if row is None:
 				if self.__DEBUG:
-					print(f"[-] User {username} does not exist")
+					print(f"[-][CUSTOMS_DB][get_user_by_username] User {username} does not exist")
 				return None
 			else:
 				if self.__DEBUG:
-					print(f"[+] User {username} exists :)")
+					print(f"[+][CUSTOMS_DB][get_user_by_username] User {username} exists :)")
 				return row
 		except Error as e:
-			print(f"[!] get_user_by_username: {e}")
+			print(f"[!][CUSTOMS_DB][get_user_by_username] ERROR: {e}")
 			return None
 
 
@@ -340,14 +344,14 @@ class CustomsDbHandler:
 			row = cursor.fetchone()
 			if row is None:
 				if self.__DEBUG:
-					print(f"[-] User with email {email} does not exist")
+					print(f"[-][CUSTOMS_DB][get_user_by_email] User with email {email} does not exist")
 				return None
 			else:
 				if self.__DEBUG:
-					print(f"[+] User with email {email} exists :)")
+					print(f"[+][CUSTOMS_DB][get_user_by_email] User with email {email} exists :)")
 				return row
 		except Error as e:
-			print(f"[!] get_user_by_email: {e}")
+			print(f"[!][CUSTOMS_DB][get_user_by_email] ERROR: {e}")
 			return None
 
 
@@ -360,14 +364,14 @@ class CustomsDbHandler:
 			row = cursor.fetchall()
 			if row is None:
 				if self.__DEBUG:
-					print(f"[-] Team with uuid {str(team_uuid)} has no users")
+					print(f"[-][CUSTOMS_DB][get_users_by_team_uuid] Team with uuid {str(team_uuid)} has no users")
 				return None
 			else:
 				if self.__DEBUG:
-					print(f"[+] Team with uuid {str(team_uuid)} exists with {str(len(row))} users! :)")
+					print(f"[+][CUSTOMS_DB][get_users_by_team_uuid] Team with uuid {str(team_uuid)} exists with {str(len(row))} users! :)")
 				return row
 		except Error as e:
-			print(f"[!] get_users_by_team_uuid: {e}")
+			print(f"[!][CUSTOMS_DB][get_users_by_team_uuid] ERROR: {e}")
 			return None
 
 
@@ -380,14 +384,14 @@ class CustomsDbHandler:
 			row = cursor.fetchone()
 			if row is None:
 				if self.__DEBUG:
-					print(f"[+] User {username} and email {email} does not exist")
+					print(f"[+][CUSTOMS_DB][check_if_user_email_exists] User {username} and email {email} does not exist")
 				return None
 			else:
 				if self.__DEBUG:
-					print(f"[-] User {username} or email {email} exists :)")
+					print(f"[-][CUSTOMS_DB][check_if_user_email_exists] User {username} or email {email} exists :)")
 				return row
 		except Error as e:
-			print(f"[!] check_if_user_email_exists: {e}")
+			print(f"[!][CUSTOMS_DB][check_if_user_email_exists] ERROR: {e}")
 			return None
 
 
@@ -399,10 +403,10 @@ class CustomsDbHandler:
 			cursor.execute(sql_query, (str(user_uuid), str(team_uuid)))
 			self.__conn.commit()
 			if self.__DEBUG:
-				print(f"[+] Successfully joined user uuid {str(user_uuid)} to team uuid {str(team_uuid)} :D")
+				print(f"[+][CUSTOMS_DB][join_user_to_team] Successfully joined user uuid {str(user_uuid)} to team uuid {str(team_uuid)} :D")
 			return True
 		except Error as e:
-			print(f"[!] join_user_to_team: {e}")
+			print(f"[!][CUSTOMS_DB][join_user_to_team] ERROR: {e}")
 			return False
 
 
@@ -415,7 +419,7 @@ class CustomsDbHandler:
 			self.__conn.commit()
 			return True
 		except Error as e:
-			print(f"[!] remove_user_from_team: {e}")
+			print(f"[!][CUSTOMS_DB][remove_user_from_team] ERROR: {e}")
 			return False
 
 
@@ -427,10 +431,10 @@ class CustomsDbHandler:
 			cursor.execute(sql_query, (username, str(user_uuid), email, password_hash))
 			self.__conn.commit()
 			if self.__DEBUG:
-				print(f"[+] Successfully registered user {username} :D")
+				print(f"[+][CUSTOMS_DB][register_user] Successfully registered user {username} :D")
 			return True
 		except Error as e:
-			print(f"[!] register_user: {e}")
+			print(f"[!][CUSTOMS_DB][register_team]: {e}")
 			return False
 
 
@@ -441,8 +445,9 @@ class CustomsDbHandler:
 		sql_query = """ CREATE TABLE IF NOT EXISTS content (
 				id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
 				content_id TEXT NOT NULL,
+				content_category TEXT NOT NULL,
 				last_updated_patch TEXT NOT NULL,
-				content_data TEXT NOT NULL
+				content_path TEXT NOT NULL
 			);"""
 		try:
 			cursor = self.__conn.cursor()
@@ -450,7 +455,7 @@ class CustomsDbHandler:
 			self.__conn.commit()
 			return True
 		except Error as e:
-			print(f"[!] __create_content_table {e}")
+			print(f"[!][CUSTOMS_DB][__create_content_table] ERROR: {e}")
 			return False
 
 
@@ -474,7 +479,7 @@ class CustomsDbHandler:
 			self.__conn.commit()
 			return True
 		except Error as e:
-			print(f"[!] __create_players_table {e}")
+			print(f"[!][CUSTOMS_DB][__create_players_table] ERROR:  {e}")
 			return False
 
 
@@ -487,14 +492,14 @@ class CustomsDbHandler:
 			row = cursor.fetchone()
 			if row is None:
 				if self.__DEBUG:
-					print(f"[-] Could not find player {summoner_name}#{summoner_tag} :(")
+					print(f"[-][CUSTOMS_DB][get_player] Could not find player {summoner_name}#{summoner_tag} :(")
 				return None
 			else:
 				if self.__DEBUG:
-					print(f"[+] Found player {summoner_name}#{summoner_tag} :)")
+					print(f"[+][CUSTOMS_DB][get_player] Found player {summoner_name}#{summoner_tag} :)")
 				return row
 		except Error as e:
-			print(f"[!] get_player: {e}")
+			print(f"[!][CUSTOMS_DB][get_player] ERROR: {e}")
 			return None
 
 
@@ -506,10 +511,10 @@ class CustomsDbHandler:
 			cursor.execute(sql_query, (summoner_name, summoner_tag))
 			self.__conn.commit()
 			if self.__DEBUG:
-				print(f"[+] Successfully registered player {summoner_name}#{summoner_tag} :D")
+				print(f"[+][CUSTOMS_DB][register_player] Successfully registered player {summoner_name}#{summoner_tag} :D")
 			return True
 		except Error as e:
-			print(f"[!] register_player: {e}")
+			print(f"[!][CUSTOMS_DB][regiter_player] ERROR: {e}")
 			return False
 
 	def update_player(self, summoner_name, summoner_tag, wins, loses, kills, deaths, assists):
@@ -520,15 +525,16 @@ class CustomsDbHandler:
 			cursor.execute(sql_query, (wins, loses, kills, deaths, assists, summoner_name, summoner_tag))
 			self.__conn.commit()
 			if self.__DEBUG:
-				print(f"[+] Successfully updated player details for {summoner_name}#{summoner_tag} :D")
+				print(f"[+][CUSTOMS_DB][update_player] Successfully updated player details for {summoner_name}#{summoner_tag} :D")
 			return True
 		except Error as e:
-			print(f"[!] update_player: {e}")
+			print(f"[!][CUSTOMS_DB][update_player] ERROR: {e}")
 			return False
 
 	##########
 	# EVENTS #
 	##########
+	# THIS TABLE MAY BE UNNECESSARY BUT WILL KEEP IT HERE FOR NOW
 	def __create_game_events_table(self):
 		sql_query = """ CREATE TABLE IF NOT EXISTS game_events (
 				id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
@@ -542,7 +548,7 @@ class CustomsDbHandler:
 			self.__conn.commit()
 			return True
 		except Error as e:
-			print(f"[!] __create_game_events_table: {e}")
+			print(f"[!][CUSTOMS_DB][__create_game_events_table] ERROR: {e}")
 			return False
 
 
@@ -555,14 +561,14 @@ class CustomsDbHandler:
 			row = cursor.fetchall()
 			if row is None:
 				if self.__DEBUG:
-					print(f"[-] Could not find game events associated with game id {game_id} :(")
+					print(f"[-][CUSTOMS_DB][get_game_events_by_game_id] Could not find game events associated with game id {game_id} :(")
 				return None
 			else:
 				if self.__DEBUG:
-					print(f"[+] Found {str(len(row))} records associated with game id {game_id} :)")
+					print(f"[+][CUSTOMS_DB][get_game_events_by_game_id] Found {str(len(row))} records associated with game id {game_id} :)")
 				return row
 		except Error as e:
-			print(f"[!] get_game_events_by_game_id: {e}")
+			print(f"[!][CUSTOMS_DB][get_game_events_by_game_id] ERROR: {e}")
 			return None
 
 
@@ -574,10 +580,10 @@ class CustomsDbHandler:
 			cursor.execute(sql_query, (game_id, game_event_id, game_event_data))
 			self.__conn.commit()
 			if self.__DEBUG:
-				print(f"[+] Successfully inserted game event for game {game_id} :D")
+				print(f"[+][CUSTOMS_DB][insert_game_event] Successfully inserted game event for game {game_id} :D")
 			return True
 		except Error as e:
-			print(f"[!] insert_game_event: {e}")
+			print(f"[!][CUSTOMS_DB][insert_game_event] ERROR: {e}")
 			return False
 
 
@@ -600,27 +606,8 @@ class CustomsDbHandler:
 			self.__conn.commit()
 			return True
 		except Error as e:
-			print(f"[!] __create_game_history_table: {e}")
+			print(f"[!][CUSTOMS_DB][__create_game_history_table] ERROR: {e}")
 			return False
-
-
-	def get_active_games(self):
-		sql_query = "SELECT * FROM game_history WHERE game_stata = 'ACTIVE';"
-
-		try:
-			cursor = self.__conn.cursor()
-			cursor.execute(sql_query)
-			row = cursor.fetchall()
-			if row is None:
-				if self.__DEBUG:
-					print(f"[-] No active games found :(")
-				return None
-			else:
-				print(f"[+] Found {str(len(row))} active game(s)! :)")
-				return row
-		except Error as e:
-			print(f"[!] get_active_games: {e}")
-			return None
 
 
 	def get_all_game_history(self):
@@ -632,14 +619,14 @@ class CustomsDbHandler:
 			row = cursor.fetchall()
 			if row is None:
 				if self.__DEBUG:
-					print(f"[-] No game history found :(")
+					print(f"[-][CUSTOMS_DB][get_all_game_history] No game history found :(")
 				return None
 			else:
 				if self.__DEBUG:
-					print(f"[+] Found {str(len(row))} game(s) history!")
+					print(f"[+][CUSTOMS_DB][get_all_game_history] Found {str(len(row))} game(s) history!")
 				return row
 		except Error as e:
-			print(f"[!] get_all_game_history: {e}")
+			print(f"[!][CUSTOMS_DB][get_all_game_history] ERROR: {e}")
 			return None
 
 
@@ -652,14 +639,14 @@ class CustomsDbHandler:
 			row = cursor.fetchone()
 			if row is None:
 				if self.__DEBUG:
-					print(f"[-] Could not find any game history :(")
+					print(f"[-][CUSTOMS_DB][get_game_history_by_game_id] Could not find any game history :(")
 				return None
 			else:
 				if self.__DEBUG:
-					print(f"[+] Found game id {str(game_id)} :D")
+					print(f"[+][CUSTOMS_DB][get_game_history_by_game_id] Found game id {str(game_id)} :D")
 				return row
 		except Error as e:
-			print(f"[!] get_game_history_by_game_id: {e}")
+			print(f"[!][CUSTOMS_DB][get_game_history_by_game_id] ERROR: {e}")
 			return None
 
 	def get_game_history_by_team_uuid(self, team_uuid):
@@ -671,14 +658,14 @@ class CustomsDbHandler:
 			row = cursor.fetchall()
 			if row is None:
 				if self.__DEBUG:
-					print(f"[-] Could not find any game history :(")
+					print(f"[-][CUSTOMS_DB][get_game_history_by_team_uuid] Could not find any game history :(")
 				return None
 			else:
 				if self.__DEBUG:
-					print(f"[+] Found {str(len(row))} game(s) history for team {str(team_uuid)} :D")
+					print(f"[+][CUSTOMS_DB][get_game_history_by_team_uuid] Found {str(len(row))} game(s) history for team {str(team_uuid)} :D")
 				return row
 		except Error as e:
-			print(f"[!] get_game_history_by_team_uuid: {e}")
+			print(f"[!][CUSTOMS_DB][get_game_history_by_team_uuid] ERROR: {e}")
 			return None
 
 
@@ -692,10 +679,10 @@ class CustomsDbHandler:
 			cursor.execute(sql_query, (game_id, current_timestamp))
 			self.__conn.commit()
 			if self.__DEBUG:
-				print(f"[+] Successfully registered game id {game_id} :)")
+				print(f"[+][CUSTOMS_DB][register_game] Successfully registered game id {game_id} :)")
 			return True
 		except Error as e:
-			print(f"[!] register_game: {e}")
+			print(f"[!][CUSTOMS_DB][register_game] ERROR: {e}")
 			return False
 
 
@@ -710,8 +697,50 @@ class CustomsDbHandler:
 			cursor.execute(sql_query, (game_data, current_timestamp, game_id))
 			self.__conn.commit()
 			if self.__DEBUG:
-				print(f"[+] Successfully updated end game details for game id {game_id} :D")
+				print(f"[+][CUSTOMS_DB][update_end_game_history] Successfully updated end game details for game id {game_id} :D")
 			return True
 		except Error as e:
-			print(f"[!] update_end_game_history: {e}")
+			print(f"[!][CUSTOMS_DB][update_end_game_history] ERROR: {e}")
 			return False
+
+	##########
+	# PATCH  #
+	##########
+	def __create_current_patch_table(self):
+		sql_query = """ CREATE TABLE IF NOT EXISTS current_patch (
+				id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+				patch_version TEXT NOT NULL
+			);"""
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query)
+			self.__conn.commit()
+
+			 # Check if there is already a record in the table
+			cursor.execute("SELECT COUNT(*) FROM current_patch;")
+			count = cursor.fetchone()[0]
+
+			# Insert initial record if the table is empty
+			if count == 0:
+				sql_query = "INSERT INTO current_patch (patch_version) VALUES (?);"
+				cursor.execute(sql_query, ("0.0.0",))
+				self.__conn.commit()
+
+			return True
+		except Error as e:
+			print(f"[!][CUSTOMS_DB][__create_current_patch_table] ERROR: {e}")
+			return False
+
+	def get_current_patch(self):
+		sql_query = "SELECT patch_version FROM current_patch ORDER BY id DESC LIMIT 1;"
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query)
+			row = cursor.fetchone()
+			if row:
+				return row[0]
+			else:
+				return None
+		except Error as e:
+			print(f"[!][CUSTOMS_DB][get_current_patch] ERROR: {e}")
+			return None

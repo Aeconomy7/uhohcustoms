@@ -2,6 +2,8 @@
 games/
 *.swp
 config.py
+*.log
+static/dd/
 venv/
 __pycache__/
 .vscode/

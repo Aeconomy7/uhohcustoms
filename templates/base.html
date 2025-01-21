@@ -61,6 +61,13 @@
 										Manage Teams
 									</a>
 								</li>
+								{% if session.get('role') == 'admin' %}
+								<li>
+									<a class="dropdown-item px-bg-dark" href="{{ url_for('uhohadmin') }}">
+										Admin
+									</a>
+								</li>
+								{% endif %}
 								<li>
 									<a class="dropdown-item px-bg-dark" href="{{ url_for('logout') }}">
 										Logout
