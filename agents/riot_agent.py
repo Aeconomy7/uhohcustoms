@@ -4,7 +4,6 @@ import requests
 
 # GLOBALS
 # RIOT API CONFIGURATIONS
-RIOT_API_KEY		= "RGAPI-fd909656-cc3d-4f8d-9e84-01b6f090e4b6"
 RIOT_CLIENT_ID		= "PLACEHOLDER"
 RIOT_CLIENT_SECRET	= "PLACEHOLDER"
 RIOT_AUTH_URL		= "https://auth.riotgames.com/authorize"
@@ -23,6 +22,9 @@ class RiotAgent:
         self.__lol_watcher = LolWatcher(self.__api_key)
         self.__riot_watcher = RiotWatcher(self.__api_key)
         print(f"[+][RIOT_AGENT][__init__] Initialized Riot Agent")
+
+    def __enter__(self):
+        return self
 
     # GETTERS
     def get_lol_watcher(self):

@@ -199,6 +199,12 @@ html, body {
 	color: black;
 }
 
+.px-bg-sea {
+	background-image: url("../img/px_bg_sea.png");
+	background-repeat: repeat;
+	color: white;
+}
+
 /* ETC CSS */
 tr.ORDER {
 	border: 1px solid blue !important;

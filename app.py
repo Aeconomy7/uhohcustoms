@@ -20,8 +20,9 @@ from logging.handlers import RotatingFileHandler
 ##################
 # CUSTOM IMPORTS #
 ##################
-from agents.datadragon_agent import DataDragonAgent
 from db.customsdb import CustomsDbHandler
+from agents.datadragon_agent import DataDragonAgent
+from agents.riot_agent import RiotAgent
 from config import *
 
 #########
@@ -45,6 +46,12 @@ CUSTOMS_DB.__enter__()
 ####################
 DD_AGENT = DataDragonAgent()
 DD_AGENT.__enter__()
+
+##############
+# RIOT AGENT #
+##############
+RIOT_AGENT = RiotAgent(RIOT_API_KEY)
+RIOT_AGENT.__enter__()
 
 ###########
 # LOGGING #

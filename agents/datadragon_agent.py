@@ -17,8 +17,7 @@ class DataDragonAgent:
 		self.__spells_data = {}
 		self.__runes_data = {}
 
-		# init directories
-		self.__ensure_directories_exist()
+		
 
 		# DEBUG MODE
 		self.__DEBUG = True
@@ -26,6 +25,9 @@ class DataDragonAgent:
 		
 
 	def __enter__(self):
+		# init directories
+		self.__ensure_directories_exist()
+
 		#Establish connection with Customs DB
 		self.__conn = self.__create_connection(self.__db_location)
 		print("[+][DD_AGENT][__enter__] Connected DataDragon to Customs DB")
@@ -37,9 +39,11 @@ class DataDragonAgent:
 			print("[-][DD_AGENT][__enter__] No current patch in DB, updating now...")
 			self.__current_patch = self.update_current_patch()
 		if self.fetch_metadata():
-			print("[+][DD_AGENT][__enter__] Successfully fetched metadata.")
+			return
 		else:
-			print("[-][DD_AGENT][__enter__] Failed to fetch metadata.")
+			self.download_and_extract_archive()
+			self.fetch_metadata()
+			return
 
 
 	def __exit__(self):
@@ -142,6 +146,7 @@ class DataDragonAgent:
 			return
 
 		# Download the archive
+		print(f"[+][DD_AGENT][download_and_extract_archive] Downloading patch {self.__current_patch} archive from: {url}")
 		response = requests.get(url, stream=True)
 		if response.status_code == 200:
 			with open(local_archive_path, 'wb') as file:
@@ -185,6 +190,7 @@ class DataDragonAgent:
 			print(f"[-][DD_AGENT][fetch_metadata] Failed to load metadata: {e}")
 			return False
 
+		print("[+][DD_AGENT][fetch_metadata] Successfully fetched metadata, ready to go!")
 		return True
 
 	def get_single_image(self, category, image_name):
