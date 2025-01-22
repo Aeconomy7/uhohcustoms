@@ -2,19 +2,60 @@
 
 {% block content %}
 	<div class="container h-100">
-		<div class="row m-1">
-			<!-- Left Section: Join/Create a Team -->
-			<div class="col-md-5 m-3 overflow-auto">
-				
-			</div>
+		<div class="row h-100">
+			<!-- Left Section: Game History -->
+            <div class="col-md-6 m-1 overflow-auto">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h3>Game History</h3>
+                    <a href="{{ url_for('add_game') }}" class="btn btn-primary px-bg-blue">Add Game</a>
+                </div>
+                <div class="card px-bg-inverted">
+                    <div class="card-body">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Game ID</th>
+                                    <th>Red Team</th>
+                                    <th>Blue Team</th>
+                                    <th>Date</th>
+                                    <th>Result</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for game in game_history %}
+                                <tr>
+                                    <td>{{ game.id }}</td>
+                                    <td>
+                                        <ul>
+                                            {% for player in game.red_team %}
+                                            <li>{{ player }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </td>
+                                    <td>
+                                        <ul>
+                                            {% for player in game.blue_team %}
+                                            <li>{{ player }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </td>
+                                    <td>{{ game.date }}</td>
+                                    <td>{{ game.result }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
 
 			<!-- Vertical Divider -->
-			<div class="col-md-1 d-flex justify-content-center">
+			<div class="col-md-1 m-1 d-flex justify-content-center">
 				<div class="vr" style="height: 100%;"></div>
 			</div>
 
 			<!-- Right Section: Team Information -->
-			<div class="col-md-5 m-3 overflow-auto">
+			<div class="col-md-4 m-1 overflow-auto">
 				{% if active_team %}
 				<h3>Team Information</h3>
 				<div class="card px-bg-inverted">

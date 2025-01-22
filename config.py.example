@@ -7,7 +7,8 @@ RIOT_CLIENT_SECRET	= "PLACEHOLDER"
 RIOT_AUTH_URL		= "https://auth.riotgames.com/authorize"
 RIOT_TOKEN_URL		= "https://auth.riotgames.com/token"
 REDIRECT_URL		= "https://example.com/callback"
-REGION			= "AMERICAS"
+MATCH_REGION		= "AMERICAS"
+SERVER_REGION		= "NA1"
 
 # NETWORK INFO
 LOCAL_HOST		= "127.0.0.1"

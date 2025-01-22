@@ -3,7 +3,7 @@ games/
 *.swp
 config.py
 *.log
-static/dd/
+static/dd/*.*.*
 venv/
 __pycache__/
 .vscode/

@@ -21,7 +21,6 @@ class CustomsDbHandler:
 		self.__create_users_table()
 		self.__create_teams_table()
 		self.__create_user_teams_table()
-		self.__create_content_table()
 		self.__create_players_table()
 		self.__create_game_events_table()
 		self.__create_game_history_table()
@@ -71,6 +70,26 @@ class CustomsDbHandler:
 		except Error as e:
 			print(f"[!][CUSTOMS_DB][__create_users_table] ERROR:  {e}")
 			return False
+
+
+	def get_total_users(self):
+		sql_query = "SELECT COUNT(*) FROM users;"
+
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query)
+			row = cursor.fetchone()
+			if row is None:
+				if self.__DEBUG:
+					print(f"[-][CUSTOMS_DB][get_total_users] No users found :(")
+				return None
+			else:
+				if self.__DEBUG:
+					print(f"[+][CUSTOMS_DB][get_total_users] Found {str(row[0])} users!")
+				return row[0]
+		except Error as e:
+			print(f"[!][CUSTOMS_DB][get_total_users] ERROR: {e}")
+			return None
 
 
 	def get_team_by_team_uuid(self, team_uuid):
@@ -275,6 +294,26 @@ class CustomsDbHandler:
 			return False
 
 
+	def get_total_teams(self):
+		sql_query = "SELECT COUNT(*) FROM teams;"
+
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query)
+			row = cursor.fetchone()
+			if row is None:
+				if self.__DEBUG:
+					print(f"[-][CUSTOMS_DB][get_total_teams] No teams found :(")
+				return None
+			else:
+				if self.__DEBUG:
+					print(f"[+][CUSTOMS_DB][get_total_teams] Found {str(row[0])} teams!")
+				return row[0]
+		except Error as e:
+			print(f"[!][CUSTOMS_DB][get_total_teams] ERROR: {e}")
+			return None
+
+
 	def get_user_by_id(self, id):
 		sql_query = "SELECT * FROM users WHERE id = ?;"
 
@@ -441,22 +480,22 @@ class CustomsDbHandler:
 	###########
 	# CONTENT #
 	###########
-	def __create_content_table(self):
-		sql_query = """ CREATE TABLE IF NOT EXISTS content (
-				id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-				content_id TEXT NOT NULL,
-				content_category TEXT NOT NULL,
-				last_updated_patch TEXT NOT NULL,
-				content_path TEXT NOT NULL
-			);"""
-		try:
-			cursor = self.__conn.cursor()
-			cursor.execute(sql_query)
-			self.__conn.commit()
-			return True
-		except Error as e:
-			print(f"[!][CUSTOMS_DB][__create_content_table] ERROR: {e}")
-			return False
+	# def __create_content_table(self):
+	# 	sql_query = """ CREATE TABLE IF NOT EXISTS content (
+	# 			id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+	# 			content_id TEXT NOT NULL,
+	# 			content_category TEXT NOT NULL,
+	# 			last_updated_patch TEXT NOT NULL,
+	# 			content_path TEXT NOT NULL
+	# 		);"""
+	# 	try:
+	# 		cursor = self.__conn.cursor()
+	# 		cursor.execute(sql_query)
+	# 		self.__conn.commit()
+	# 		return True
+	# 	except Error as e:
+	# 		print(f"[!][CUSTOMS_DB][__create_content_table] ERROR: {e}")
+	# 		return False
 
 
 	##########
@@ -608,6 +647,26 @@ class CustomsDbHandler:
 		except Error as e:
 			print(f"[!][CUSTOMS_DB][__create_game_history_table] ERROR: {e}")
 			return False
+
+
+	def get_total_games(self):
+		sql_query = "SELECT COUNT(*) FROM game_history;"
+
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query)
+			row = cursor.fetchone()
+			if row is None:
+				if self.__DEBUG:
+					print(f"[-][CUSTOMS_DB][get_total_games] No games found :(")
+				return None
+			else:
+				if self.__DEBUG:
+					print(f"[+][CUSTOMS_DB][get_total_games] Found {str(row[0])} games!")
+				return row[0]
+		except Error as e:
+			print(f"[!][CUSTOMS_DB][get_total_games] ERROR: {e}")
+			return None
 
 
 	def get_all_game_history(self):

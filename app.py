@@ -6,6 +6,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash, jso
 from flask_httpauth import HTTPBasicAuth
 from flask_socketio import SocketIO, emit
 from werkzeug.security import generate_password_hash, check_password_hash
+import psutil
 import uuid
 import requests
 import datetime
@@ -525,7 +526,7 @@ def join_team(team_uuid='None'):
 		userteamcheck = CUSTOMS_DB.get_teams_for_user(session['user_uuid'])
 		for team in userteamcheck:
 			if team[0] == str(team_uuid):
-				raise ValueError("User is already a member of this team.")
+				raise ValueError("You are already a member of this team.")
 
 		# perform the team join
 		if not CUSTOMS_DB.join_user_to_team(session['user_uuid'], team_uuid):
@@ -583,7 +584,7 @@ def leave_team(team_uuid):
 
 		if DEBUG:
 			app.logger.debug(f"[+][APP][leave_team][{session['username']}] Successfully left team {team_uuid}")
-		flash(f"You have left team!", 'success')
+		flash(f"You have successfully left the team.", 'success')
 
 	except ValueError as e:
 		flash(str(e), 'danger')
@@ -597,11 +598,11 @@ def leave_team(team_uuid):
 
 
 # New Game Upload - manual and file upload
-@app.route('/new_game', methods=['GET', 'POST'])
+@app.route('/add_game', methods=['GET', 'POST'])
 @auth.login_required
 @app_login_required
-def new_game():
-	return render_template('new_game.html')
+def add_game():
+	return render_template('add_game.html')
 
 
 # Get game events callback
@@ -719,11 +720,26 @@ def uhohadmin():
 	if session.get('username') not in ADMINS:
 		return redirect(url_for('uhoh', error_code=403))
 	
+	if DEBUG:
+		app.logger.debug(f"[?][APP][uhohadmin][{session.get('username')}] Admin access granted.")
+
+	# app stats
+	total_users = CUSTOMS_DB.get_total_users()
+	total_teams = CUSTOMS_DB.get_total_teams()
+	total_games = CUSTOMS_DB.get_total_games()
+
+	# server stats
+	uptime = datetime.datetime.now() - datetime.datetime.fromtimestamp(psutil.boot_time())
+	memory = psutil.virtual_memory()
+	cpu = psutil.cpu_percent(interval=1)
+
+	# image data
 	champions = DD_AGENT.get_images_by_category('champion')
 	items = DD_AGENT.get_images_by_category('item')
 	spells = DD_AGENT.get_images_by_category('spell')
+	runes = DD_AGENT.get_images_by_category('runes')
 
-	return render_template('uhohadmin.html', current_patch=DD_AGENT.get_current_patch(), champions=champions, items=items, spells=spells)
+	return render_template('uhohadmin.html', total_users=total_users, total_teams=total_teams, total_games=total_games, uptime=uptime, memory=memory, cpu=cpu, current_patch=DD_AGENT.get_current_patch(), champions=champions, items=items, spells=spells, runes=runes)
 
 # ERROR ROUTES
 @app.route('/uhoh/<int:error_code>')

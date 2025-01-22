@@ -12,6 +12,10 @@ class DataDragonAgent:
 		self.__base_dd_url = "https://ddragon.leagueoflegends.com"
 		self.__local_dd_path = "./static/dd"
 		self.__db_location = "./db/cs.db"
+		self.__champions_data = {}
+		self.__items_data = {}
+		self.__spells_data = {}
+		self.__runes_data = {}
 
 		# DEBUG MODE
 		self.__DEBUG = True
@@ -29,6 +33,10 @@ class DataDragonAgent:
 		else:
 			print("[-][DD_AGENT][__enter__] No current patch in DB, updating now...")
 			self.__current_patch = self.update_current_patch()
+		if self.fetch_metadata():
+			print("[+][DD_AGENT][__enter__] Successfully fetched metadata.")
+		else:
+			print("[-][DD_AGENT][__enter__] Failed to fetch metadata.")
 
 
 	def __exit__(self):
@@ -81,6 +89,11 @@ class DataDragonAgent:
 			return False
 
 	# UTILITY FUNCTIONS
+	# convert image to base64
+	def convert_image_to_base64(self, image_path):
+			with open(image_path, "rb") as image_file:
+				return base64.b64encode(image_file.read()).decode('utf-8')
+	
 	# UPDATE CURRENT PATCH BASED ON RIOT
 	def update_current_patch(self):
 		url = f'{self.__base_dd_url}/api/versions.json'
@@ -141,40 +154,62 @@ class DataDragonAgent:
 		champions_path = f"{self.__local_dd_path}/{self.__current_patch}/{self.__current_patch}/data/en_US/champion.json"
 		items_path = f"{self.__local_dd_path}/{self.__current_patch}/{self.__current_patch}/data/en_US/item.json"
 		spells_path = f"{self.__local_dd_path}/{self.__current_patch}/{self.__current_patch}/data/en_US/summoner.json"
+		runes_path = f"{self.__local_dd_path}/{self.__current_patch}/{self.__current_patch}/data/en_US/runesReforged.json"
 
-		# Load JSON data from local files
-		with open(champions_path, 'r') as champions_file:
-			champions_data = json.load(champions_file)
-		
-		with open(items_path, 'r') as items_file:
-			items_data = json.load(items_file)
-		
-		with open(spells_path, 'r') as spells_file:
-			spells_data = json.load(spells_file)
+		try:
+			# Load JSON data from local files
+			with open(champions_path, 'r') as champions_file:
+				self.__champions_data = json.load(champions_file)
+			
+			with open(items_path, 'r') as items_file:
+				self.__items_data = json.load(items_file)
+			
+			with open(spells_path, 'r') as spells_file:
+				self.__spells_data = json.load(spells_file)
 
-		return champions_data, items_data, spells_data
+			with open(runes_path, 'r') as runes_file:
+				self.__runes_data = json.load(runes_file)
 
-	def get_images_by_category(self, category):
-		champions_data, items_data, spells_data = self.fetch_metadata()
+		except FileNotFoundError as e:
+			print(f"[-][DD_AGENT][fetch_metadata] Failed to load metadata: {e}")
+			return False
 
-		def convert_image_to_base64(image_path):
-			with open(image_path, "rb") as image_file:
-				return base64.b64encode(image_file.read()).decode('utf-8')
+		return True
 
+	def get_single_image(self, category, image_name):
 		if category == 'champion':
-			return [{"image_base64": convert_image_to_base64(f"{self.__local_dd_path}/{self.__current_patch}/{self.__current_patch}/img/champion/{champion['image']['full']}"), "champion_name": champion['name']} for champion in champions_data['data'].values()]
+			champion = self.__champions_data['data'][image_name]
+			return {"image_base64": self.convert_image_to_base64(f"{self.__local_dd_path}/{self.__current_patch}/{self.__current_patch}/img/champion/{champion['image']['full']}"), "champion_name": champion['name']}
 		elif category == 'item':
-			return [{"image_base64": convert_image_to_base64(f"{self.__local_dd_path}/{self.__current_patch}/{self.__current_patch}/img/item/{item['image']['full']}"), "item_name": item['name']} for item in items_data['data'].values()]
+			item = self.__items_data['data'][image_name]
+			return {"image_base64": self.convert_image_to_base64(f"{self.__local_dd_path}/{self.__current_patch}/{self.__current_patch}/img/item/{item['image']['full']}"), "item_name": item['name']}
 		elif category == 'spell':
-			return [{"image_base64": convert_image_to_base64(f"{self.__local_dd_path}/{self.__current_patch}/{self.__current_patch}/img/spell/{spell['image']['full']}"), "spell_name": spell['name']} for spell in spells_data['data'].values()]
+			spell = self.__spells_data['data'][image_name]
+			return {"image_base64": self.convert_image_to_base64(f"{self.__local_dd_path}/{self.__current_patch}/{self.__current_patch}/img/spell/{spell['image']['full']}"), "spell_name": spell['name']}
+		elif category == 'runes':
+			rune = self.__runes_data['data'][image_name]
+			return {"image_base64": self.convert_image_to_base64(f"{self.__local_dd_path}/{self.__current_patch}/{self.__current_patch}/img/rune/{rune['icon']}"), "rune_name": rune['name']}
+		else:
+			return {}
+		
+
+	# get all images in a certain category
+	def get_images_by_category(self, category):
+		if category == 'champion':
+			return [{"image_base64": self.convert_image_to_base64(f"{self.__local_dd_path}/{self.__current_patch}/{self.__current_patch}/img/champion/{champion['image']['full']}"), "champion_name": champion['name']} for champion in self.__champions_data['data'].values()]
+		elif category == 'item':
+			return [{"image_base64": self.convert_image_to_base64(f"{self.__local_dd_path}/{self.__current_patch}/{self.__current_patch}/img/item/{item['image']['full']}"), "item_name": item['name']} for item in self.__items_data['data'].values()]
+		elif category == 'spell':
+			return [{"image_base64": self.convert_image_to_base64(f"{self.__local_dd_path}/{self.__current_patch}/{self.__current_patch}/img/spell/{spell['image']['full']}"), "spell_name": spell['name']} for spell in self.__spells_data['data'].values()]
+		elif category == 'runes':
+			runes = []
+			for rune_tree in self.__runes_data:
+				for slot in rune_tree['slots']:
+					for rune in slot['runes']:
+						runes.append({
+							"image_base64": self.convert_image_to_base64(f"{self.__local_dd_path}/{self.__current_patch}/img/{rune['icon']}"),
+							"rune_name": rune['name']
+						})
+			return runes
 		else:
 			return []
-
-		# if category == 'champion':
-		# 	return [{"image_path": f"{self.__local_dd_path}/{self.__current_patch}/{self.__current_patch}/img/champion/{champion['image']['full']}", "champion_name": champion['name']} for champion in champions_data['data'].values()]
-		# elif category == 'item':
-		# 	return [{"image_path": f"{self.__local_dd_path}/{self.__current_patch}/{self.__current_patch}/img/item/{item['image']['full']}", "item_name": item['name']} for item in items_data['data'].values()]
-		# elif category == 'spell':
-		# 	return [{"image_path": f"{self.__local_dd_path}/{self.__current_patch}/{self.__current_patch}/img/spell/{spell['image']['full']}", "spell_name": spell['name']} for spell in spells_data['data'].values()]
-		# else:
-		# 	return []

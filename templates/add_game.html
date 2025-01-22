@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-center align-items-center vh-100">
+	<div class="card p-4 shadow text-center px-bg-inverted" style="padding: 10px;">
+		<div class="card-body">
+			<h5 class="card-title">Add a game</h5>
+			<form action="" method="POST">
+				<div class="mb-3">
+					<label for="team_uuid" class="form-label">Game Code</label>
+					<input type="text" class="form-control" id="game_code" name="game_code" required>
+				</div>
+				<button type="submit" class="btn btn-success px-bg-success">Add Game</button>
+			</form>
+		</div>
+
+		<h5>What do?</h5>
+		<p>Find your game ID to add within your match history and paste it above! Easy as!</p>
+		<img src="{{ url_for('static', filename='img/add_game.png') }}" class="img-fluid" alt="Add Game">
+	</div>
+</div>
+{% endblock %}

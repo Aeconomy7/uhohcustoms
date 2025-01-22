@@ -18,10 +18,6 @@
 			<div class="collapse navbar-collapse" id="navbarNav">
 				<ul class="navbar-nav ms-auto">
 					{% if session.get('user_uuid') %}
-						<!-- <li class="nav-item">
-							<a class="nav-link" href="{{ url_for('dashboard', team_uuid=session.get('active_team_uuid', '')) }}" style="color: white;">Dashboard</a>
-						</li>
-						<div class="vr"></div> -->
 						<!-- TEAMS THINGS N STUFF -->
 						<li class="nav-item dropdown">
 							<a class="nav-link dropdown-toggle" href="#" id="teamDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="color: white;">

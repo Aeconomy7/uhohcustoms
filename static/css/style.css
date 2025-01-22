@@ -40,6 +40,20 @@ html, body {
 	background-color: white;
 }
 
+
+.nav .nav-item {
+	background-image: url("../img/px_bg_darkblue.png");
+	background-repeat: repeat;
+	color: white !important;
+}
+
+.nav .nav-item .active {
+	background-image: url("../img/px_bg_selected.png");
+	background-repeat: repeat;
+	color: black !important;
+}
+
+
 /* INDEX CSS */
 /* Ensure the card scales appropriately */
 .index-card {
