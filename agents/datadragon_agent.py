@@ -9,9 +9,6 @@ from sqlite3 import Error
 class DataDragonAgent:
 	# DEFAULT CONSTRUCTOR
 	def __init__(self):
-		# init directories
-		self.__ensure_directories_exist()
-
 		self.__base_dd_url = "https://ddragon.leagueoflegends.com"
 		self.__local_dd_path = "./static/dd"
 		self.__db_location = "./db/cs.db"
@@ -19,6 +16,9 @@ class DataDragonAgent:
 		self.__items_data = {}
 		self.__spells_data = {}
 		self.__runes_data = {}
+
+		# init directories
+		self.__ensure_directories_exist()
 
 		# DEBUG MODE
 		self.__DEBUG = True
