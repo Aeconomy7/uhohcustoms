@@ -49,6 +49,8 @@ DD_AGENT.__enter__()
 ###########
 # LOGGING #
 ###########
+if not os.path.exists('logs'):
+	os.makedirs('logs')
 log_handler = RotatingFileHandler('./logs/app.log', maxBytes=500000, backupCount=1)
 log_handler.setLevel(logging.DEBUG)
 log_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')

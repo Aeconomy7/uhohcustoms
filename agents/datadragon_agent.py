@@ -9,6 +9,9 @@ from sqlite3 import Error
 class DataDragonAgent:
 	# DEFAULT CONSTRUCTOR
 	def __init__(self):
+		# init directories
+		self.__ensure_directories_exist()
+
 		self.__base_dd_url = "https://ddragon.leagueoflegends.com"
 		self.__local_dd_path = "./static/dd"
 		self.__db_location = "./db/cs.db"
@@ -44,6 +47,14 @@ class DataDragonAgent:
 		self.__conn.commit()
 		# Close DB
 		self.__conn.close()
+
+
+	def __ensure_directories_exist(self):
+		directories = [self.__local_dd_path, os.path.join(self.__local_dd_path, "archives")]
+		for directory in directories:
+			if not os.path.exists(directory):
+				os.makedirs(directory)
+				print(f"[+][DD_AGENT][__ensure_directories_exist] Created directory: {directory}")
 
 
 	def __create_connection(self,db_file):
