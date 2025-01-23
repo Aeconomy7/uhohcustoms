@@ -4,6 +4,7 @@ games/
 config.py
 *.log
 static/dd/
+static/game_data/
 venv/
 __pycache__/
 .vscode/

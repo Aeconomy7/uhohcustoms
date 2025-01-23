@@ -634,9 +634,7 @@ class CustomsDbHandler:
 				id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
 				game_id TEXT NOT NULL,
 				game_data BLOB DEFAULT 'NA',
-				game_state TEXT DEFAULT 'ACTIVE',
-				team_uuid TEXT NOT NULL,
-				last_updated TEXT NOT NULL
+				team_uuid TEXT NOT NULL
 			);"""
 
 		try:

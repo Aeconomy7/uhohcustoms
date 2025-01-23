@@ -16,12 +16,13 @@ class DataDragonAgent:
 		self.__items_data = {}
 		self.__spells_data = {}
 		self.__runes_data = {}
-
-		
+		self.__current_patch = None
 
 		# DEBUG MODE
 		self.__DEBUG = True
 		print(f"[?][DD_AGENT][__init__] DATADRAGON AGENT DEBUG MODE: {self.__DEBUG}")
+
+		return
 		
 
 	def __enter__(self):

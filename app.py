@@ -50,7 +50,9 @@ DD_AGENT.__enter__()
 ##############
 # RIOT AGENT #
 ##############
-RIOT_AGENT = RiotAgent(RIOT_API_KEY)
+if not os.path.exists('static/game_data'):
+	os.makedirs('static/game_data')
+RIOT_AGENT = RiotAgent(RIOT_API_KEY, RIOT_AUTH_URL, RIOT_TOKEN_URL, REDIRECT_URI, SERVER_REGION, MATCH_REGION)
 RIOT_AGENT.__enter__()
 
 ###########
@@ -293,7 +295,8 @@ def register_user():
 			valid = False
 
 		email = request.form['email']
-		if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+		#if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+		if not re.match(r"^[^\s@]+@[^\s@]+\.[^\s@]+$", email):
 			flash('Email is not in a valid format.', 'danger')
 			valid = False
 
@@ -473,6 +476,9 @@ def create_team():
 		if not team_name:
 			raise ValueError("Team name cannot be empty.")
 
+		if not re.match(r"^[a-zA-Z0-9_]*$", team_name) or len(team_name) > 20:
+			raise ValueError("Team name must be alphanumeric and <= 20 characters.")
+
 		if DEBUG:
 			app.logger.debug(f"[?][create_team][{session['username']}] Attempting to create team {team_name}...")
 
@@ -604,15 +610,40 @@ def leave_team(team_uuid):
 	return redirect(request.args.get('next', url_for('teams', team_uuid=session.get('active_team_uuid'))))
 
 
-
-
 # New Game Upload - manual and file upload
 @app.route('/add_game', methods=['GET', 'POST'])
 @auth.login_required
 @app_login_required
 def add_game():
-	return render_template('add_game.html')
+	if request.method == 'GET':
+		return render_template('add_game.html')
 
+	if request.method == 'POST':
+		game_code = "NA1_" + request.form['game_code']
+
+		if not re.match(r"^NA1_\d{1,32}$", game_code):
+			flash("Invalid game code format.", 'danger')
+			return render_template('add_game.html')
+
+		file_path = f"static/game_data/{game_code}.json"
+		if os.path.exists(file_path):
+			flash(f"Game {game_code} already exists!", 'danger')
+			return render_template('add_game.html')
+		game_data = RIOT_AGENT.fetch_match_data(game_code)
+		if game_data:
+			flash(f"Game {game_code} successfully added!", 'success')
+			with open(file_path, 'w') as f:
+				json.dump(game_data, f)
+			
+			# Extract relevant data
+			game_result = game_data['info']['gameEndTimestamp']
+			players_data = game_data['info']['participants']
+		else:
+			flash("Failed to add game.", 'danger')
+			game_result = None
+			players_data = []
+
+		return render_template('add_game.html', game_result=game_result, players_data=players_data)
 
 # Get game events callback
 @app.route('/data_callback', methods=['POST'])

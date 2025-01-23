@@ -206,12 +206,12 @@ html, body {
 }
 
 /* ETC CSS */
-tr.ORDER {
-	border: 1px solid blue !important;
+.team-blue td {
+	color: blue !important;
 }
 
-tr.CHAOS {
-	border: 1px solid red !important;
+.team-red td {
+	color: red !important;
 }
 
 .highlight {
