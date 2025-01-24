@@ -5,7 +5,7 @@
 	<div class="card p-4 shadow px-bg-inverted" style="width: 100%; max-width: 400px;">
 	<!-- <div class="card p-5 shadow px-bg-inverted"> -->
 		<h3 class="text-center mb-2">Register</h3>
-		<form action="{{ url_for('register_user') }}" method="post">
+		<form action="{{ url_for('register') }}" method="post">
 			<div class="mb-2">
 				<label for="username" class="form-label">Username</label>
 				<input type="text" id="username" name="username" class="form-control" required>
@@ -23,7 +23,7 @@
 				<input type="password" id="confirm_password" name="confirm_password" class="form-control" required>
 			</div>
 			<div class="mb-2">
-				<button type="submit" class="px-bg-blue btn btn-primary w-100" style="padding-top: 10px;">Register</button>
+				<button type="submit" class="btn btn-primary w-100" style="padding-top: 10px;">Register</button>
 			</div>
 		</form>
 		<!-- Alert messages -->
@@ -31,7 +31,7 @@
 		{% with messages = get_flashed_messages(with_categories=true) %}
 			{% if messages %}
 				{% for message in messages %}
-					<div class="alert alert-{{ message[0] }} px-bg-{{ message[0] }} mb-2">
+					<div class="alert alert-{{ message[0] }} mb-2">
 						{{ message[1] }}
 					</div>
 				{% endfor %}

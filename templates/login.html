@@ -13,14 +13,14 @@
 				<label for="password" class="form-label">Password</label>
 				<input type="password" id="password" name="password" class="form-control" required>
 			</div>
-			<button type="submit" class="px-bg-blue btn btn-primary w-100">Login</button>
+			<button type="submit" class="btn btn-primary w-100">Login</button>
 		</form>
 		<!-- Alert messages -->
 		<div class="mt-2">
 		{% with messages = get_flashed_messages(with_categories=true) %}
 			{% if messages %}
 				{% for message in messages %}
-					<div class="alert alert-{{ message[0] }} px-bg-{{ message[0] }} mb-2">
+					<div class="alert alert-{{ message[0] }} mb-2">
 						{{ message[1] }}
 					</div>
 				{% endfor %}
@@ -28,7 +28,7 @@
 		{% endwith %}
 		</div>
 		<div class="text-center">
-			<p class="mb-0">Don't have an account? <a href="{{ url_for('register_user') }}">Register</a></p>
+			<p class="mb-0">Don't have an account? <a href="{{ url_for('register') }}">Register</a></p>
 		</div>
 	</div>
 </div>

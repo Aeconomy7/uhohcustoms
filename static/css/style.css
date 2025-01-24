@@ -35,8 +35,10 @@ html, body {
 	text-align: center;
 }
 
+
 .vr {
 	width: 3px;
+	opacity: 0.5;
 	background-color: white;
 }
 
@@ -206,6 +208,14 @@ html, body {
 }
 
 /* ETC CSS */
+.team-blue {
+	color: blue !important;
+}
+
+.team-red {
+	color: red !important;
+}
+
 .team-blue td {
 	color: blue !important;
 }

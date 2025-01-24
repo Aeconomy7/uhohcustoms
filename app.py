@@ -31,8 +31,14 @@ from config import *
 app = Flask(__name__)
 app.secret_key = FLASK_SECRET_KEY
 
+########
+# AUTH #
+########
 auth = HTTPBasicAuth()
 
+##############
+# WEBSOCKETS #
+##############
 socketio = SocketIO(app)
 
 ######
@@ -73,9 +79,9 @@ app.logger.setLevel(logging.DEBUG)
 ###########
 DEBUG			= True
 
-PLAYERS_DATA 		= []
+# PLAYERS_DATA 		= []
 
-ACTIVE_GAME_DATA 	= []
+# ACTIVE_GAME_DATA 	= []
 """
 	[
 		{
@@ -109,164 +115,164 @@ def get_user_roles(username):
 
 
 # Event handlers
-def handle_event(event):
-	app.logger.debug(f"[?] handle_event : event : {event}")
-	event_handler = event_switch.get(event['EventName'], handle_UnknownEvent)
-	id, name, time, message = event_handler(event)
-	return id, name, time, message
+# def handle_event(event):
+# 	app.logger.debug(f"[?] handle_event : event : {event}")
+# 	event_handler = event_switch.get(event['EventName'], handle_UnknownEvent)
+# 	id, name, time, message = event_handler(event)
+# 	return id, name, time, message
 
 
-def handle_GameStart(event):
-	print("[+] Handling Game Start event")
-	message = f"The game has started! May the best team win."
-	return event['EventID'], event['EventName'], str(datetime.timedelta(seconds=round(event['EventTime']))), message
+# def handle_GameStart(event):
+# 	print("[+] Handling Game Start event")
+# 	message = f"The game has started! May the best team win."
+# 	return event['EventID'], event['EventName'], str(datetime.timedelta(seconds=round(event['EventTime']))), message
 
 
-def handle_MinionsSpawning(event):
-	print("[+] Handling Minion Spawn event")
-	message = f"The minions have begun their relentless march, be ready!"
-	return event['EventID'], event['EventName'], str(datetime.timedelta(seconds=round(event['EventTime']))), message
+# def handle_MinionsSpawning(event):
+# 	print("[+] Handling Minion Spawn event")
+# 	message = f"The minions have begun their relentless march, be ready!"
+# 	return event['EventID'], event['EventName'], str(datetime.timedelta(seconds=round(event['EventTime']))), message
 
 
-def handle_FirstBlood(event):
-	print("[+] Handling First Blood event")
-	message = f"{event['Recipient']} got first blood! BOOYAH!!"
-	return event['EventID'], event['EventName'], str(datetime.timedelta(seconds=round(event['EventTime']))), message
+# def handle_FirstBlood(event):
+# 	print("[+] Handling First Blood event")
+# 	message = f"{event['Recipient']} got first blood! BOOYAH!!"
+# 	return event['EventID'], event['EventName'], str(datetime.timedelta(seconds=round(event['EventTime']))), message
 
 
-def handle_ChampionKill(event):
-	print("[+] Handling Champion Kill event")
-	message = f""
-	if not event['Assisters']:
-		message = f"{event['KillerName']} has slain {event['VictimName']}!"
-	else:
-		message = f"{event['KillerName']} has slain {event['VictimName']}. Assisted By: "
-		for assister in event['Assisters']:
-			message = message + f"{assister} "
-	return event['EventID'], event['EventName'], str(datetime.timedelta(seconds=round(event['EventTime']))), message
+# def handle_ChampionKill(event):
+# 	print("[+] Handling Champion Kill event")
+# 	message = f""
+# 	if not event['Assisters']:
+# 		message = f"{event['KillerName']} has slain {event['VictimName']}!"
+# 	else:
+# 		message = f"{event['KillerName']} has slain {event['VictimName']}. Assisted By: "
+# 		for assister in event['Assisters']:
+# 			message = message + f"{assister} "
+# 	return event['EventID'], event['EventName'], str(datetime.timedelta(seconds=round(event['EventTime']))), message
 
 
-def handle_Multikill(event):
-	print("[+] Handling Multi Kill event")
-	message = f""
-	if(event['KillStreak'] == 2):
-		message = f"{event['KillerName']} got a Double Kill! Wow!"
-	elif(event['KillStreak'] == 3):
-		message = f"{event['KillerName']} got a Triple Kill! Holy Shiz!!"
-	elif(event['KillStreak'] == 4):
-		message = f"{event['KillerName']} got a QUADRA KILL! WHAT THE FRICK!"
-	elif(event['KillStreak'] == 5):
-		message = f"{event['KillerName']} GOT A PENTAKILLLLL PAPA JOHNS! I HAVE LOST MY MARBLES, THIS IS CUSTOMS HISTORY!!!!!"
-	else:
-		message = f"This should not happen, pls contact Al."
-	return event['EventID'], event['EventName'], str(datetime.timedelta(seconds=round(event['EventTime']))), message
+# def handle_Multikill(event):
+# 	print("[+] Handling Multi Kill event")
+# 	message = f""
+# 	if(event['KillStreak'] == 2):
+# 		message = f"{event['KillerName']} got a Double Kill! Wow!"
+# 	elif(event['KillStreak'] == 3):
+# 		message = f"{event['KillerName']} got a Triple Kill! Holy Shiz!!"
+# 	elif(event['KillStreak'] == 4):
+# 		message = f"{event['KillerName']} got a QUADRA KILL! WHAT THE FRICK!"
+# 	elif(event['KillStreak'] == 5):
+# 		message = f"{event['KillerName']} GOT A PENTAKILLLLL PAPA JOHNS! I HAVE LOST MY MARBLES, THIS IS CUSTOMS HISTORY!!!!!"
+# 	else:
+# 		message = f"This should not happen, pls contact Al."
+# 	return event['EventID'], event['EventName'], str(datetime.timedelta(seconds=round(event['EventTime']))), message
 
 
-def handle_Ace(event):
-	print("[+] Handling Multi Kill event")
-	message = f""
-	if event['AcingTeam'] == "ORDER":
-		message = f"{event['Acer']} of the Blue Team has scored an ACE-U!!!"
-	elif event['AcingTeam'] == "CHAOS":
-		message = f"{event['Acer']} of the Red Team has scored an ACE-U!!!"
-	else:
-		message = f"This should not happen, pls contact Al."
-	return event['EventID'], event['EventName'], str(datetime.timedelta(seconds=round(event['EventTime']))), message
+# def handle_Ace(event):
+# 	print("[+] Handling Multi Kill event")
+# 	message = f""
+# 	if event['AcingTeam'] == "ORDER":
+# 		message = f"{event['Acer']} of the Blue Team has scored an ACE-U!!!"
+# 	elif event['AcingTeam'] == "CHAOS":
+# 		message = f"{event['Acer']} of the Red Team has scored an ACE-U!!!"
+# 	else:
+# 		message = f"This should not happen, pls contact Al."
+# 	return event['EventID'], event['EventName'], str(datetime.timedelta(seconds=round(event['EventTime']))), message
 
 
-def handle_FirstBrick(event):
-	print("[+] Handling First Turret event")
-	message = f"{event['KillerName']} destroyed the first tower! BURN BABY BURN!!"
-	return event['EventID'], event['EventName'], str(datetime.timedelta(seconds=round(event['EventTime']))), message
+# def handle_FirstBrick(event):
+# 	print("[+] Handling First Turret event")
+# 	message = f"{event['KillerName']} destroyed the first tower! BURN BABY BURN!!"
+# 	return event['EventID'], event['EventName'], str(datetime.timedelta(seconds=round(event['EventTime']))), message
 
 
-def handle_TurretKilled(event):
-	print("[+] Handling Turret Killed event")
-	message = f"{event['KillerName']} destroyed a tower. Anotha one bites the dust!"
-	return event['EventID'], event['EventName'], str(datetime.timedelta(seconds=round(event['EventTime']))), message
+# def handle_TurretKilled(event):
+# 	print("[+] Handling Turret Killed event")
+# 	message = f"{event['KillerName']} destroyed a tower. Anotha one bites the dust!"
+# 	return event['EventID'], event['EventName'], str(datetime.timedelta(seconds=round(event['EventTime']))), message
 
 
-def handle_InhibKilled(event):
-	print("[+] Handling Inhib Killed event")
-	message = f"{event['KillerName']} destroyed an inhibitor. Super minions incoming!"
-	return event['EventID'], event['EventName'], str(datetime.timedelta(seconds=round(event['EventTime']))), message
+# def handle_InhibKilled(event):
+# 	print("[+] Handling Inhib Killed event")
+# 	message = f"{event['KillerName']} destroyed an inhibitor. Super minions incoming!"
+# 	return event['EventID'], event['EventName'], str(datetime.timedelta(seconds=round(event['EventTime']))), message
 
 
-def handle_DragonKill(event):
-	print("[+] Handling Dragon Kill event")
-	message = f"{event['KillerName']} has slain the {event['DragonType']} Dragon!"
-	if event['Stolen'] == 'True':
-		message = message + f" WHAT A STEAL!!!"
-	return event['EventID'], event['EventName'], str(datetime.timedelta(seconds=round(event['EventTime']))), message
+# def handle_DragonKill(event):
+# 	print("[+] Handling Dragon Kill event")
+# 	message = f"{event['KillerName']} has slain the {event['DragonType']} Dragon!"
+# 	if event['Stolen'] == 'True':
+# 		message = message + f" WHAT A STEAL!!!"
+# 	return event['EventID'], event['EventName'], str(datetime.timedelta(seconds=round(event['EventTime']))), message
 
 
-def handle_BaronKill(event):
-	print("[+] Handling Baron Kill event")
-	message = f"{event['KillerName']} felled the Baron Nashor!"
-	if event['Stolen'] == 'True':
-		message = message + f" HOLY SHIT WHAT A STEAL, COULD BE A GAME CHANGER!"
-	return event['EventID'], event['EventName'], str(datetime.timedelta(seconds=round(event['EventTime']))), message
+# def handle_BaronKill(event):
+# 	print("[+] Handling Baron Kill event")
+# 	message = f"{event['KillerName']} felled the Baron Nashor!"
+# 	if event['Stolen'] == 'True':
+# 		message = message + f" HOLY SHIT WHAT A STEAL, COULD BE A GAME CHANGER!"
+# 	return event['EventID'], event['EventName'], str(datetime.timedelta(seconds=round(event['EventTime']))), message
 
 
-def handle_HeraldKill(event):
-	print("[+] Handling Herald Kill event")
-	message = f"{event['KillerName']} shattered the Rift Herald."
-	if event['Stolen'] == 'True':
-		mesage = message + f" WHAT A STEAL!"
-	return event['EventID'], event['EventName'], str(datetime.timedelta(seconds=round(event['EventTime']))), message
+# def handle_HeraldKill(event):
+# 	print("[+] Handling Herald Kill event")
+# 	message = f"{event['KillerName']} shattered the Rift Herald."
+# 	if event['Stolen'] == 'True':
+# 		mesage = message + f" WHAT A STEAL!"
+# 	return event['EventID'], event['EventName'], str(datetime.timedelta(seconds=round(event['EventTime']))), message
 
 
-def handle_HordeKill(event):
-	print("[+] Handling Void Grubbs Kill event")
-	message = f"{event['KillerName']} smashed a void grubby."
-	if event['Stolen'] == 'True':
-		message = message + f" WHAT A STEAL!"
-	return event['EventID'], event['EventName'], str(datetime.timedelta(seconds=round(event['EventTime']))), message
+# def handle_HordeKill(event):
+# 	print("[+] Handling Void Grubbs Kill event")
+# 	message = f"{event['KillerName']} smashed a void grubby."
+# 	if event['Stolen'] == 'True':
+# 		message = message + f" WHAT A STEAL!"
+# 	return event['EventID'], event['EventName'], str(datetime.timedelta(seconds=round(event['EventTime']))), message
 
 
-#def handle_ChampionSpecialKill(event):
-#	print("Handling Champion Special Kill event")
-#	return f"[+] {event['EventName']}: {event['EventID']} @ {str(datetime.timedelta(seconds=round(event['EventTime'])))}: " + str(event)
+# #def handle_ChampionSpecialKill(event):
+# #	print("Handling Champion Special Kill event")
+# #	return f"[+] {event['EventName']}: {event['EventID']} @ {str(datetime.timedelta(seconds=round(event['EventTime'])))}: " + str(event)
 
 
-def handle_EliteMonsterKill(event):
-	print("[+] Handling Elite Monster Kill event")
-	message = f"{event['KillerName']} has demolished the Elder Dragon!!!"
-	if event['Stolen'] == 'True':
-		message = message + f" HOLY SHIT WHAT A STEAL, THAT COULD BE THE GAME WINNING PLAY!"
-	return event['EventID'], event['EventName'], str(datetime.timedelta(seconds=round(event['EventTime']))), message
+# def handle_EliteMonsterKill(event):
+# 	print("[+] Handling Elite Monster Kill event")
+# 	message = f"{event['KillerName']} has demolished the Elder Dragon!!!"
+# 	if event['Stolen'] == 'True':
+# 		message = message + f" HOLY SHIT WHAT A STEAL, THAT COULD BE THE GAME WINNING PLAY!"
+# 	return event['EventID'], event['EventName'], str(datetime.timedelta(seconds=round(event['EventTime']))), message
 
 
-def handle_GameEnd(event):
-	print("Handling Game End event")
-	message = f"[+] {event['EventName']}: {event['EventID']} @ {str(datetime.timedelta(seconds=round(event['EventTime'])))}: " + str(event)
-	return event['EventID'], event['EventName'], str(datetime.timedelta(seconds=round(event['EventTime']))), message
+# def handle_GameEnd(event):
+# 	print("Handling Game End event")
+# 	message = f"[+] {event['EventName']}: {event['EventID']} @ {str(datetime.timedelta(seconds=round(event['EventTime'])))}: " + str(event)
+# 	return event['EventID'], event['EventName'], str(datetime.timedelta(seconds=round(event['EventTime']))), message
 
 
-def handle_UnknownEvent(event):
-	message = f"[-] Unknown event type: {event.get('EventName', 'NoEventName')}: " + str(event)
-	return event['EventID'], event['EventName'], str(datetime.timedelta(seconds=round(event['EventTime']))), message
+# def handle_UnknownEvent(event):
+# 	message = f"[-] Unknown event type: {event.get('EventName', 'NoEventName')}: " + str(event)
+# 	return event['EventID'], event['EventName'], str(datetime.timedelta(seconds=round(event['EventTime']))), message
 
 
-# Dictionary to map event names to handler functions
-event_switch = {
-	'GameStart': handle_GameStart,
-	'MinionsSpawning': handle_MinionsSpawning,
-	'FirstBlood': handle_FirstBlood,
-	'ChampionKill': handle_ChampionKill,
-	'Multikill': handle_Multikill,
-	'Ace': handle_Ace,
-	'FirstBrick': handle_FirstBrick,
-	'TurretKilled': handle_TurretKilled,
-	'InhibKilled': handle_InhibKilled,
-	'DragonKill': handle_DragonKill,
-	'BaronKill': handle_BaronKill,
-	'HeraldKill': handle_HeraldKill,
-	'HordeKill': handle_HordeKill,
-#	'ChampionSpecialKill': handle_ChampionSpecialKill,
-	'EliteMonsterKill': handle_EliteMonsterKill,
-	'GameEnd': handle_GameEnd
-}
+# # Dictionary to map event names to handler functions
+# event_switch = {
+# 	'GameStart': handle_GameStart,
+# 	'MinionsSpawning': handle_MinionsSpawning,
+# 	'FirstBlood': handle_FirstBlood,
+# 	'ChampionKill': handle_ChampionKill,
+# 	'Multikill': handle_Multikill,
+# 	'Ace': handle_Ace,
+# 	'FirstBrick': handle_FirstBrick,
+# 	'TurretKilled': handle_TurretKilled,
+# 	'InhibKilled': handle_InhibKilled,
+# 	'DragonKill': handle_DragonKill,
+# 	'BaronKill': handle_BaronKill,
+# 	'HeraldKill': handle_HeraldKill,
+# 	'HordeKill': handle_HordeKill,
+# #	'ChampionSpecialKill': handle_ChampionSpecialKill,
+# 	'EliteMonsterKill': handle_EliteMonsterKill,
+# 	'GameEnd': handle_GameEnd
+# }
 
 ##########
 # ROUTES #
@@ -283,9 +289,9 @@ def riot_app_verification():
 
 
 # ACTION: User Registration
-@app.route('/register_user', methods=['GET','POST'])
+@app.route('/register', methods=['GET','POST'])
 @auth.login_required
-def register_user():
+def register():
 	if request.method == 'POST':
 		valid = True
 
@@ -310,14 +316,14 @@ def register_user():
 			valid = False
 
 		if not valid:
-			return redirect(url_for('register_user'))
+			return redirect(url_for('register'))
 
 		password_hash = generate_password_hash(password)
 		user_uuid = uuid.uuid4()
 
 		if(CUSTOMS_DB.check_if_user_email_exists(username, email) != None):
 			flash('User or email already exists.', 'danger')
-			return redirect(url_for('register_user'))
+			return redirect(url_for('register'))
 
 		if(CUSTOMS_DB.register_user(username, user_uuid, email, password_hash)):
 			flash('Successfully registered user!', 'success')
@@ -325,7 +331,7 @@ def register_user():
 		else:
 			flash('Failed to register user.', 'danger')
 
-	return render_template('register_user.html')
+	return render_template('register.html')
 
 
 # AUTH: RSO Login
@@ -574,8 +580,8 @@ def leave_team(team_uuid):
 		return redirect(url_for('uhoh', error_code=401))
 	
 	# check if its POST or GET request
-	if request.method == 'POST':
-		team_uuid = request.form['team_uuid']
+	#if request.method == 'POST':
+	#	team_uuid = request.form['team_uuid']
 
 	try:
 
@@ -626,129 +632,142 @@ def add_game():
 			return render_template('add_game.html')
 
 		file_path = f"static/game_data/{game_code}.json"
+		game_data = None
+
+		# check if json file already exists
 		if os.path.exists(file_path):
-			flash(f"Game {game_code} already exists!", 'danger')
+			with open (file_path, 'r') as f:
+				game_data = json.load(f)
+#			return render_template('add_game.html')
+
+		# if not, attempt to fetch from riot api
+		if game_data == None:	
+			game_data = RIOT_AGENT.fetch_match_data(game_code)
+			if game_data:
+				flash(f"Game {game_code} successfully added!", 'success')
+				with open(file_path, 'w') as f:
+					json.dump(game_data, f)
+
+		# check if file and riot API failed
+		if game_data == None:
+			flash(f"Failed to add game {game_code}.", 'danger')
 			return render_template('add_game.html')
-		game_data = RIOT_AGENT.fetch_match_data(game_code)
-		if game_data:
-			flash(f"Game {game_code} successfully added!", 'success')
-			with open(file_path, 'w') as f:
-				json.dump(game_data, f)
-			
-			# Extract relevant data
-			game_result = game_data['info']['gameEndTimestamp']
-			players_data = game_data['info']['participants']
-		else:
-			flash("Failed to add game.", 'danger')
-			game_result = None
-			players_data = []
+
+		# Extract relevant data
+		game_info = game_data['info']
+		teams = game_info['teams']
+		players_data = game_info['participants']
+
+		# Determine the winning team
+		blue_team = next(team for team in teams if team['teamId'] == 100)
+		game_result = "Blue" if blue_team['win'] else "Red"
 
 		return render_template('add_game.html', game_result=game_result, players_data=players_data)
 
 # Get game events callback
-@app.route('/data_callback', methods=['POST'])
-def event_callback():
-	global PLAYERS_DATA
-	global ACTIVE_GAME_DATA
+# @app.route('/data_callback', methods=['POST'])
+# def event_callback():
+# 	global PLAYERS_DATA
+# 	global ACTIVE_GAME_DATA
 
-	event = request.json
-	headers = request.headers
-	game_id = headers.get('X-Game-ID')
+# 	event = request.json
+# 	headers = request.headers
+# 	game_id = headers.get('X-Game-ID')
 
-	print(f"ACTIVE_GAME_DATA: {ACTIVE_GAME_DATA}")
+# 	print(f"ACTIVE_GAME_DATA: {ACTIVE_GAME_DATA}")
 
-	if isinstance(event, str):
-		# Convert the string into a list of dictionaries
-		event = json.loads(event)
+# 	if isinstance(event, str):
+# 		# Convert the string into a list of dictionaries
+# 		event = json.loads(event)
 
-	# Check headers and handle data accordingly
-	if headers.get('X-Agent-Secret') == SECRET_HEADER:
-		app.logger.debug(f"[?] Received callback from Game Agent: {str(event)}")
-		app.logger.debug(f"	|-> X-Event-Type: {headers.get('X-Event-Type')}")
-
-
-		# HANDLE GAME REGISTRATION
-		if headers.get('X-Event-Type') == 'GAME_REGISTRATION':
-			if len(ACTIVE_GAME_DATA) != 0:
-				if ACTIVE_GAME_DATA[0]['game_id'] != game_id:
-					return jsonify({'error': 'Active Game in Progress'}), 400
-			else:
-				CUSTOMS_DB.register_game(game_id)
-				payload = {
-					"game_id": game_id
-				}
-				ACTIVE_GAME_DATA.append(payload)
-				app.logger.debug(f"[+] Successfully registered game id {game_id}! :)")
-
-		# HANDLE PLAYER_DATA
-		elif headers.get('X-Event-Type') == 'PLAYER_DATA':
-			for p in event:
-				player_name	= p['player_name'].split('#')[0]
-				player_tag	= p['player_name'].split('#')[1]
-				PLAYERS_DATA.append(p)
-				if CUSTOMS_DB.get_player(player_name, player_tag) is None:
-					CUSTOMS_DB.register_player(player_name, player_tag)
-			socketio.emit('add_player_data', event)
+# 	# Check headers and handle data accordingly
+# 	if headers.get('X-Agent-Secret') == SECRET_HEADER:
+# 		app.logger.debug(f"[?] Received callback from Game Agent: {str(event)}")
+# 		app.logger.debug(f"	|-> X-Event-Type: {headers.get('X-Event-Type')}")
 
 
-		# HANDLE EVENT_DATA
-		elif headers.get('X-Event-Type') == 'EVENT_DATA':
-			event_no, event_type, game_time, message = handle_event(event)
-			payload = {
-				'event_id':	event_no,
-				'event_type':	event_type,
-				'game_time':	game_time,
-				'message':	message
-			}
+# 		# HANDLE GAME REGISTRATION
+# 		if headers.get('X-Event-Type') == 'GAME_REGISTRATION':
+# 			if len(ACTIVE_GAME_DATA) != 0:
+# 				if ACTIVE_GAME_DATA[0]['game_id'] != game_id:
+# 					return jsonify({'error': 'Active Game in Progress'}), 400
+# 			else:
+# 				CUSTOMS_DB.register_game(game_id)
+# 				payload = {
+# 					"game_id": game_id
+# 				}
+# 				ACTIVE_GAME_DATA.append(payload)
+# 				app.logger.debug(f"[+] Successfully registered game id {game_id}! :)")
 
-			# push events to DB
-			CUSTOMS_DB.insert_game_event(game_id, event_no, json.dumps(event))
+# 		# HANDLE PLAYER_DATA
+# 		elif headers.get('X-Event-Type') == 'PLAYER_DATA':
+# 			for p in event:
+# 				player_name	= p['player_name'].split('#')[0]
+# 				player_tag	= p['player_name'].split('#')[1]
+# 				PLAYERS_DATA.append(p)
+# 				if CUSTOMS_DB.get_player(player_name, player_tag) is None:
+# 					CUSTOMS_DB.register_player(player_name, player_tag)
+# 			socketio.emit('add_player_data', event)
 
-			# OG
-			socketio.emit('event_data', payload)
 
-			# check if stats need updated
-			if event['EventName'] == "ChampionKill":
-				app.logger.debug(f"[?] Got ChampionKill event")
-				assisters = set(event['Assisters'])
-				for p in PLAYERS_DATA:
-					pn = p['player_name'].split('#')[0]
-					if pn == event['KillerName']:
-						p['kills'] += 1
-					elif pn == event['VictimName']:
-						p['deaths'] += 1
-					elif pn in assisters:
-						p['assists'] += 1
+# 		# HANDLE EVENT_DATA
+# 		elif headers.get('X-Event-Type') == 'EVENT_DATA':
+# 			event_no, event_type, game_time, message = handle_event(event)
+# 			payload = {
+# 				'event_id':	event_no,
+# 				'event_type':	event_type,
+# 				'game_time':	game_time,
+# 				'message':	message
+# 			}
 
-				app.logger.debug(f"[?] PLAYERS_DATA: {PLAYERS_DATA}")
-				socketio.emit('update_player_data', PLAYERS_DATA)
+# 			# push events to DB
+# 			CUSTOMS_DB.insert_game_event(game_id, event_no, json.dumps(event))
 
-			# Check for GameEnd event
-			if event['EventName'] == 'GameEnd':
-				app.logger.debug(f"[?] Got GameEnd event")
-				PLAYERS_DATA = []
-				ACTIVE_GAME_DATA = []
+# 			# OG
+# 			socketio.emit('event_data', payload)
 
-		# HANDLE GAME_DATA
-		elif headers.get('X-Event-Type') == 'GAME_DATA':
-			app.logger.debug(f"[?] Got GAME_DATA")
-			CUSTOMS_DB.update_end_game_history(game_id, json.dumps(event))
+# 			# check if stats need updated
+# 			if event['EventName'] == "ChampionKill":
+# 				app.logger.debug(f"[?] Got ChampionKill event")
+# 				assisters = set(event['Assisters'])
+# 				for p in PLAYERS_DATA:
+# 					pn = p['player_name'].split('#')[0]
+# 					if pn == event['KillerName']:
+# 						p['kills'] += 1
+# 					elif pn == event['VictimName']:
+# 						p['deaths'] += 1
+# 					elif pn in assisters:
+# 						p['assists'] += 1
 
-		else:
-			app.logger.debug(f"[-] Found unknown X-Event-Type header")
+# 				app.logger.debug(f"[?] PLAYERS_DATA: {PLAYERS_DATA}")
+# 				socketio.emit('update_player_data', PLAYERS_DATA)
 
-		return jsonify({'status': 'THANKS FOR YOUR EVENT CONTRIBUTION AGENT'}), 200
-	else:
-		return jsonify({'error': 'Unauthorized'}), 403
+# 			# Check for GameEnd event
+# 			if event['EventName'] == 'GameEnd':
+# 				app.logger.debug(f"[?] Got GameEnd event")
+# 				PLAYERS_DATA = []
+# 				ACTIVE_GAME_DATA = []
+
+# 		# HANDLE GAME_DATA
+# 		elif headers.get('X-Event-Type') == 'GAME_DATA':
+# 			app.logger.debug(f"[?] Got GAME_DATA")
+# 			CUSTOMS_DB.update_end_game_history(game_id, json.dumps(event))
+
+# 		else:
+# 			app.logger.debug(f"[-] Found unknown X-Event-Type header")
+
+# 		return jsonify({'status': 'THANKS FOR YOUR EVENT CONTRIBUTION AGENT'}), 200
+# 	else:
+# 		return jsonify({'error': 'Unauthorized'}), 403
 
 
 # Watch live game updates
-@app.route('/live_game', methods=['GET'])
-@auth.login_required
-def live_game():
-	global PLAYERS_DATA
+# @app.route('/live_game', methods=['GET'])
+# @auth.login_required
+# def live_game():
+# 	global PLAYERS_DATA
 
-	return render_template('live_game.html', player_data=PLAYERS_DATA)
+# 	return render_template('live_game.html', player_data=PLAYERS_DATA)
 
 
 # ADMIN ROUTES
@@ -816,9 +835,20 @@ def internal_server_error(e):
 #################
 # JINJA FILTERS #
 #################
+@app.template_filter('to_lowercase')
+def to_lowercase(value):
+	return value.lower()
+
+
 @app.template_filter('sanitize')
 def sanitize(value):
 	return re.sub(r'\W+', '', value)
+
+
+@app.template_filter('get_champion_image_base64')
+def get_champion_image_base64(value):
+	image_data = DD_AGENT.get_single_image('champion', value)['image_base64']
+	return f"data:image/png;base64,{image_data}"
 
 
 ########

@@ -18,6 +18,7 @@
 			<div class="collapse navbar-collapse" id="navbarNav">
 				<ul class="navbar-nav ms-auto">
 					{% if session.get('user_uuid') %}
+						<div class="vr"></div>
 						<!-- TEAMS THINGS N STUFF -->
 						<li class="nav-item dropdown">
 							<a class="nav-link dropdown-toggle" href="#" id="teamDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="color: white;">
@@ -27,7 +28,7 @@
 								{% for team in session.get('user_teams', []) %}
 									<li>
 										{% if team['team_uuid'] == session.get('active_team_uuid') %}
-											<a class="dropdown-item px-bg-dark px-bg-darkpink" href="{{ url_for('teams', team_uuid=team['team_uuid']) }}">
+											<a class="dropdown-item px-bg-dark px-bg-lightcyan" href="{{ url_for('teams', team_uuid=team['team_uuid']) }}">
 												{{ team['team_name'] }}
 											</a>
 										{% else %}
@@ -46,6 +47,13 @@
 								Logged in as: <span style="color: yellow; padding-left: 10px;">{{ session.get('username', 'None') }}</span>
 							</a>
 							<ul class="dropdown-menu dropdown-menu-end px-bg-dark" aria-labelledby="userDropdown">
+								{% if session.get('role') == 'admin' %}
+								<li>
+									<a class="dropdown-item px-bg-dark" href="{{ url_for('uhohadmin') }}">
+										Admin
+									</a>
+								</li>
+								{% endif %}
 								<li>
 									<!-- THIS WILL BE USER ACCOUNT -->
 									<a class="dropdown-item px-bg-dark" href="{{ url_for('index') }}">
@@ -57,13 +65,6 @@
 										Manage Teams
 									</a>
 								</li>
-								{% if session.get('role') == 'admin' %}
-								<li>
-									<a class="dropdown-item px-bg-dark" href="{{ url_for('uhohadmin') }}">
-										Admin
-									</a>
-								</li>
-								{% endif %}
 								<li>
 									<a class="dropdown-item px-bg-dark" href="{{ url_for('logout') }}">
 										Logout
@@ -71,15 +72,18 @@
 								</li>
 							</ul>
 						</li>
+						<div class="vr"></div>
 						
 					{% else %}
+						<div class="vr"></div>
 						<li class="nav-item">
 							<a class="nav-link" href="{{ url_for('login') }}" style="color: white;">Login</a>
 						</li>
 						<div class="vr"></div>
 						<li class="nav-item">
-							<a class="nav-link" href="{{ url_for('register_user') }}" style="color: white;">Register</a>
+							<a class="nav-link" href="{{ url_for('register') }}" style="color: white;">Register</a>
 						</li>
+						<div class="vr"></div>
 					{% endif %}
 				</ul>
 			</div>
@@ -96,7 +100,7 @@
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
                     {% for message in messages %}
-                        <div class="alert alert-{{ message[0] }} px-bg-{{ message[0] }} alert-dismissible fade show p-1" role="alert">
+                        <div class="alert alert-{{ message[0] }} alert-dismissible fade show p-1" role="alert">
                             {{ message[1] }}
                             <div class="mt-3">
                                 <button type="button" class="px-bg-inverted" data-bs-dismiss="alert" aria-label="Close">Dismiss</button>
