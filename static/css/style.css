@@ -8,11 +8,11 @@ html, body {
 	font-family: OCR A Std, monospace;
 }
 
-/* A tag styling */
+/* a tag styling */
 .dropdown-menu a:hover {
-	background-image: url("../img/px_bg_lightcyan.png");
-	background-repeat: repeat;
-	color: black;
+	/* background-image: url("../img/px_bg_lightcyan.png");
+	background-repeat: repeat; */
+	color: yellow;
 }
 
 /* Ensure no padding in container-fluid sections */

@@ -28,7 +28,7 @@
 								{% for team in session.get('user_teams', []) %}
 									<li>
 										{% if team['team_uuid'] == session.get('active_team_uuid') %}
-											<a class="dropdown-item px-bg-dark px-bg-lightcyan" href="{{ url_for('teams', team_uuid=team['team_uuid']) }}">
+											<a class="dropdown-item px-bg-dark" style="color: yellow;" href="{{ url_for('teams', team_uuid=team['team_uuid']) }}">
 												{{ team['team_name'] }}
 											</a>
 										{% else %}

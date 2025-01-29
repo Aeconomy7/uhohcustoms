@@ -2,9 +2,9 @@
 
 {% block content %}
 <!-- <div class="container h-100"> -->
-	<div class="d-flex justify-content-center align-items-center h-100">
+<div class="d-flex justify-content-center align-items-center h-100">
 	<div class="card p-4 shadow text-center px-bg-inverted" style="padding: 10px;">
-		{% if game_result %}
+		<!-- {% if game_result %}
 		<h2 class="m-1">Game Result</h2>
 			<p><strong>Winning Team:</strong> <span class="team-{{ game_result | to_lowercase }}">{{ game_result }}</span></p>
 
@@ -41,10 +41,26 @@
 					{% endfor %}
 				</tbody>
 			</table>
-		{% else %}
+		{% else %} -->
 		<div class="card-body">
 			<h5 class="card-title">Add a game</h5>
 			<form action="{{ url_for('add_game') }}" method="POST">
+				<div class="mb-3">
+					<label for="region" class="form-label">Game Region</label>
+					<select class="form-select" id="region" name="region" required>
+						<option value="NA1">NA</option>
+						<option value="EUW1">EUW</option>
+						<option value="EUNE1">EUNE</option>
+						<option value="KR">KR</option>
+						<option value="BR1">BR</option>
+						<option value="JP1">JP</option>
+						<option value="LAN">LAN</option>
+						<option value="LAS">LAS</option>
+						<option value="OCE">OCE</option>
+						<option value="TR1">TR</option>
+						<option value="RU">RU</option>
+					</select>
+				</div>
 				<div class="mb-3">
 					<label for="game_code" class="form-label">Game Code</label>
 					<input type="text" class="form-control" id="game_code" name="game_code" required>
@@ -56,7 +72,7 @@
 		<h5>What do?</h5>
 		<p>Find your game ID to add within your match history and paste it above! Easy as!</p>
 		<img src="{{ url_for('static', filename='img/add_game.png') }}" class="img-fluid" alt="Add Game">
-		{% endif %}
+		<!-- {% endif %} -->
 	</div>
 </div>
 <!-- </div> -->
