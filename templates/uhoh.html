@@ -2,7 +2,7 @@
 
 {% block content %}
 <div class="container d-flex justify-content-center align-items-center h-100">
-    <div class="card mb-3 px-bg-inverted" style="width: 60%;">
+    <div class="card mb-3 px-bg-danger" style="width: 80%;">
         <div class="card-body">
             <h5 class="card-title">UH OH ERROR: {{ error_code }}</h5>
             <p class="card-text">
@@ -11,7 +11,7 @@
                 {% elif error_code == 401 %}
                     You are not authorized to view this page, leave now!
                 {% elif error_code == 403 %}
-                    The monkey does not deem your merit to be worth of this page.
+                    The monkey does not deem your merit to be worthy of this page.
                 {% elif error_code == 404 %}
                     Oh dear! There does not appear to be anything here except this old monkey!
                 {% elif error_code == 419 %}
@@ -19,7 +19,7 @@
                 {% elif error_code >= 500 and error_code <= 599 %}
                     The monkey has made a mistake, please try again later.
                 {% else %}
-                    An unexpected error occurred.
+                    The monkey cannot even begin to fathom what has gone wrong here.
                 {% endif %}
             </p>
             <div class="card-img-top" style="background-image: url({{ url_for('static', filename='img/error/' ~ error_image) }}); height: 200px; background-size: contain; background-repeat: no-repeat; background-position: center;"></div>
