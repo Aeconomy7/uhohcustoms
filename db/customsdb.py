@@ -21,9 +21,10 @@ class CustomsDbHandler:
 		self.__create_users_table()
 		self.__create_teams_table()
 		self.__create_user_teams_table()
-		self.__create_players_table()
-		self.__create_game_events_table()
-		self.__create_game_history_table()
+		#self.__create_players_table()
+		#self.__create_game_events_table()
+		self.__create_game_data_table()
+		self.__create_team_games_table()
 		self.__create_current_patch_table()
 		print("[+][CUSTOMS_DB][__init__] Successfully initiated Customs database tables!")
 
@@ -501,140 +502,139 @@ class CustomsDbHandler:
 	##########
 	# PLAYER #
 	##########
-	def __create_players_table(self):
-		sql_query = """ CREATE TABLE IF NOT EXISTS players (
-				id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-				summoner_name TEXT NOT NULL,
-				summoner_tag TEXT NOT NULL,
-				wins INTEGER DEFAULT 0,
-				loses INTEGER DEFAULT 0,
-				kills INTEGER DEFAULT 0,
-				deaths INTEGER DEFAULT 0,
-				assists INTEGER DEFAULT 0
-			);"""
-		try:
-			cursor = self.__conn.cursor()
-			cursor.execute(sql_query)
-			self.__conn.commit()
-			return True
-		except Error as e:
-			print(f"[!][CUSTOMS_DB][__create_players_table] ERROR:  {e}")
-			return False
+	# def __create_players_table(self):
+	# 	sql_query = """ CREATE TABLE IF NOT EXISTS players (
+	# 			id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+	# 			summoner_name TEXT NOT NULL,
+	# 			summoner_tag TEXT NOT NULL,
+	# 			wins INTEGER DEFAULT 0,
+	# 			loses INTEGER DEFAULT 0,
+	# 			kills INTEGER DEFAULT 0,
+	# 			deaths INTEGER DEFAULT 0,
+	# 			assists INTEGER DEFAULT 0
+	# 		);"""
+	# 	try:
+	# 		cursor = self.__conn.cursor()
+	# 		cursor.execute(sql_query)
+	# 		self.__conn.commit()
+	# 		return True
+	# 	except Error as e:
+	# 		print(f"[!][CUSTOMS_DB][__create_players_table] ERROR:  {e}")
+	# 		return False
 
 
-	def get_player(self, summoner_name, summoner_tag):
-		sql_query = "SELECT * FROM players WHERE summoner_name = ? AND summoner_tag = ?;"
+	# def get_player(self, summoner_name, summoner_tag):
+	# 	sql_query = "SELECT * FROM players WHERE summoner_name = ? AND summoner_tag = ?;"
 
-		try:
-			cursor = self.__conn.cursor()
-			cursor.execute(sql_query, (summoner_name, summoner_tag))
-			row = cursor.fetchone()
-			if row is None:
-				if self.__DEBUG:
-					print(f"[-][CUSTOMS_DB][get_player] Could not find player {summoner_name}#{summoner_tag} :(")
-				return None
-			else:
-				if self.__DEBUG:
-					print(f"[+][CUSTOMS_DB][get_player] Found player {summoner_name}#{summoner_tag} :)")
-				return row
-		except Error as e:
-			print(f"[!][CUSTOMS_DB][get_player] ERROR: {e}")
-			return None
+	# 	try:
+	# 		cursor = self.__conn.cursor()
+	# 		cursor.execute(sql_query, (summoner_name, summoner_tag))
+	# 		row = cursor.fetchone()
+	# 		if row is None:
+	# 			if self.__DEBUG:
+	# 				print(f"[-][CUSTOMS_DB][get_player] Could not find player {summoner_name}#{summoner_tag} :(")
+	# 			return None
+	# 		else:
+	# 			if self.__DEBUG:
+	# 				print(f"[+][CUSTOMS_DB][get_player] Found player {summoner_name}#{summoner_tag} :)")
+	# 			return row
+	# 	except Error as e:
+	# 		print(f"[!][CUSTOMS_DB][get_player] ERROR: {e}")
+	# 		return None
 
 
-	def register_player(self, summoner_name, summoner_tag):
-		sql_query = "INSERT INTO players (summoner_name, summoner_tag) VALUES (?, ?);"
+	# def register_player(self, summoner_name, summoner_tag):
+	# 	sql_query = "INSERT INTO players (summoner_name, summoner_tag) VALUES (?, ?);"
 
-		try:
-			cursor = self.__conn.cursor()
-			cursor.execute(sql_query, (summoner_name, summoner_tag))
-			self.__conn.commit()
-			if self.__DEBUG:
-				print(f"[+][CUSTOMS_DB][register_player] Successfully registered player {summoner_name}#{summoner_tag} :D")
-			return True
-		except Error as e:
-			print(f"[!][CUSTOMS_DB][regiter_player] ERROR: {e}")
-			return False
+	# 	try:
+	# 		cursor = self.__conn.cursor()
+	# 		cursor.execute(sql_query, (summoner_name, summoner_tag))
+	# 		self.__conn.commit()
+	# 		if self.__DEBUG:
+	# 			print(f"[+][CUSTOMS_DB][register_player] Successfully registered player {summoner_name}#{summoner_tag} :D")
+	# 		return True
+	# 	except Error as e:
+	# 		print(f"[!][CUSTOMS_DB][regiter_player] ERROR: {e}")
+	# 		return False
 
-	def update_player(self, summoner_name, summoner_tag, wins, loses, kills, deaths, assists):
-		sql_query = f"UPDATE players SET wins = ?, loses = ?, kills = ?, deaths = ?, assists = ?  WHERE summoner_name = ? AND summoner_tag = ?;"
+	# def update_player(self, summoner_name, summoner_tag, wins, loses, kills, deaths, assists):
+	# 	sql_query = f"UPDATE players SET wins = ?, loses = ?, kills = ?, deaths = ?, assists = ?  WHERE summoner_name = ? AND summoner_tag = ?;"
 
-		try:
-			cursor = self.__conn.cursor()
-			cursor.execute(sql_query, (wins, loses, kills, deaths, assists, summoner_name, summoner_tag))
-			self.__conn.commit()
-			if self.__DEBUG:
-				print(f"[+][CUSTOMS_DB][update_player] Successfully updated player details for {summoner_name}#{summoner_tag} :D")
-			return True
-		except Error as e:
-			print(f"[!][CUSTOMS_DB][update_player] ERROR: {e}")
-			return False
+	# 	try:
+	# 		cursor = self.__conn.cursor()
+	# 		cursor.execute(sql_query, (wins, loses, kills, deaths, assists, summoner_name, summoner_tag))
+	# 		self.__conn.commit()
+	# 		if self.__DEBUG:
+	# 			print(f"[+][CUSTOMS_DB][update_player] Successfully updated player details for {summoner_name}#{summoner_tag} :D")
+	# 		return True
+	# 	except Error as e:
+	# 		print(f"[!][CUSTOMS_DB][update_player] ERROR: {e}")
+	# 		return False
 
 	##########
 	# EVENTS #
 	##########
 	# THIS TABLE MAY BE UNNECESSARY BUT WILL KEEP IT HERE FOR NOW
-	def __create_game_events_table(self):
-		sql_query = """ CREATE TABLE IF NOT EXISTS game_events (
-				id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-				game_id TEXT NOT NULL,
-				game_event_id INTEGER NOT NULL,
-				game_event_data TEXT NOT NULL
-			);"""
-		try:
-			cursor = self.__conn.cursor()
-			cursor.execute(sql_query)
-			self.__conn.commit()
-			return True
-		except Error as e:
-			print(f"[!][CUSTOMS_DB][__create_game_events_table] ERROR: {e}")
-			return False
+	# def __create_game_events_table(self):
+	# 	sql_query = """ CREATE TABLE IF NOT EXISTS game_events (
+	# 			id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+	# 			game_id TEXT NOT NULL,
+	# 			game_event_id INTEGER NOT NULL,
+	# 			game_event_data TEXT NOT NULL
+	# 		);"""
+	# 	try:
+	# 		cursor = self.__conn.cursor()
+	# 		cursor.execute(sql_query)
+	# 		self.__conn.commit()
+	# 		return True
+	# 	except Error as e:
+	# 		print(f"[!][CUSTOMS_DB][__create_game_events_table] ERROR: {e}")
+	# 		return False
 
 
-	def get_game_events_by_game_id(self, game_id):
-		sql_query = "SELECT * FROM game_events WHERE game_id = ?;"
+	# def get_game_events_by_game_id(self, game_id):
+	# 	sql_query = "SELECT * FROM game_events WHERE game_id = ?;"
 
-		try:
-			cursor = self.__conn.cursor()
-			cursor.execute(sql_query, (game_id,))
-			row = cursor.fetchall()
-			if row is None:
-				if self.__DEBUG:
-					print(f"[-][CUSTOMS_DB][get_game_events_by_game_id] Could not find game events associated with game id {game_id} :(")
-				return None
-			else:
-				if self.__DEBUG:
-					print(f"[+][CUSTOMS_DB][get_game_events_by_game_id] Found {str(len(row))} records associated with game id {game_id} :)")
-				return row
-		except Error as e:
-			print(f"[!][CUSTOMS_DB][get_game_events_by_game_id] ERROR: {e}")
-			return None
+	# 	try:
+	# 		cursor = self.__conn.cursor()
+	# 		cursor.execute(sql_query, (game_id,))
+	# 		row = cursor.fetchall()
+	# 		if row is None:
+	# 			if self.__DEBUG:
+	# 				print(f"[-][CUSTOMS_DB][get_game_events_by_game_id] Could not find game events associated with game id {game_id} :(")
+	# 			return None
+	# 		else:
+	# 			if self.__DEBUG:
+	# 				print(f"[+][CUSTOMS_DB][get_game_events_by_game_id] Found {str(len(row))} records associated with game id {game_id} :)")
+	# 			return row
+	# 	except Error as e:
+	# 		print(f"[!][CUSTOMS_DB][get_game_events_by_game_id] ERROR: {e}")
+	# 		return None
 
 
-	def insert_game_event(self, game_id, game_event_id, game_event_data):
-		sql_query = "INSERT INTO game_events (game_id, game_event_id, game_event_data) VALUES (?, ?, ?);"
+	# def insert_game_event(self, game_id, game_event_id, game_event_data):
+	# 	sql_query = "INSERT INTO game_events (game_id, game_event_id, game_event_data) VALUES (?, ?, ?);"
 
-		try:
-			cursor = self.__conn.cursor()
-			cursor.execute(sql_query, (game_id, game_event_id, game_event_data))
-			self.__conn.commit()
-			if self.__DEBUG:
-				print(f"[+][CUSTOMS_DB][insert_game_event] Successfully inserted game event for game {game_id} :D")
-			return True
-		except Error as e:
-			print(f"[!][CUSTOMS_DB][insert_game_event] ERROR: {e}")
-			return False
+	# 	try:
+	# 		cursor = self.__conn.cursor()
+	# 		cursor.execute(sql_query, (game_id, game_event_id, game_event_data))
+	# 		self.__conn.commit()
+	# 		if self.__DEBUG:
+	# 			print(f"[+][CUSTOMS_DB][insert_game_event] Successfully inserted game event for game {game_id} :D")
+	# 		return True
+	# 	except Error as e:
+	# 		print(f"[!][CUSTOMS_DB][insert_game_event] ERROR: {e}")
+	# 		return False
 
 
 	################
 	# GAME HISTORY #
 	################
-	def __create_game_history_table(self):
-		sql_query = """ CREATE TABLE IF NOT EXISTS game_history (
+	def __create_game_data_table(self):
+		sql_query = """ CREATE TABLE IF NOT EXISTS game_data (
 				id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-				game_id TEXT NOT NULL,
-				game_data BLOB DEFAULT 'NA',
-				team_uuid TEXT NOT NULL
+				game_id TEXT NOT NULL UNIQUE,
+				game_data_blob BLOB NOT NULL
 			);"""
 
 		try:
@@ -643,12 +643,12 @@ class CustomsDbHandler:
 			self.__conn.commit()
 			return True
 		except Error as e:
-			print(f"[!][CUSTOMS_DB][__create_game_history_table] ERROR: {e}")
+			print(f"[!][CUSTOMS_DB][__create_game_data_table] ERROR: {e}")
 			return False
 
 
 	def get_total_games(self):
-		sql_query = "SELECT COUNT(*) FROM game_history;"
+		sql_query = "SELECT COUNT(*) FROM game_data;"
 
 		try:
 			cursor = self.__conn.cursor()
@@ -667,28 +667,28 @@ class CustomsDbHandler:
 			return None
 
 
-	def get_all_game_history(self):
-		sql_query = "SELECT * FROM game_history;"
+	# def get_all_game_data(self):
+	# 	sql_query = "SELECT * FROM game_data;"
 
-		try:
-			cursor = self.__conn.cursor()
-			cursor.execute(sql_query)
-			row = cursor.fetchall()
-			if row is None:
-				if self.__DEBUG:
-					print(f"[-][CUSTOMS_DB][get_all_game_history] No game history found :(")
-				return None
-			else:
-				if self.__DEBUG:
-					print(f"[+][CUSTOMS_DB][get_all_game_history] Found {str(len(row))} game(s) history!")
-				return row
-		except Error as e:
-			print(f"[!][CUSTOMS_DB][get_all_game_history] ERROR: {e}")
-			return None
+	# 	try:
+	# 		cursor = self.__conn.cursor()
+	# 		cursor.execute(sql_query)
+	# 		row = cursor.fetchall()
+	# 		if row is None:
+	# 			if self.__DEBUG:
+	# 				print(f"[-][CUSTOMS_DB][get_all_game_data] No game history found :(")
+	# 			return None
+	# 		else:
+	# 			if self.__DEBUG:
+	# 				print(f"[+][CUSTOMS_DB][get_all_game_data] Found {str(len(row))} game(s) history!")
+	# 			return row
+	# 	except Error as e:
+	# 		print(f"[!][CUSTOMS_DB][get_all_game_data] ERROR: {e}")
+	# 		return None
 
 
-	def get_game_history_by_game_id(self, game_id):
-		sql_query = "SELECT * FROM game_history WHERE game_id = ?;"
+	def get_game_data_blob_by_game_id(self, game_id):
+		sql_query = "SELECT game_data_blob FROM game_data WHERE game_id = ?;"
 
 		try:
 			cursor = self.__conn.cursor()
@@ -696,68 +696,156 @@ class CustomsDbHandler:
 			row = cursor.fetchone()
 			if row is None:
 				if self.__DEBUG:
-					print(f"[-][CUSTOMS_DB][get_game_history_by_game_id] Could not find any game history :(")
+					print(f"[-][CUSTOMS_DB][get_game_data_blob_by_game_id] Could not find any game with game id {game_id} :(")
 				return None
 			else:
 				if self.__DEBUG:
-					print(f"[+][CUSTOMS_DB][get_game_history_by_game_id] Found game id {str(game_id)} :D")
+					print(f"[+][CUSTOMS_DB][get_game_data_blob_by_game_id] Found game id {str(game_id)} :D")
 				return row
 		except Error as e:
-			print(f"[!][CUSTOMS_DB][get_game_history_by_game_id] ERROR: {e}")
+			print(f"[!][CUSTOMS_DB][get_game_data_blob_by_game_id] ERROR: {e}")
 			return None
 
-	def get_game_history_by_team_uuid(self, team_uuid):
-		sql_query = "SELECT * FROM game_history WHERE team_uuid = ?;"
+	# def get_game_data_by_team_uuid(self, team_uuid):
+	# 	sql_query = "SELECT * FROM game_data WHERE team_uuid = ?;"
 
+	# 	try:
+	# 		cursor = self.__conn.cursor()
+	# 		cursor.execute(sql_query, (str(team_uuid),))
+	# 		row = cursor.fetchall()
+	# 		if row is None:
+	# 			if self.__DEBUG:
+	# 				print(f"[-][CUSTOMS_DB][get_game_data_by_team_uuid] Could not find any game history :(")
+	# 			return None
+	# 		else:
+	# 			if self.__DEBUG:
+	# 				print(f"[+][CUSTOMS_DB][get_game_data_by_team_uuid] Found {str(len(row))} game(s) history for team {str(team_uuid)} :D")
+	# 			return row
+	# 	except Error as e:
+	# 		print(f"[!][CUSTOMS_DB][get_game_data_by_team_uuid] ERROR: {e}")
+	# 		return None
+
+
+	def add_game(self, game_id, game_data_blob):
+		sql_query = f"INSERT INTO game_data (game_id, game_data_blob) VALUES (?, ?);"
+
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query, (game_id, game_data_blob))
+			self.__conn.commit()
+			if self.__DEBUG:
+				print(f"[+][CUSTOMS_DB][add_game] Successfully added game id {game_id} :)")
+			return True
+		except Error as e:
+			print(f"[!][CUSTOMS_DB][add_game] ERROR: {e}")
+			return False
+
+
+	# def update_end_game_data(self, game_id, game_data):
+	# 	# get current timestamp
+	# 	current_timestamp = datetime.datetime.now()
+
+	# 	sql_query = f"UPDATE game_data SET game_data = ?, game_state = 'COMPLETE', last_updated = ? WHERE game_id = ?;"
+
+	# 	try:
+	# 		cursor = self.__conn.cursor()
+	# 		cursor.execute(sql_query, (game_data, current_timestamp, game_id))
+	# 		self.__conn.commit()
+	# 		if self.__DEBUG:
+	# 			print(f"[+][CUSTOMS_DB][update_end_game_data] Successfully updated end game details for game id {game_id} :D")
+	# 		return True
+	# 	except Error as e:
+	# 		print(f"[!][CUSTOMS_DB][update_end_game_data] ERROR: {e}")
+	# 		return False
+
+
+	###############
+	# team_games #
+	###############
+	def __create_team_games_table(self):
+		sql_query = """ CREATE TABLE IF NOT EXISTS team_games (
+				id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+				team_uuid TEXT NOT NULL,
+				game_id TEXT NOT NULL,
+				FOREIGN KEY(team_uuid) REFERENCES teams(team_uuid),
+				FOREIGN KEY(game_id) REFERENCES game_data(game_id)
+			);"""
+
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query)
+			self.__conn.commit()
+			return True
+		except Error as e:
+			print(f"[!][CUSTOMS_DB][__create_team_games_table] ERROR: {e}")
+			return False
+
+	def add_team_game(self, team_uuid, game_id):
+		sql_query = "INSERT INTO team_games (team_uuid, game_id) VALUES (?, ?);"
+
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query, (str(team_uuid), game_id))
+			self.__conn.commit()
+			if self.__DEBUG:
+				print(f"[+][CUSTOMS_DB][add_team_game] Successfully added game id {game_id} to team {team_uuid} :D")
+			return True
+		except Error as e:
+			print(f"[!][CUSTOMS_DB][add_team_game] ERROR: {e}")
+			return False
+		
+	def remove_team_game(self, team_uuid, game_id):
+		sql_query = "DELETE FROM team_games WHERE team_uuid = ? AND game_id = ?;"
+
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query, (str(team_uuid), game_id))
+			self.__conn.commit()
+			return True
+		except Error as e:
+			print(f"[!][CUSTOMS_DB][remove_team_game] ERROR: {e}")
+			return False
+
+	def get_team_game_data_by_team_uuid(self, team_uuid):
+		sql_query = """
+			SELECT gd.game_id, gd.game_data_blob
+			FROM game_data gd
+			JOIN team_games tg ON gd.game_id = tg.game_id
+			WHERE tg.team_uuid = ?;
+		"""
 		try:
 			cursor = self.__conn.cursor()
 			cursor.execute(sql_query, (str(team_uuid),))
 			row = cursor.fetchall()
 			if row is None:
 				if self.__DEBUG:
-					print(f"[-][CUSTOMS_DB][get_game_history_by_team_uuid] Could not find any game history :(")
+					print(f"[-][CUSTOMS_DB][get_team_game_data_by_team_uuid] Could not find any game data for team {team_uuid} :(")
 				return None
 			else:
 				if self.__DEBUG:
-					print(f"[+][CUSTOMS_DB][get_game_history_by_team_uuid] Found {str(len(row))} game(s) history for team {str(team_uuid)} :D")
+					print(f"[+][CUSTOMS_DB][get_team_game_data_by_team_uuid] Found {str(len(row))} game(s) for team {team_uuid} :D")
 				return row
 		except Error as e:
-			print(f"[!][CUSTOMS_DB][get_game_history_by_team_uuid] ERROR: {e}")
+			print(f"[!][CUSTOMS_DB][get_team_game_data_by_team_uuid] ERROR: {e}")
 			return None
 
-
-	def register_game(self, game_id):
-		current_timestamp = datetime.datetime.now()
-
-		sql_query = f"INSERT INTO game_history (game_id, last_updated) VALUES (?, ?);"
+	def check_if_team_game_exists(self, game_id, team_uuid):
+		sql_query = "SELECT * FROM team_games WHERE game_id = ? AND team_uuid = ?;"
 
 		try:
 			cursor = self.__conn.cursor()
-			cursor.execute(sql_query, (game_id, current_timestamp))
-			self.__conn.commit()
-			if self.__DEBUG:
-				print(f"[+][CUSTOMS_DB][register_game] Successfully registered game id {game_id} :)")
-			return True
+			cursor.execute(sql_query, (game_id, str(team_uuid)))
+			row = cursor.fetchone()
+			if row is None:
+				if self.__DEBUG:
+					print(f"[+][CUSTOMS_DB][check_if_team_game_exists] Game {game_id} does not exist for team {team_uuid}")
+				return False
+			else:
+				if self.__DEBUG:
+					print(f"[-][CUSTOMS_DB][check_if_team_game_exists] Game {game_id} exists for team {team_uuid} :)")
+				return True
 		except Error as e:
-			print(f"[!][CUSTOMS_DB][register_game] ERROR: {e}")
-			return False
-
-
-	def update_end_game_history(self, game_id, game_data):
-		# get current timestamp
-		current_timestamp = datetime.datetime.now()
-
-		sql_query = f"UPDATE game_history SET game_data = ?, game_state = 'COMPLETE', last_updated = ? WHERE game_id = ?;"
-
-		try:
-			cursor = self.__conn.cursor()
-			cursor.execute(sql_query, (game_data, current_timestamp, game_id))
-			self.__conn.commit()
-			if self.__DEBUG:
-				print(f"[+][CUSTOMS_DB][update_end_game_history] Successfully updated end game details for game id {game_id} :D")
-			return True
-		except Error as e:
-			print(f"[!][CUSTOMS_DB][update_end_game_history] ERROR: {e}")
+			print(f"[!][CUSTOMS_DB][check_if_team_game_exists] ERROR: {e}")
 			return False
 
 	##########
