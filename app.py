@@ -245,6 +245,44 @@ def callback():
 		return f"[!][APP][callback] Error fetching token: {token_response.text}", 400
 
 
+# STATIC: Set active team
+@app.route('/set_active_team/<team_uuid>', methods=['GET', 'POST'])
+@auth.login_required
+@app_login_required
+def set_active_team(team_uuid):
+	try:
+		if 'user_uuid' not in session:
+			return redirect(url_for('uhoh', error_code=401))
+		
+		if team_uuid == 'None':
+			return redirect(url_for('manage_teams'))
+
+		user_uuid = session['user_uuid']
+		user_teams = CUSTOMS_DB.get_teams_for_user(user_uuid)
+		active_team = next((team for team in user_teams if team[0] == str(team_uuid)), None)
+		#team_members = CUSTOMS_DB.get_team_members(active_team[0])
+
+		if DEBUG:
+			app.logger.debug(f"[?][APP][set_active_team][{session.get('username')}] user_teams:	{user_teams}")
+			app.logger.debug(f"[?][APP][set_active_team][{session.get('username')}] active_team:	{active_team}")
+
+		if not active_team:
+			raise ValueError('You are not currently a part of that team.')
+
+		session['user_teams'] = [{'team_uuid': team[0], 'team_name': team[1]} for team in user_teams]
+		session['active_team_name'] = active_team[1]
+		session['active_team_uuid'] = active_team[0]
+
+	except ValueError as e:
+		flash(str(e), 'danger')
+
+	except Exception as e:
+		flash('An unexpected error occurred setting active team. Please try again.', 'danger')
+
+	#return (request.args.get('next', url_for('teams', team_uuid=session['active_team_uuid'])))
+	return redirect(url_for('teams', team_uuid=session['active_team_uuid']))
+
+
 # STATIC: Teams
 @app.route('/teams/<team_uuid>', methods=['GET', 'POST'])
 @auth.login_required
