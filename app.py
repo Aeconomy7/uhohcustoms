@@ -207,7 +207,8 @@ def login():
 				app.logger.debug(f"[?][APP][login][{session['username']}] user_teams: {str(session['user_teams'])}")
 				app.logger.debug(f"[?][APP][login][{session['username']}] active_team_uuid: {str(session['active_team_uuid'])}")
 
-			return redirect(request.args.get('next', url_for('teams', team_uuid=session['active_team_uuid'])))
+			return redirect(request.args.get('next', url_for('game_history')))
+			#return redirect(request.args.get('next', url_for('teams', team_uuid=session['active_team_uuid'])))
 		else:
 			flash('Invalid email or password.', 'danger')
 
@@ -279,8 +280,8 @@ def set_active_team(team_uuid):
 	except Exception as e:
 		flash('An unexpected error occurred setting active team. Please try again.', 'danger')
 
-	#return (request.args.get('next', url_for('teams', team_uuid=session['active_team_uuid'])))
-	return redirect(url_for('teams', team_uuid=session['active_team_uuid']))
+	return redirect(url_for('game_history'))
+	#return redirect(url_for('teams', team_uuid=session['active_team_uuid']))
 
 
 # STATIC: Teams
@@ -448,7 +449,8 @@ def create_team():
 	except Exception as e:
 		flash('An unexpected error occurred creating the team. Please try again.', 'danger')
 
-	return redirect(request.args.get('next', url_for('teams', team_uuid=session['active_team_uuid'])))
+	return redirect(request.args.get('next', url_for('game_history')))
+	#return redirect(request.args.get('next', url_for('teams', team_uuid=session['active_team_uuid'])))
 
 
 # ACTION: Join team
@@ -499,7 +501,8 @@ def join_team(team_uuid='None'):
 	except Exception as e:
 		flash('An unexpected error occurred joining a team. Please try again.', 'danger')
 
-	return redirect(request.args.get('next', url_for('teams', team_uuid=session.get('active_team_uuid'))))
+	return redirect(request.args.get('next', url_for('game_history')))
+	#return redirect(request.args.get('next', url_for('teams', team_uuid=session.get('active_team_uuid'))))
 
 
 # ACTION: Leave Team
@@ -544,7 +547,11 @@ def leave_team(team_uuid):
 	except Exception as e:
 		flash('An unexpected error occurred. Please try again.', 'danger')
 
-	return redirect(request.args.get('next', url_for('teams', team_uuid=session.get('active_team_uuid'))))
+	return redirect(request.args.get('next', url_for('game_history')))
+	#return redirect(request.args.get('next', url_for('teams', team_uuid=session.get('active_team_uuid'))))
+
+
+
 
 
 # New Game Upload - manual and file upload
@@ -608,7 +615,7 @@ def add_game():
 			if not CUSTOMS_DB.add_team_game(session.get('active_team_uuid'), game_code):
 				raise ValueError("Failed to add game data to team.")
 
-			return redirect(url_for('view_game.html', game_code=game_code))
+			return redirect(url_for('game_history.html'))
 		
 	except ValueError as e:
 		flash(str(e), 'danger')
@@ -619,8 +626,68 @@ def add_game():
 	return render_template('add_game.html')
 
 
+# ACTION: See all games history for a team
+@app.route('/game_history', methods=['GET'])
+@auth.login_required
+@app_login_required
+def game_history():
+	if 'user_uuid' not in session:
+		return redirect(url_for('uhoh', error_code=401))
+	
+	try:
+		team_game_data = CUSTOMS_DB.get_team_game_data_by_team_uuid(session.get('active_team_uuid', 'None'))
+		games_info = []
+		for game in team_game_data:
+			game_code = game[0]
+
+			# game blob data
+			game_info = json.loads(game[1])['info']
+			
+			# date played
+			date_played_timestamp = game_info['gameCreation'] / 1000  # Convert milliseconds to seconds
+			date_played = datetime.datetime.fromtimestamp(date_played_timestamp).strftime('%Y-%m-%d %H:%M:%S')
+
+			# player data
+			players_data = game_info['participants']
+			blue_team_players = [
+				{
+					'summoner_name': f"{player['riotIdGameName']}#{player['riotIdTagline']}",
+					'champion_name': player['championName']
+				}
+				for player in players_data if player['teamId'] == 100
+			]
+			red_team_players = [
+				{
+					'summoner_name': f"{player['riotIdGameName']}#{player['riotIdTagline']}",
+					'champion_name': player['championName']
+				}
+				for player in players_data if player['teamId'] == 200
+			]
+
+			# team data
+			teams = game_info['teams']
+			blue_team = next(team for team in teams if team['teamId'] == 100)
+			game_result = "Blue" if blue_team['win'] else "Red"
+			
+			games_info.append({
+				'game_code': game_code,
+				'blue_team_players': blue_team_players,
+				'red_team_players': red_team_players,
+				'date_played': date_played,
+				'game_result': game_result
+			})
+
+		return render_template('game_history.html', games_info=games_info)
+	
+	except ValueError as e:
+		flash(str(e), 'danger')
+
+	except Exception as e:
+		flash('An unexpected error occurred. Please try again.', 'danger')
+
+
 # ACTION: View game data
-@app.route('/view_game/<game_code>', methods=['GET'])
+@app.route('/game_history/<game_code>', methods=['GET'])
 @auth.login_required
 @app_login_required
 def view_game(game_code):
@@ -664,7 +731,61 @@ def view_game(game_code):
 	except Exception as e:
 		flash('An unexpected error occurred. Please try again.', 'danger')
 
-	return redirect(url_for('teams', team_uuid=session.get('active_team_uuid')))
+	return redirect(url_for('game_history'))
+	#return redirect(url_for('teams', team_uuid=session.get('active_team_uuid')))
+
+
+# PLAYER ROUTES
+@app.route('/player_stats', methods=['GET'])
+@auth.login_required
+@app_login_required
+def player_stats():
+	if 'user_uuid' not in session:
+		return redirect(url_for('uhoh', error_code=401))
+	
+	try:
+		team_game_data = CUSTOMS_DB.get_team_game_data_by_team_uuid(session.get('active_team_uuid', 'None'))
+		players_info = {}
+
+		for game in team_game_data:
+			# game blob data
+			game_info = json.loads(game[1])['info']
+			
+			# player data
+			players_data = game_info['participants']
+			for player in players_data:
+				summoner_name = f"{player['riotIdGameName']}#{player['riotIdTagline']}"
+				
+				if summoner_name not in players_info:
+					players_info[summoner_name] = {
+						'kills': 0,
+						'assists': 0,
+						'deaths': 0,
+						'wins': 0,
+						'losses': 0,
+						'gold_earned': 0,
+						'damage_dealt': 0
+					}
+				
+				players_info[summoner_name]['kills'] += player['kills']
+				players_info[summoner_name]['assists'] += player['assists']
+				players_info[summoner_name]['deaths'] += player['deaths']
+				players_info[summoner_name]['gold_earned'] += player['goldEarned']
+				players_info[summoner_name]['damage_dealt'] += player['totalDamageDealt']
+				
+				if player['win']:
+					players_info[summoner_name]['wins'] += 1
+				else:
+					players_info[summoner_name]['losses'] += 1
+
+
+	except ValueError as e:
+		flash(str(e), 'danger')
+
+	except Exception as e:
+		flash('An unexpected error occurred. Please try again.', 'danger')
+
+	return render_template('player_stats.html', players_info=players_info)
 
 
 # ADMIN ROUTES

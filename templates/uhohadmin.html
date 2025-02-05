@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container h-100">
+<div class="container d-flex justify-content-center align-items-center">
     <h1 class="m-1">Admin Dashboard</h1>
     <ul class="nav nav-tabs" id="adminTab" role="tablist">
         <li class="nav-item" role="presentation">
@@ -58,7 +58,7 @@
                                 {% for image in champions %}
                                 <div class="col-md-2">
                                     <div class="card mb-1 px-bg-darkblue">
-                                        <img src="data:image/png;base64,{{ image['image_base64'] }}" class="card-img-top" alt="{{ image['champion_name'] }}">
+                                        <img src="data:image/png;base64,{{ image['image_base64'] }}" class="card-img-top" alt="{{ image['champion_name'] }}" title="{{ image['champion_name'] }}">
                                         <div class="card-body">
                                             <p class="card-text responsive-text">{{ image['champion_name'] }}</p>
                                         </div>
@@ -74,7 +74,7 @@
                             {% for image in items %}
                             <div class="col-md-2">
                                 <div class="card mb-1 px-bg-darkblue">
-                                    <img src="data:image/png;base64,{{ image['image_base64'] }}" class="card-img-top" alt="{{ image['item_name'] }}">
+                                    <img src="data:image/png;base64,{{ image['image_base64'] }}" class="card-img-top" alt="{{ image['item_name'] }}" title="{{ image['item_name'] }}">
                                     <div class="card-body">
                                         <p class="card-text responsive-text">{{ image['item_name'] }}</p>
                                     </div>
@@ -89,7 +89,7 @@
                             {% for image in spells %}
                             <div class="col-md-2">
                                 <div class="card mb-1 px-bg-darkblue">
-                                    <img src="data:image/png;base64,{{ image['image_base64'] }}" class="card-img-top" alt="{{ image['spell_name'] }}">
+                                    <img src="data:image/png;base64,{{ image['image_base64'] }}" class="card-img-top" alt="{{ image['spell_name'] }}" title="{{ image['spell_name'] }}">
                                     <div class="card-body">
                                         <p class="card-text responsive-text">{{ image['spell_name'] }}</p>
                                     </div>
@@ -104,7 +104,7 @@
                             {% for image in runes %}
                             <div class="col-md-2">
                                 <div class="card mb-1 px-bg-darkblue">
-                                    <img src="data:image/png;base64,{{ image['image_base64'] }}" class="card-img-top" alt="{{ image['rune_name'] }}">
+                                    <img src="data:image/png;base64,{{ image['image_base64'] }}" class="card-img-top" alt="{{ image['rune_name'] }}" title="{{ image['rune_name'] }}">
                                     <div class="card-body">
                                         <p class="card-text responsive-text">{{ image['rune_name'] }}</p>
                                     </div>

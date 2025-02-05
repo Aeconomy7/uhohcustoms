@@ -3221,8 +3221,8 @@ textarea.form-control-lg {
   --bs-dropdown-padding-y: 0.5rem;
   --bs-dropdown-spacer: 0.125rem;
   --bs-dropdown-font-size: 1rem;
-  --bs-dropdown-color: #212529;
-  --bs-dropdown-bg: #fff;
+  --bs-dropdown-color: #ffffff;
+  --bs-dropdown-bg: #776d6d9c;
   --bs-dropdown-border-color: var(--bs-border-color-translucent);
   --bs-dropdown-border-radius: 0.375rem;
   --bs-dropdown-border-width: 1px;
@@ -3231,8 +3231,8 @@ textarea.form-control-lg {
   --bs-dropdown-divider-margin-y: 0.5rem;
   --bs-dropdown-box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
   --bs-dropdown-link-color: #212529;
-  --bs-dropdown-link-hover-color: #1e2125;
-  --bs-dropdown-link-hover-bg: #e9ecef;
+  --bs-dropdown-link-hover-color: #00eeff;
+  --bs-dropdown-link-hover-bg: #776d6d9c;
   --bs-dropdown-link-active-color: #fff;
   --bs-dropdown-link-active-bg: #0d6efd;
   --bs-dropdown-link-disabled-color: #adb5bd;
@@ -3731,7 +3731,7 @@ textarea.form-control-lg {
   --bs-navbar-color: rgba(0, 0, 0, 0.55);
   --bs-navbar-hover-color: rgba(0, 0, 0, 0.7);
   --bs-navbar-disabled-color: rgba(0, 0, 0, 0.3);
-  --bs-navbar-active-color: rgba(0, 0, 0, 0.9);
+  --bs-navbar-active-color: rgb(0, 0, 0);
   --bs-navbar-brand-padding-y: 0.3125rem;
   --bs-navbar-brand-margin-end: 1rem;
   --bs-navbar-brand-font-size: 1.25rem;
@@ -4340,7 +4340,7 @@ textarea.form-control-lg {
   --bs-accordion-inner-border-radius: calc(0.375rem - 1px);
   --bs-accordion-btn-padding-x: 1.25rem;
   --bs-accordion-btn-padding-y: 1rem;
-  --bs-accordion-btn-color: #212529;
+  --bs-accordion-btn-color: #f8f8f8;
   --bs-accordion-btn-bg: var(--bs-accordion-bg);
   --bs-accordion-btn-icon: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23212529'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
   --bs-accordion-btn-icon-width: 1.25rem;
@@ -10825,6 +10825,9 @@ textarea.form-control-lg {
   }
 }
 #wrapper {
+  background-image: url("../img/px_bg_dark.png");
+	background-repeat: repeat;
+	color: white;
   overflow-x: hidden;
 }
 
@@ -10862,4 +10865,110 @@ body.sb-sidenav-toggled #wrapper #sidebar-wrapper {
   body.sb-sidenav-toggled #wrapper #sidebar-wrapper {
     margin-left: -15rem;
   }
+}
+
+/* Custom CSS */
+/* BACKGROUND IMAGE CSS */
+.px-bg-dark {
+	background-image: url("../img/px_bg_dark.png");
+	background-repeat: repeat;
+	color: white;
+}
+
+.px-bg-blue {
+	background-image: url("../img/px_bg_blue.png");
+	background-repeat: repeat;
+	color: white;
+}
+
+.px-bg-darkblue {
+	background-image: url("../img/px_bg_darkblue.png");
+	background-repeat: repeat;
+	color: white;
+}
+
+.px-bg-darkpink {
+	background-image: url("../img/px_bg_darkpink.png");
+	background-repeat: repeat;
+	color: white;
+}
+
+.px-bg-darkgreenblue {
+	background-image: url("../img/px_bg_darkgreenblue.jpg");
+	background-repeat: repeat;
+	color: white;
+}
+
+.px-bg-inverted {
+	background-image: url("../img/px_bg_inverted.png");
+	background-repeat: repeat;
+	color: black;
+}
+
+.px-bg-lightcyan {
+	background-image: url("../img/px_bg_lightcyan.png");
+	background-repeat: repeat;
+	color: black;
+}
+
+.px-bg-danger {
+	background-image: url("../img/px_bg_darkred.png");
+	background-repeat: repeat;
+	color: white;
+}
+
+.px-bg-success {
+	background-image: url("../img/px_bg_darkgreen.png");
+	background-repeat: repeat;
+	color: white;
+}
+
+.px-bg-selected {
+	background-image: url("../img/px_bg_selected.png");
+	background-repeat: repeat;
+	color: black;
+}
+
+.px-bg-sea {
+	background-image: url("../img/px_bg_sea.png");
+	background-repeat: repeat;
+	color: white;
+}
+
+/* ETC CSS */
+.team-blue {
+	color: blue !important;
+}
+
+.team-red {
+	color: red !important;
+}
+
+.team-blue td {
+	color: blue !important;
+}
+
+.team-red td {
+	color: red !important;
+}
+
+.funcolor {
+  animation: colorizer 10s infinite;
+}
+
+@keyframes colorizer {
+  from, to { color: #00FF00; }
+  25%	  { color: #00FFFF; }
+  50%	  { color: #FF0080; }
+  75%	  { color: #8000FF; }
+}
+
+/* ALERT CSS */
+.alert-container {
+	position: fixed; 
+	top: 40px; 
+	right: 0; 
+	z-index: 1050; 
+	width: 250px; 
+	padding: 1rem;
 }

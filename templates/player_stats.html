@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center">
+	<div class="table-responsive" style="overflow-y: auto;">
+        {% if players_info %}
+        <table id="playerStatsTable" class="table table-striped table-responsive-text">
+            <thead>
+                <tr>
+                    <th>Summoner Name</th>
+                    <th>Total Games</th>
+                    <th>Wins</th>
+                    <th>Losses</th>
+                    <th>Total Kills</th>
+                    <th>Total Deaths</th>
+                    <th>Total Assists</th>
+                    <th>Total Gold Earned</th>
+                    <th>Total Damage Dealt</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for summoner_name, stats in players_info.items() %}
+                <tr>
+                    <td>{{ summoner_name }}</td>
+                    <td>{{ stats.wins + stats.losses }}</td>
+                    <td>{{ stats.wins }}</td>
+                    <td>{{ stats.losses }}</td>
+                    <td>{{ stats.kills }}</td>
+                    <td>{{ stats.deaths }}</td>
+                    <td>{{ stats.assists }}</td>
+                    <td>{{ stats.gold_earned }}</td>
+                    <td>{{ stats.damage_dealt }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>No player stats available. Add games first!</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+	$(document).ready(function() {
+		$('#playerStatsTable').DataTable({
+			layout: {
+				topStart: {
+					pageLength: {
+						menu: [ 5, 10, 15, 20 ]
+					}
+				},
+				topEnd: {
+					search: {
+						placeholder: 'Search whatever here!'
+					}
+				},
+				bottomEnd: {
+					paging: {
+						buttons: 3
+					}
+				}
+			},
+			responsive: true
+		});
+	});
+</script>
+{% endblock %}
