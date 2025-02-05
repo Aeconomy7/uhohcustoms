@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-100">
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
@@ -11,70 +11,97 @@
         <link rel="stylesheet" href="{{ url_for('static', filename='css/datatables.min.css') }}">
         <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     </head>
-    <body>
-        <div class="d-flex" id="wrapper">
-            <!-- Sidebar-->
-            <div class="border-end" id="sidebar-wrapper">
-                <div class="sidebar-heading border-bottom">UH OH CUSTOMS</div>
-                
-                <div class="list-group list-group-flush">
-                    {% if session.get('user_uuid') %}
-                    <div class="dropdown">
-                        <a class="px-bg-dark list-group-item list-group-item-action list-group-item-light p-3 dropdown-toggle" href="#" id="teamsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            Active Team: {{ session.get('active_team_name', 'None') }}
-                        </a>
-                        <ul class="dropdown-menu px-bg-inverted" aria-labelledby="teamsDropdown">
-                            {% for team in session.get('user_teams', []) %}
-                                {% if team['team_uuid'] == session.get('active_team_uuid') %}
-                                    <a class="dropdown-item" style="color: rgb(155, 8, 155);" href="#!">
-                                        {{ team['team_name'] }}
-                                    </a>
+    <body class="h-100">
+        <div class="d-flex flex-column h-100">
+
+            <!-- TOP NAVBAR -->
+            <div id="top-navbar">
+                <nav class="navbar navbar-expand-lg px-bg-dark fixed-top" style="border-bottom: 1px solid cyan;">
+                    <div class="d-flex w-100">
+                        <a class="navbar-brand funcolor" href="{{ url_for('index') }}" style="color: white; padding-left: 20px;">UH OH CUSTOMS</a>
+                        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                            <span class="navbar-toggler-icon"></span>
+                        </button>
+                        <div class="collapse navbar-collapse" id="navbarNav">
+                            <ul class="navbar-nav ms-auto" >
+                                {% if session.get('user_uuid') %}
+                                    <!-- <div class="vr"></div> -->
+                                    <!-- TEAMS THINGS N STUFF -->
+                                    <li class="nav-item dropdown">
+                                        <a class="nav-link dropdown-toggle" href="#" id="teamDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="border-left: 1px solid cyan; color: white;">
+                                            Active team: <span style="color: yellow; padding-left: 10px;">{{ session.get('active_team_name', 'None') }}</span>
+                                        </a>
+                                        <ul class="dropdown-menu dropdown-menu-end px-bg-dark" aria-labelledby="teamDropdown">
+                                            {% for team in session.get('user_teams', []) %}
+                                                <li>
+                                                    {% if team['team_uuid'] == session.get('active_team_uuid') %}
+                                                        <a class="dropdown-item px-bg-dark" style="color: yellow;" href="{{ url_for('set_active_team', team_uuid=team['team_uuid'], next=request.path) }}">
+                                                            {{ team['team_name'] }}
+                                                        </a>
+                                                    {% else %}
+                                                        <a class="dropdown-item px-bg-dark" href="{{ url_for('set_active_team', team_uuid=team['team_uuid'], next=request.path) }}">
+                                                            {{ team['team_name'] }}
+                                                        </a>
+                                                    {% endif %}
+                                                </li>
+                                            {% endfor %}
+                                        </ul>
+                                    </li>
+                                    <!-- <div class="vr"></div> -->
+                                    <!-- USER ACCOUNT THINGS AND STUFF -->
+                                    <li class="nav-item dropdown">
+                                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="border-left: 1px solid cyan; color: white;">
+                                            Logged in as: <span style="color: yellow; padding-left: 10px;">{{ session.get('username', 'None') }}</span>
+                                        </a>
+                                        <ul class="dropdown-menu dropdown-menu-end px-bg-dark" aria-labelledby="userDropdown">
+                                            {% if session.get('role') == 'admin' %}
+                                            <li>
+                                                <a class="dropdown-item px-bg-dark" href="{{ url_for('uhohadmin') }}">
+                                                    Admin
+                                                </a>
+                                            </li>
+                                            {% endif %}
+                                            <li>
+                                                <!-- THIS WILL BE USER ACCOUNT -->
+                                                <a class="dropdown-item px-bg-dark" href="{{ url_for('index') }}">
+                                                    Account
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item px-bg-dark" href="{{ url_for('manage_teams') }}">
+                                                    Manage Teams
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item px-bg-dark" href="{{ url_for('logout') }}">
+                                                    Logout
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <div class="vr"></div>
+                                    
                                 {% else %}
-                                    <a class="dropdown-item" href="{{ url_for('set_active_team', team_uuid=team['team_uuid'], next=request.path) }}">
-                                        {{ team['team_name'] }}
-                                    </a>
+                                    <div class="vr"></div>
+                                    <li class="nav-item">
+                                        <a class="nav-link" href="{{ url_for('login') }}" style="color: white;">Login</a>
+                                    </li>
+                                    <div class="vr"></div>
+                                    <li class="nav-item">
+                                        <a class="nav-link" href="{{ url_for('register') }}" style="color: white;">Register</a>
+                                    </li>
+                                    <div class="vr"></div>
                                 {% endif %}
-                            {% endfor %}
-                        </ul>
-                    </div>
-                    <a class="px-bg-dark list-group-item list-group-item-action list-group-item-light p-3" href="{{ url_for('game_history') }}">Game History</a>
-                    <a class="px-bg-dark list-group-item list-group-item-action list-group-item-light p-3" href="{{ url_for('player_stats') }}">Player Stats</a>
-                    {% endif %}
-                </div>
-                
-            </div>
-            <!-- Page content wrapper-->
-			
-            <div id="page-content-wrapper">
-                <!-- Top navigation-->
-                <nav class="navbar navbar-expand-lg navbar-light bg-light px-bg-dark border-bottom">
-                <!-- <nav class="navbar navbar-expand-lg px-bg-dark"> -->
-                    <div class="container-fluid">
-                        <button class="btn btn-primary" id="sidebarToggle">Toggle Menu</button>
-                        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
-                        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                            <ul class="navbar-nav ms-auto mt-2 mt-lg-0">
-                                <!-- <li class="nav-item active"><a class="nav-link" href="#!">Home</a></li>
-                                <li class="nav-item"><a class="nav-link" href="#!">Link</a></li> -->
-                                <li class="nav-item dropdown">
-                                    <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span style="color: white;">Logged in as: </span><span style="color: yellow;">{{ session.get('username', 'None') }}</span></a>
-                                    <div class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                                        {% if session.get('role') == 'admin' %}
-                                            <a class="dropdown-item" href="{{ url_for('uhohadmin') }}">Admin</a>
-                                        {% endif %}
-                                        <a class="dropdown-item" href="{{ url_for('manage_teams') }}">Manage Teams</a>
-                                        <a class="dropdown-item" href="#!">Account</a>
-                                        <div class="dropdown-divider"></div>
-                                        <a class="dropdown-item" href="{{ url_for('logout', next=request.path) }}">Logout</a>
-                                    </div>
-                                </li>
                             </ul>
                         </div>
                     </div>
                 </nav>
-				
+            </div>
+
+            <div class="px-bg-darkgreenblue d-flex flex-row flex-remaining-height" style="padding-top: 56px;">
+
                 {% if session.get('user_uuid') %}
-                <!-- Alert messages -->
+                <!-- FLASH MESSAGES -->
                 <div class="alert-container">
                     {% with messages = get_flashed_messages(with_categories=true) %}
                         {% if messages %}
@@ -91,18 +118,50 @@
                 </div>
                 {% endif %}
 
-                <!-- Page content-->
-                <div class="container-fluid px-bg-inverted">
-                <!-- <div class="container-fluid px-bg-inverted" style="min-height: calc(100vh - 57px);"> -->
-					{% block content %}
-					{% endblock %}
+                <!-- SIDE NAVBAR -->
+                {% if session.get('user_uuid') %}
+                <div id="side-navbar" class="px-bg-dark h-100" style="border-right: 1px solid cyan;">
+                    <div class="flex-shrink-0" style="width: 200px;">
+                        <ul class="list-unstyled" >
+                            <li class="mb-1" style="border-bottom: 1px solid cyan; ">
+                                <button class="btn btn-toggle align-items-center rounded collapsed" style="color: white;" data-bs-toggle="collapse" data-bs-target="#dashboard-collapse" aria-expanded="false">
+                                Active Team: {{ session.get('active_team_name', 'None') }}
+                                </button>
+                                <div class="collapse" id="dashboard-collapse">
+                                <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small">
+                                    {% for team in session.get('user_teams', []) %}
+                                    <li>
+                                        <a class="dropdown-item" href="{{ url_for('set_active_team', team_uuid=team['team_uuid'], next=request.path) }}">
+                                            {{ team['team_name'] }}
+                                        </a>
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                                </div>
+                            </li>
+                            <li class="mb-1" style="border-bottom: 1px solid cyan;">
+                                <a class="btn btn-toggle align-items-center rounded collapsed" style="color: white;" href="{{ url_for('game_history') }}">
+                                    Game History
+                                </a>
+                            </li>
+                            <li class="mb-1" style="border-bottom: 1px solid cyan;">
+                                <a class="btn btn-toggle align-items-center rounded collapsed" style="color: white;" href="{{ url_for('player_stats') }}">
+                                    Player Stats
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
-				
+                {% endif %}
+                
+                <!-- MAIN PAGE CONTENT POPULATED HERE -->
+                <div id="page-wrapper" class="mt-3 w-100 h-100" style="overflow-y: scroll;">
+                    {% block content %}{% endblock %}
+                </div>
+
             </div>
-			
         </div>
-        
-		
+
         <script src="{{ url_for('static', filename='js/jquery-3.7.1.min.js') }}"></script>
         <script src="{{ url_for('static', filename='js/datatables.min.js') }}"></script>
 		<script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
