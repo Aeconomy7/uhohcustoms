@@ -79,18 +79,14 @@
                                             </li>
                                         </ul>
                                     </li>
-                                    <div class="vr"></div>
                                     
                                 {% else %}
-                                    <div class="vr"></div>
                                     <li class="nav-item">
-                                        <a class="nav-link" href="{{ url_for('login') }}" style="color: white;">Login</a>
+                                        <a class="nav-link" href="{{ url_for('login') }}" style="border-left: 1px solid cyan; color: white;">Login</a>
                                     </li>
-                                    <div class="vr"></div>
                                     <li class="nav-item">
-                                        <a class="nav-link" href="{{ url_for('register') }}" style="color: white;">Register</a>
+                                        <a class="nav-link" href="{{ url_for('register') }}" style="border-left: 1px solid cyan; color: white;">Register</a>
                                     </li>
-                                    <div class="vr"></div>
                                 {% endif %}
                             </ul>
                         </div>
