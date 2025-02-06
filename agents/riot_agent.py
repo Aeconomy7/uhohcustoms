@@ -8,9 +8,9 @@ class RiotAgent:
 		self.__server_region = server_region
 		self.__match_region = match_region
 
-		self.__base_riot_api_url = f"https://{self.__match_region}.api.riotgames.com"
-		self.__summoner_api_url = f"{self.__base_riot_api_url}/lol/summoner/v4/summoners"
-		self.__match_api_url = f"{self.__base_riot_api_url}/lol/match/v5/matches"
+		#self.__base_riot_api_url = f"https://{self.__match_region}.api.riotgames.com"
+		self.__summoner_api_url = f"/lol/summoner/v4/summoners"
+		self.__match_api_url = f"/lol/match/v5/matches"
 		
 		self.__api_key = api_key
 
@@ -43,8 +43,10 @@ class RiotAgent:
 
 	# UTILITY FUNCTIONS
 	# fetch summoner data
-	def fetch_summoner_data(self, summoner_name, retries=3, timeout=10):
-		url = f"{self.__summoner_api_url}/by-name/{quote(summoner_name)}"
+	def fetch_summoner_data(self, summoner_name, match_region, retries=3, timeout=10):
+		base_riot_api_url = f"https://{match_region}.api.riotgames.com"
+		
+		url = f"{base_riot_api_url}{self.__summoner_api_url}/by-name/{quote(summoner_name)}"
 		
 		headers = {
 			"X-Riot-Token": self.__api_key
@@ -67,8 +69,10 @@ class RiotAgent:
 
 
 	# fetch match data
-	def fetch_match_data(self, match_id, retries=3, timeout=10):
-		url = f"{self.__match_api_url}/{match_id}"
+	def fetch_match_data(self, match_id, match_region, retries=3, timeout=10):
+		base_riot_api_url = f"https://{match_region}.api.riotgames.com"
+		
+		url = f"{base_riot_api_url}{self.__match_api_url}/{match_id}"
 		
 		headers = {
 			"X-Riot-Token": self.__api_key

@@ -96,6 +96,27 @@ SUPPORTED_REGIONS	= ['NA1', 'EUW1', 'EUN1', 'KR', 'BR1', 'LA1', 'LA2', 'OC1', 'J
 def sanitize_game_code(game_code):
 	return re.sub(r'[^a-zA-Z0-9_]', '', game_code)
 
+def get_match_region(game_region):
+    region_mapping = {
+        'NA1': 'americas',
+        'BR1': 'americas',
+        'LAN': 'americas',
+        'LAS': 'americas',
+        'OCE': 'americas',
+        'EUW1': 'europe',
+        'EUNE1': 'europe',
+        'TR1': 'europe',
+        'RU': 'europe',
+        'KR': 'asia',
+        'JP1': 'asia',
+        'SG2': 'sea',
+        'PH2': 'sea',
+        'TH2': 'sea',
+        'TW2': 'sea',
+        'VN2': 'sea'
+    }
+    return region_mapping.get(game_region, 'unknown')
+
 def app_login_required(f):
 	@wraps(f)
 	def decorated_function(*args, **kwargs):
@@ -596,7 +617,7 @@ def add_game():
 
 			# if not, attempt to fetch from riot api
 			if game_data == None:	
-				game_data = RIOT_AGENT.fetch_match_data(game_code)
+				game_data = RIOT_AGENT.fetch_match_data(game_code, get_match_region(game_region))
 				if game_data:
 					flash(f"Game {game_code} successfully added!", 'success')
 					with open(file_path, 'w') as f:

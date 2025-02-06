@@ -2,46 +2,8 @@
 
 {% block content %}
 <!-- <div class="container h-100"> -->
-<div class="d-flex justify-content-center align-items-center h-100">
-	<div class="card p-4 shadow text-center px-bg-inverted" style="padding: 10px;">
-		<!-- {% if game_result %}
-		<h2 class="m-1">Game Result</h2>
-			<p><strong>Winning Team:</strong> <span class="team-{{ game_result | to_lowercase }}">{{ game_result }}</span></p>
-
-			<h2 class="m-1">Players Data</h2>
-			<table class="table table-striped">
-				<thead>
-					<tr>
-						<th>Champion</th>
-						<th>Summoner Name</th>
-						<th>Kills</th>
-						<th>Deaths</th>
-						<th>Assists</th>
-						<th>Gold Earned</th>
-						<th>Damage</th>
-					</tr>
-				</thead>
-				<tbody>
-					{% for player in players_data %}
-					{% if player['teamId'] == 100 %}
-					<tr class="team-blue">
-					{% elif player['teamId'] == 200 %}
-					<tr class="team-red">
-					{% else %}
-					<tr>
-					{% endif %}
-						<td><img src="{{ player['championName'] | get_champion_image_base64 }}" width="40px" height="40px" alt="{{ player['championName'] }}"></td>
-						<td>{{ player['riotIdGameName'] | e }}#{{ player['riotIdTagline'] | e }}</td>
-						<td>{{ player['kills'] }}</td>
-						<td>{{ player['deaths'] }}</td>
-						<td>{{ player['assists'] }}</td>
-						<td>{{ player['goldEarned'] }}</td>
-						<td>{{ player['totalDamageDealtToChampions'] }}</td>			
-					</tr>
-					{% endfor %}
-				</tbody>
-			</table>
-		{% else %} -->
+<div class="d-flex flex-column flex-remaining-height justify-content-center align-items-center w-100">
+	<div class="card p-4 shadow text-center px-bg-inverted" style="border: 1px solid cyan; padding: 10px;">
 		<div class="card-body">
 			<h5 class="card-title">Add a game</h5>
 			<form action="{{ url_for('add_game') }}" method="POST">
@@ -72,7 +34,6 @@
 		<h5>What do?</h5>
 		<p>Find your game ID to add within your match history and paste it above! Easy as!</p>
 		<img src="{{ url_for('static', filename='img/add_game.png') }}" class="img-fluid" alt="Add Game">
-		<!-- {% endif %} -->
 	</div>
 </div>
 <!-- </div> -->
