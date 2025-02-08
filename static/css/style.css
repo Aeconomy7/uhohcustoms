@@ -1,4 +1,5 @@
 html, body {
+	font-family: OCR A Std, monospace;
     overflow: hidden;
 }
 
@@ -119,6 +120,12 @@ html, body {
     25%	  { color: #00FFFF; }
     50%	  { color: #FF0080; }
     75%	  { color: #8000FF; }
+}
+
+/* DATATABLES CSS */
+/* Change the font color of the DataTables pageLength dropdown */
+.dt-input option {
+    color: #000000; /* Change this to your desired color */
 }
 
 /* SIDEBAR CSS */

@@ -13,6 +13,7 @@ import datetime
 import json
 import re
 import os
+import time
 import random
 import logging
 from logging.handlers import RotatingFileHandler
@@ -97,25 +98,25 @@ def sanitize_game_code(game_code):
 	return re.sub(r'[^a-zA-Z0-9_]', '', game_code)
 
 def get_match_region(game_region):
-    region_mapping = {
-        'NA1': 'americas',
-        'BR1': 'americas',
-        'LAN': 'americas',
-        'LAS': 'americas',
-        'OCE': 'americas',
-        'EUW1': 'europe',
-        'EUNE1': 'europe',
-        'TR1': 'europe',
-        'RU': 'europe',
-        'KR': 'asia',
-        'JP1': 'asia',
-        'SG2': 'sea',
-        'PH2': 'sea',
-        'TH2': 'sea',
-        'TW2': 'sea',
-        'VN2': 'sea'
-    }
-    return region_mapping.get(game_region, 'unknown')
+	region_mapping = {
+		'NA1': 'americas',
+		'BR1': 'americas',
+		'LAN': 'americas',
+		'LAS': 'americas',
+		'OCE': 'americas',
+		'EUW1': 'europe',
+		'EUNE1': 'europe',
+		'TR1': 'europe',
+		'RU': 'europe',
+		'KR': 'asia',
+		'JP1': 'asia',
+		'SG2': 'sea',
+		'PH2': 'sea',
+		'TH2': 'sea',
+		'TW2': 'sea',
+		'VN2': 'sea'
+	}
+	return region_mapping.get(game_region, 'unknown')
 
 def app_login_required(f):
 	@wraps(f)
@@ -706,8 +707,10 @@ def game_history():
 	except Exception as e:
 		flash('An unexpected error occurred. Please try again.', 'danger')
 
+	return render_template('game_history.html')
 
-# ACTION: View game data
+
+# STATIC: View game data
 @app.route('/game_history/<game_code>', methods=['GET'])
 @auth.login_required
 @app_login_required
@@ -716,8 +719,8 @@ def view_game(game_code):
 		return redirect(url_for('uhoh', error_code=401))
 	
 	try:
-		if not re.match(r"^(NA1|EUW1|EUNE1|KR|BR1|JP1|LAN|LAS|OCE|TR1|RU)_\d{1,32}$", game_code):
-			raise ValueError("Invalid game code format.")
+		# if not re.match(r"^(NA1|EUW1|EUNE1|KR|BR1|JP1|LAN|LAS|OCE|TR1|RU)_\d{1,32}$", game_code):
+		# 	raise ValueError("Invalid game code format.")
 
 		if not CUSTOMS_DB.check_if_team_game_exists(game_code, session['active_team_uuid']):
 			raise ValueError(f"Game {game_code} not found for current team.")
@@ -756,7 +759,7 @@ def view_game(game_code):
 	#return redirect(url_for('teams', team_uuid=session.get('active_team_uuid')))
 
 
-# PLAYER ROUTES
+# Static: PLAYER ROUTES
 @app.route('/player_stats', methods=['GET'])
 @auth.login_required
 @app_login_required
@@ -792,7 +795,7 @@ def player_stats():
 				players_info[summoner_name]['assists'] += player['assists']
 				players_info[summoner_name]['deaths'] += player['deaths']
 				players_info[summoner_name]['gold_earned'] += player['goldEarned']
-				players_info[summoner_name]['damage_dealt'] += player['totalDamageDealt']
+				players_info[summoner_name]['damage_dealt'] += player['totalDamageDealtToChampions']
 				
 				if player['win']:
 					players_info[summoner_name]['wins'] += 1
@@ -807,6 +810,134 @@ def player_stats():
 		flash('An unexpected error occurred. Please try again.', 'danger')
 
 	return render_template('player_stats.html', players_info=players_info)
+
+
+# ACTION: Manually add game stats
+@app.route('/manual_game_entry', methods=['GET', 'POST'])
+@app_login_required
+def manual_game_entry():
+	if 'user_uuid' not in session:
+		return redirect(url_for('uhoh', error_code=401))
+	
+	try:
+		# Check that user is the captain of the team they are adding the game to
+		if not CUSTOMS_DB.is_user_captain_of_team(session['user_uuid'], session['active_team_uuid']):
+			raise ValueError("You must be the captain of the team to add a game manually.")
+
+		if request.method == 'GET':
+			return render_template('manual_game_entry.html', champions=DD_AGENT.get_all_champion_names())
+		
+
+		if request.method == 'POST':
+			game_code = f"MANUAL_CUSTOMS_{uuid.uuid4()}"
+
+			print(f"request.form: {request.form}")
+
+			blue_team_players = []
+			red_team_players = []
+
+			for i in range(5):
+				print(i)
+				print(f'blue_team_players[{i}] : {request.form.get(f"blue_team_players[{i}]")}')
+				print(f'blue_team_players_champion[{i}] : {request.form.get(f"blue_team_players_champion[{i}]")}')
+				print(f'blue_team_players_kills[{i}] : {request.form.get(f"blue_team_players_kills[{i}]")}')
+				print(f'blue_team_players_assists[{i}] : {request.form.get(f"blue_team_players_assists[{i}]")}')
+				print(f'blue_team_player_deaths[{i}] : {request.form.get(f"blue_team_players_deaths[{i}]")}')
+				print(f'blue_team_player_gold[{i}] : {request.form.get(f"blue_team_players_gold[{i}]")}')
+				print(f'blue_team_player_damage[{i}] : {request.form.get(f"blue_team_players_damage[{i}]")}')
+				blue_team_players.append({
+					'summonerName': request.form.get(f'blue_team_players[{i}]'),
+					'championName': request.form.get(f'blue_team_players_champion[{i}]'),
+					'kills': int(request.form.get(f'blue_team_players_kills[{i}]')),
+					'assists': int(request.form.get(f'blue_team_players_assists[{i}]')),
+					'deaths': int(request.form.get(f'blue_team_players_deaths[{i}]')),
+					'goldEarned': int(request.form.get(f'blue_team_players_gold[{i}]')),
+					'totalDamageDealtToChampions': int(request.form.get(f'blue_team_players_damage[{i}]'))
+				})
+
+				red_team_players.append({
+					'summonerName': request.form.get(f'red_team_players[{i}]'),
+					'championName': request.form.get(f'red_team_players_champion[{i}]'),
+					'kills': int(request.form.get(f'red_team_players_kills[{i}]')),
+					'assists': int(request.form.get(f'red_team_players_assists[{i}]')),
+					'deaths': int(request.form.get(f'red_team_players_deaths[{i}]')),
+					'goldEarned': int(request.form.get(f'red_team_players_gold[{i}]')),
+					'totalDamageDealtToChampions': int(request.form.get(f'red_team_players_damage[{i}]'))
+				})
+			
+			# date played (to match riot data blob format)
+			current_time_seconds = time.time()
+			date_played = int(current_time_seconds * 1000)
+
+			# game result
+			game_result = request.form['game_result']
+
+			# Process and save the data
+			game_data = {
+				'info': {
+					'gameCreation': date_played,
+					'participants': [
+						# Example structure for blue team players
+						{
+							'riotIdGameName': player['summonerName'].split('#')[0],
+							'riotIdTagline': player['summonerName'].split('#')[1],
+							'championName': player['championName'],
+							'teamId': 100,
+							'kills': int(player['kills']),
+							'assists': int(player['assists']),
+							'deaths': int(player['deaths']),
+							'goldEarned': int(player['goldEarned']),
+							'totalDamageDealtToChampions': int(player['totalDamageDealtToChampions']),
+							'win': request.form.get('game_result') == 'Blue'
+						} for player in blue_team_players
+					] + [
+						# Example structure for red team players
+						{
+							'riotIdGameName': player['summonerName'].split('#')[0],
+							'riotIdTagline': player['summonerName'].split('#')[1],
+							'championName': player['championName'],
+							'teamId': 200,
+							'kills': int(player['kills']),
+							'assists': int(player['assists']),
+							'deaths': int(player['deaths']),
+							'goldEarned': int(player['goldEarned']),
+							'totalDamageDealtToChampions': int(player['totalDamageDealtToChampions']),
+							'win': request.form.get('game_result') == 'Red'
+						} for player in red_team_players
+					],
+					'teams': [
+						{
+							'teamId': 100,
+							'win': request.form.get('game_result') == 'Blue'
+						},
+						{
+							'teamId': 200,
+							'win': request.form.get('game_result') == 'Red'
+						}
+					]
+				}
+			}
+
+			print(f"game_data: {game_data}")
+
+			# Save to database (example function, replace with actual implementation)
+			if not CUSTOMS_DB.add_game(game_code, json.dumps(game_data)):
+				raise ValueError("Failed to add game data to database.")
+
+			# add game id to team_game table
+			if not CUSTOMS_DB.add_team_game(session.get('active_team_uuid'), game_code):
+				raise ValueError("Failed to add game data to team.")
+
+			flash('Game data successfully saved!', 'success')
+			return render_template(url_for('game_history'))
+		
+	except ValueError as e:
+		flash(str(e), 'danger')
+
+	except Exception as e:
+		flash('An unexpected error occurred. Please try again.', 'danger')
+	
+	return redirect(url_for('game_history'))
 
 
 # ADMIN ROUTES
@@ -900,6 +1031,11 @@ def sanitize(value):
 def get_champion_image_base64(value):
 	image_data = DD_AGENT.get_single_image('champion', value)['image_base64']
 	return f"data:image/png;base64,{image_data}"
+
+@app.template_filter('is_team_captain')
+def is_team_captain(value):
+	result = CUSTOMS_DB.is_user_captain_of_team(value, session.get('active_team_uuid')) != None
+	return result
 
 
 ########

@@ -135,6 +135,9 @@ class DataDragonAgent:
 			print(f"[-][DD_AGENT][update_current_patch] Failed to fetch versions: {response.status_code}")
 			return None
 
+	def get_all_champion_names(self):
+		return [champion['name'] for champion in self.__champions_data['data'].values()]
+
 	# DOWNLOAD NEWEST DATA DRAGON ARCHIVE AND EXTRACT IT
 	def download_and_extract_archive(self):
 		url = f'{self.__base_dd_url}/cdn/dragontail-{self.__current_patch}.tgz'
