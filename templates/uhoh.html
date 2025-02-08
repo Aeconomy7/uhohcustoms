@@ -16,6 +16,8 @@
                     Oh dear! There does not appear to be anything here except this old monkey!
                 {% elif error_code == 419 %}
                     The teacup is empty, please refill it.
+                {% elif error_code == 429 %}
+                    The monkey is overwhelmed, please try again later.
                 {% elif error_code >= 500 and error_code <= 599 %}
                     The monkey has made a mistake, please try again later.
                 {% else %}

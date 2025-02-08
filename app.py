@@ -5,6 +5,8 @@ from functools import wraps
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session, send_from_directory
 from flask_httpauth import HTTPBasicAuth
 from flask_socketio import SocketIO, emit
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from werkzeug.security import generate_password_hash, check_password_hash
 import psutil
 import uuid
@@ -34,6 +36,11 @@ from config import *
 app = Flask(__name__)
 app.secret_key = FLASK_SECRET_KEY
 
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=["200 per day", "50 per hour"]
+)
 
 ########
 # AUTH #
@@ -145,6 +152,11 @@ def index():
 	return render_template('index.html')
 
 
+@app.route('/about')
+def about():
+	return render_template('about.html')
+
+
 # for riot site verification
 @app.route('/riot.txt')
 def riot_app_verification():
@@ -153,7 +165,8 @@ def riot_app_verification():
 
 # ACTION: User Registration
 @app.route('/register', methods=['GET','POST'])
-@auth.login_required
+@limiter.limit("5 per minute")
+#@auth.login_required
 def register():
 	if request.method == 'POST':
 		valid = True
@@ -206,7 +219,8 @@ def login_rso():
 
 # AUTH: Login
 @app.route('/login', methods=['GET','POST'])
-@auth.login_required
+@limiter.limit("5 per minute")
+#@auth.login_required
 def login():
 	if request.method == 'POST':
 		email = request.form['email']
@@ -230,7 +244,6 @@ def login():
 				app.logger.debug(f"[?][APP][login][{session['username']}] active_team_uuid: {str(session['active_team_uuid'])}")
 
 			return redirect(request.args.get('next', url_for('game_history')))
-			#return redirect(request.args.get('next', url_for('teams', team_uuid=session['active_team_uuid'])))
 		else:
 			flash('Invalid email or password.', 'danger')
 
@@ -270,7 +283,7 @@ def callback():
 
 # STATIC: Set active team
 @app.route('/set_active_team/<team_uuid>', methods=['GET', 'POST'])
-@auth.login_required
+#@auth.login_required
 @app_login_required
 def set_active_team(team_uuid):
 	try:
@@ -297,108 +310,110 @@ def set_active_team(team_uuid):
 		session['active_team_uuid'] = active_team[0]
 
 	except ValueError as e:
+		app.logger.error(f"[!][APP][set_active_team][{session.get('username')}] {str(e)}")
 		flash(str(e), 'danger')
 
 	except Exception as e:
+		app.logger.error(f"[!][APP][set_active_team][{session.get('username')}] {str(e)}")
 		flash('An unexpected error occurred setting active team. Please try again.', 'danger')
 
 	return redirect(url_for('game_history'))
 	#return redirect(url_for('teams', team_uuid=session['active_team_uuid']))
 
 
-# STATIC: Teams
-@app.route('/teams/<team_uuid>', methods=['GET', 'POST'])
-@auth.login_required
-@app_login_required
-def teams(team_uuid):
-	try:
-		if 'user_uuid' not in session:
-			return redirect(url_for('uhoh', error_code=401))
+# # STATIC: Teams
+# @app.route('/teams/<team_uuid>', methods=['GET', 'POST'])
+# #@auth.login_required
+# @app_login_required
+# def teams(team_uuid):
+# 	try:
+# 		if 'user_uuid' not in session:
+# 			return redirect(url_for('uhoh', error_code=401))
 		
-		if team_uuid == 'None':
-			return redirect(url_for('manage_teams'))
+# 		if team_uuid == 'None':
+# 			return redirect(url_for('manage_teams'))
 
-		user_uuid = session['user_uuid']
-		user_teams = CUSTOMS_DB.get_teams_for_user(user_uuid)
-		active_team = next((team for team in user_teams if team[0] == str(team_uuid)), None)
-		team_members = CUSTOMS_DB.get_team_members(active_team[0])
+# 		user_uuid = session['user_uuid']
+# 		user_teams = CUSTOMS_DB.get_teams_for_user(user_uuid)
+# 		active_team = next((team for team in user_teams if team[0] == str(team_uuid)), None)
+# 		team_members = CUSTOMS_DB.get_team_members(active_team[0])
 
-		if DEBUG:
-			app.logger.debug(f"[?][APP][teams][{session.get('username')}] user_teams:	{user_teams}")
-			app.logger.debug(f"[?][APP][teams][{session.get('username')}] active_team:	{active_team}")
-			app.logger.debug(f"[?][APP][teams][{session.get('username')}] team_members:	{team_members}")
+# 		if DEBUG:
+# 			app.logger.debug(f"[?][APP][teams][{session.get('username')}] user_teams:	{user_teams}")
+# 			app.logger.debug(f"[?][APP][teams][{session.get('username')}] active_team:	{active_team}")
+# 			app.logger.debug(f"[?][APP][teams][{session.get('username')}] team_members:	{team_members}")
 
-		if not active_team:
-			raise ValueError('You are not currently a part of that team.')
+# 		if not active_team:
+# 			raise ValueError('You are not currently a part of that team.')
 
-		session['user_teams'] = [{'team_uuid': team[0], 'team_name': team[1]} for team in user_teams]
-		session['active_team_name'] = active_team[1]
-		session['active_team_uuid'] = active_team[0]
+# 		session['user_teams'] = [{'team_uuid': team[0], 'team_name': team[1]} for team in user_teams]
+# 		session['active_team_name'] = active_team[1]
+# 		session['active_team_uuid'] = active_team[0]
 
-		team_game_data = CUSTOMS_DB.get_team_game_data_by_team_uuid(session.get('active_team_uuid', 'None'))
-		games_info = []
-		for game in team_game_data:
-			game_code = game[0]
+# 		team_game_data = CUSTOMS_DB.get_team_game_data_by_team_uuid(session.get('active_team_uuid', 'None'))
+# 		games_info = []
+# 		for game in team_game_data:
+# 			game_code = game[0]
 
-			# game blob data
-			game_info = json.loads(game[1])['info']
+# 			# game blob data
+# 			game_info = json.loads(game[1])['info']
 			
-			# date played
-			date_played_timestamp = game_info['gameCreation'] / 1000  # Convert milliseconds to seconds
-			date_played = datetime.datetime.fromtimestamp(date_played_timestamp).strftime('%Y-%m-%d %H:%M:%S')
+# 			# date played
+# 			date_played_timestamp = game_info['gameCreation'] / 1000  # Convert milliseconds to seconds
+# 			date_played = datetime.datetime.fromtimestamp(date_played_timestamp).strftime('%Y-%m-%d %H:%M:%S')
 
-			# player data
-			players_data = game_info['participants']
-			blue_team_players = [
-				{
-					'summoner_name': f"{player['riotIdGameName']}#{player['riotIdTagline']}",
-					'champion_name': player['championName']
-				}
-				for player in players_data if player['teamId'] == 100
-			]
-			red_team_players = [
-				{
-					'summoner_name': f"{player['riotIdGameName']}#{player['riotIdTagline']}",
-					'champion_name': player['championName']
-				}
-				for player in players_data if player['teamId'] == 200
-			]
+# 			# player data
+# 			players_data = game_info['participants']
+# 			blue_team_players = [
+# 				{
+# 					'summoner_name': f"{player['riotIdGameName']}#{player['riotIdTagline']}",
+# 					'champion_name': player['championName']
+# 				}
+# 				for player in players_data if player['teamId'] == 100
+# 			]
+# 			red_team_players = [
+# 				{
+# 					'summoner_name': f"{player['riotIdGameName']}#{player['riotIdTagline']}",
+# 					'champion_name': player['championName']
+# 				}
+# 				for player in players_data if player['teamId'] == 200
+# 			]
 
-			# team data
-			teams = game_info['teams']
-			blue_team = next(team for team in teams if team['teamId'] == 100)
-			game_result = "Blue" if blue_team['win'] else "Red"
+# 			# team data
+# 			teams = game_info['teams']
+# 			blue_team = next(team for team in teams if team['teamId'] == 100)
+# 			game_result = "Blue" if blue_team['win'] else "Red"
 			
-			games_info.append({
-				'game_code': game_code,
-				'blue_team_players': blue_team_players,
-				'red_team_players': red_team_players,
-				'date_played': date_played,
-				'game_result': game_result
-			})
+# 			games_info.append({
+# 				'game_code': game_code,
+# 				'blue_team_players': blue_team_players,
+# 				'red_team_players': red_team_players,
+# 				'date_played': date_played,
+# 				'game_result': game_result
+# 			})
 
-		return render_template('teams.html', 
-						games_info=games_info, 
-						team_members=team_members, 
-						team_name=session['active_team_name'], 
-						active_team=active_team)
+# 		return render_template('teams.html', 
+# 						games_info=games_info, 
+# 						team_members=team_members, 
+# 						team_name=session['active_team_name'], 
+# 						active_team=active_team)
 		
-	except ValueError as e:
-		flash(str(e), 'danger')
+# 	except ValueError as e:
+# 		flash(str(e), 'danger')
 
-	except Exception as e:
-		flash('An unexpected error occurred setting active team. Please try again.', 'danger')
+# 	except Exception as e:
+# 		flash('An unexpected error occurred setting active team. Please try again.', 'danger')
 
-	return render_template('teams.html', 
-						games_info=None, 
-						team_members=team_members, 
-						team_name=session['active_team_name'], 
-						active_team=active_team)
+# 	return render_template('teams.html', 
+# 						games_info=None, 
+# 						team_members=team_members, 
+# 						team_name=session['active_team_name'], 
+# 						active_team=active_team)
 
 
 # STATIC: Manage teams
 @app.route('/manage_teams', methods=['GET'])
-@auth.login_required
+#@auth.login_required
 @app_login_required
 def manage_teams():
 	try:
@@ -417,6 +432,7 @@ def manage_teams():
 			app.logger.debug(f"[?][APP][manage_teams][{session.get('username')}] user_teams: {user_teams}")
 
 	except Exception as e:
+		app.logger.error(f"[!][APP][manage_teams][{session.get('username')}] {str(e)}")
 		flash('An unexpected error occurred. Please try again.', 'danger')
 
 	return render_template('manage_teams.html', user_teams=user_teams, captain_team=captain_team)
@@ -424,7 +440,7 @@ def manage_teams():
 
 # ACTION: Create team
 @app.route('/create_team', methods=['POST'])
-@auth.login_required
+#@auth.login_required
 @app_login_required
 def create_team():
 	team_name = request.form['team_name']
@@ -466,9 +482,11 @@ def create_team():
 		flash(f"Successfully created {team_name}, you are the captain now!", 'success')
 
 	except ValueError as e:
+		app.logger.error(f"[!][APP][create_team][{session.get('username')}] {str(e)}")
 		flash(str(e), 'danger')
 
 	except Exception as e:
+		app.logger.error(f"[!][APP][create_team][{session.get('username')}] {str(e)}")
 		flash('An unexpected error occurred creating the team. Please try again.', 'danger')
 
 	return redirect(request.args.get('next', url_for('game_history')))
@@ -477,7 +495,7 @@ def create_team():
 
 # ACTION: Join team
 @app.route('/join_team/<team_uuid>', methods=['GET', 'POST'])
-@auth.login_required
+#@auth.login_required
 @app_login_required
 def join_team(team_uuid='None'):
 	if 'user_uuid' not in session:
@@ -518,9 +536,11 @@ def join_team(team_uuid='None'):
 		flash(f"You have successfully joined {teamcheck[1]}!", 'success')
 
 	except ValueError as e:
+		app.logger.error(f"[!][APP][join_team][{session.get('username')}] {str(e)}")
 		flash(str(e), 'danger')
 
 	except Exception as e:
+		app.logger.error(f"[!][APP][join_team][{session.get('username')}] {str(e)}")
 		flash('An unexpected error occurred joining a team. Please try again.', 'danger')
 
 	return redirect(request.args.get('next', url_for('game_history')))
@@ -529,7 +549,7 @@ def join_team(team_uuid='None'):
 
 # ACTION: Leave Team
 @app.route('/leave_team/<team_uuid>', methods=['GET', 'POST'])
-@auth.login_required
+#@auth.login_required
 @app_login_required
 def leave_team(team_uuid):
 	if 'user_uuid' not in session:
@@ -564,9 +584,11 @@ def leave_team(team_uuid):
 		flash(f"You have successfully left the team.", 'success')
 
 	except ValueError as e:
+		app.logger.error(f"[!][APP][leave_team][{session.get('username')}] {str(e)}")
 		flash(str(e), 'danger')
 
 	except Exception as e:
+		app.logger.error(f"[!][APP][leave_team][{session.get('username')}] {str(e)}")
 		flash('An unexpected error occurred. Please try again.', 'danger')
 
 	return redirect(request.args.get('next', url_for('game_history')))
@@ -578,7 +600,8 @@ def leave_team(team_uuid):
 
 # New Game Upload - manual and file upload
 @app.route('/add_game', methods=['GET', 'POST'])
-@auth.login_required
+@limiter.limit("5 per minute")
+#@auth.login_required
 @app_login_required
 def add_game():
 	if request.method == 'GET':
@@ -640,9 +663,11 @@ def add_game():
 			return redirect(url_for('game_history.html'))
 		
 	except ValueError as e:
+		app.logger.error(f"[!][APP][add_game][{session.get('username')}] {str(e)}")
 		flash(str(e), 'danger')
 
 	except Exception as e:
+		app.logger.error(f"[!][APP][add_game][{session.get('username')}] {str(e)}")
 		flash('An unexpected error occurred. Please try again.', 'danger')
 
 	return render_template('add_game.html')
@@ -650,7 +675,7 @@ def add_game():
 
 # ACTION: See all games history for a team
 @app.route('/game_history', methods=['GET'])
-@auth.login_required
+#@auth.login_required
 @app_login_required
 def game_history():
 	if 'user_uuid' not in session:
@@ -702,9 +727,11 @@ def game_history():
 		return render_template('game_history.html', games_info=games_info)
 	
 	except ValueError as e:
+		app.logger.error(f"[!][APP][game_history][{session.get('username')}] {str(e)}")
 		flash(str(e), 'danger')
 
 	except Exception as e:
+		app.logger.error(f"[!][APP][game_history][{session.get('username')}] {str(e)}")
 		flash('An unexpected error occurred. Please try again.', 'danger')
 
 	return render_template('game_history.html')
@@ -712,7 +739,7 @@ def game_history():
 
 # STATIC: View game data
 @app.route('/game_history/<game_code>', methods=['GET'])
-@auth.login_required
+#@auth.login_required
 @app_login_required
 def view_game(game_code):
 	if 'user_uuid' not in session:
@@ -750,9 +777,11 @@ def view_game(game_code):
 						 players_data=players_data)
 		
 	except ValueError as e:
+		app.logger.error(f"[!][APP][view_game][{session.get('username')}] {str(e)}")
 		flash(str(e), 'danger')
 
 	except Exception as e:
+		app.logger.error(f"[!][APP][view_game][{session.get('username')}] {str(e)}")
 		flash('An unexpected error occurred. Please try again.', 'danger')
 
 	return redirect(url_for('game_history'))
@@ -761,7 +790,7 @@ def view_game(game_code):
 
 # Static: PLAYER ROUTES
 @app.route('/player_stats', methods=['GET'])
-@auth.login_required
+#@auth.login_required
 @app_login_required
 def player_stats():
 	if 'user_uuid' not in session:
@@ -804,9 +833,11 @@ def player_stats():
 
 
 	except ValueError as e:
+		app.logger.error(f"[!][APP][player_stats][{session.get('username')}] {str(e)}")
 		flash(str(e), 'danger')
 
 	except Exception as e:
+		app.logger.error(f"[!][APP][player_stats][{session.get('username')}] {str(e)}")
 		flash('An unexpected error occurred. Please try again.', 'danger')
 
 	return render_template('player_stats.html', players_info=players_info)
@@ -814,6 +845,7 @@ def player_stats():
 
 # ACTION: Manually add game stats
 @app.route('/manual_game_entry', methods=['GET', 'POST'])
+@limiter.limit("5 per minute")
 @app_login_required
 def manual_game_entry():
 	if 'user_uuid' not in session:
@@ -837,14 +869,7 @@ def manual_game_entry():
 			red_team_players = []
 
 			for i in range(5):
-				print(i)
-				print(f'blue_team_players[{i}] : {request.form.get(f"blue_team_players[{i}]")}')
-				print(f'blue_team_players_champion[{i}] : {request.form.get(f"blue_team_players_champion[{i}]")}')
-				print(f'blue_team_players_kills[{i}] : {request.form.get(f"blue_team_players_kills[{i}]")}')
-				print(f'blue_team_players_assists[{i}] : {request.form.get(f"blue_team_players_assists[{i}]")}')
-				print(f'blue_team_player_deaths[{i}] : {request.form.get(f"blue_team_players_deaths[{i}]")}')
-				print(f'blue_team_player_gold[{i}] : {request.form.get(f"blue_team_players_gold[{i}]")}')
-				print(f'blue_team_player_damage[{i}] : {request.form.get(f"blue_team_players_damage[{i}]")}')
+
 				blue_team_players.append({
 					'summonerName': request.form.get(f'blue_team_players[{i}]'),
 					'championName': request.form.get(f'blue_team_players_champion[{i}]'),
@@ -932,9 +957,11 @@ def manual_game_entry():
 			return render_template(url_for('game_history'))
 		
 	except ValueError as e:
+		app.logger.error(f"[!][APP][manual_game_entry][{session.get('username')}] {str(e)}")
 		flash(str(e), 'danger')
 
 	except Exception as e:
+		app.logger.error(f"[!][APP][manual_game_entry][{session.get('username')}] {str(e)}")
 		flash('An unexpected error occurred. Please try again.', 'danger')
 	
 	return redirect(url_for('game_history'))
@@ -942,7 +969,7 @@ def manual_game_entry():
 
 # ADMIN ROUTES
 @app.route('/uhohadmin')
-@auth.login_required
+#@auth.login_required
 @app_login_required
 def uhohadmin():
 	# DOUBLE CHECK FOR FUNKINESS
@@ -952,21 +979,30 @@ def uhohadmin():
 	if DEBUG:
 		app.logger.debug(f"[?][APP][uhohadmin][{session.get('username')}] Admin access granted.")
 
-	# app stats
-	total_users = CUSTOMS_DB.get_total_users()
-	total_teams = CUSTOMS_DB.get_total_teams()
-	total_games = CUSTOMS_DB.get_total_games()
+	try:
+		# app stats
+		total_users = CUSTOMS_DB.get_total_users()
+		total_teams = CUSTOMS_DB.get_total_teams()
+		total_games = CUSTOMS_DB.get_total_games()
 
-	# server stats
-	uptime = datetime.datetime.now() - datetime.datetime.fromtimestamp(psutil.boot_time())
-	memory = psutil.virtual_memory()
-	cpu = psutil.cpu_percent(interval=1)
+		# server stats
+		uptime = datetime.datetime.now() - datetime.datetime.fromtimestamp(psutil.boot_time())
+		memory = psutil.virtual_memory()
+		cpu = psutil.cpu_percent(interval=1)
 
-	# image data
-	champions = DD_AGENT.get_images_by_category('champion')
-	items = DD_AGENT.get_images_by_category('item')
-	spells = DD_AGENT.get_images_by_category('spell')
-	runes = DD_AGENT.get_images_by_category('runes')
+		# image data
+		champions = DD_AGENT.get_images_by_category('champion')
+		items = DD_AGENT.get_images_by_category('item')
+		spells = DD_AGENT.get_images_by_category('spell')
+		runes = DD_AGENT.get_images_by_category('runes')
+
+	except ValueError as e:
+		app.logger.error(f"[!][APP][uhohadmin][{session.get('username')}] {str(e)}")
+		flash(str(e), 'danger')
+
+	except Exception as e:
+		app.logger.error(f"[!][APP][uhohadmin][{session.get('username')}] {str(e)}")
+		flash('An unexpected error occurred. Please try again.', 'danger')
 
 	return render_template('uhohadmin.html', 
 						current_patch=DD_AGENT.get_current_patch(), 
@@ -984,7 +1020,7 @@ def uhohadmin():
 
 # ERROR ROUTES
 @app.route('/uhoh/<int:error_code>')
-@auth.login_required
+#@auth.login_required
 @app_login_required
 def uhoh(error_code):
 	error_image_folder = os.path.join(app.static_folder, 'img', 'error')
@@ -1009,6 +1045,10 @@ def forbidden(e):
 def page_not_found(e):
 	return redirect(url_for('uhoh', error_code=404))
 
+@app.errorhandler(429)
+def too_many_requests(e):
+	return redirect(url_for('uhoh', error_code=429))
+
 @app.errorhandler(500)
 def internal_server_error(e):
 	return redirect(url_for('uhoh', error_code=500))
@@ -1031,6 +1071,7 @@ def sanitize(value):
 def get_champion_image_base64(value):
 	image_data = DD_AGENT.get_single_image('champion', value)['image_base64']
 	return f"data:image/png;base64,{image_data}"
+
 
 @app.template_filter('is_team_captain')
 def is_team_captain(value):

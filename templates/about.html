@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex flex-column flex-remaining-height justify-content-center align-items-center m-3 w-100">
+    <div class="card m-3 p-3 shadow px-bg-inverted" style="border: 1px solid cyan; max-width: 80%;">
+        <h3 class="text-center mb-2">About</h3>
+        <h5>UH OH CUSTOMS made by Sc00by</h5>
+        <p class="card-text">
+            This is a simple web application that allows users to track their League of Legends games and statistics.
+            The application is built using Flask, a Python web framework, and SQLite, a lightweight database engine.
+        </p>
+        <p class="card-text">
+            The application uses the Riot Games API to retrieve data about League of Legends champions, items, and summoner spells.
+            The API is rate-limited to prevent abuse and ensure fair usage by all developers.
+        </p>
+        <p class="card-text p-2" style="border: 2px solid black; border-radius: 5px;">
+            <small>UH OH CUSSMS is not endorsed by Riot Games and does not reflect the views or opinions of Riot Games or anyone officially involved in producing or managing Riot Games properties. Riot Games and all associated properties are trademarks or registered trademarks of Riot Games, Inc</small>
+        </p>
+    </div>
+</div>
+{% endblock %}
