@@ -148,6 +148,13 @@ def get_user_roles(username):
 ##########
 # ROUTES #
 ##########
+@app.before_request
+def limit_post_requests():
+	if request.method == 'POST':
+		if request.path == '/login' or request.path == '/register' or request.path == '/add_game' or request.path == 'manual_game_upload':
+			if request.endpoint == 'login' or request.endpoint == 'register':
+				limiter.limit("10 per minute")(lambda: None)()
+
 @app.route('/')
 def index():
 	return render_template('index.html')
@@ -166,7 +173,6 @@ def riot_app_verification():
 
 # ACTION: User Registration
 @app.route('/register', methods=['GET','POST'])
-@limiter.limit("5 per minute")
 #@auth.login_required
 def register():
 	if request.method == 'POST':
@@ -220,7 +226,6 @@ def login_rso():
 
 # AUTH: Login
 @app.route('/login', methods=['GET','POST'])
-@limiter.limit("5 per minute")
 #@auth.login_required
 def login():
 	if request.method == 'POST':
@@ -511,7 +516,6 @@ def leave_team(team_uuid):
 
 # New Game Upload - manual and file upload
 @app.route('/add_game', methods=['GET', 'POST'])
-@limiter.limit("5 per minute")
 #@auth.login_required
 @app_login_required
 def add_game():
@@ -756,7 +760,6 @@ def player_stats():
 
 # ACTION: Manually add game stats
 @app.route('/manual_game_entry', methods=['GET', 'POST'])
-@limiter.limit("5 per minute")
 @app_login_required
 def manual_game_entry():
 	if 'user_uuid' not in session:
