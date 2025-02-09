@@ -24,7 +24,8 @@ from logging.handlers import RotatingFileHandler
 ##################
 # CUSTOM IMPORTS #
 ##################
-from db.customsdb import CustomsDbHandler
+from db.customsdb_sqlite3 import CustomsDbHandler
+#from db.customsdb_postgresql import CustomsDbHandler
 from agents.datadragon_agent import DataDragonAgent
 from agents.riot_agent import RiotAgent
 from config import *
@@ -853,7 +854,10 @@ def manual_game_entry():
 				}
 			}
 
-			print(f"game_data: {game_data}")
+			# write game data to file
+			file_path = os.path.join("static", "game_data", sanitize_game_code(game_code) + ".json")
+			with open(file_path, 'w') as f:
+				json.dump(game_data, f)
 
 			# Save to database (example function, replace with actual implementation)
 			if not CUSTOMS_DB.add_game(game_code, json.dumps(game_data)):

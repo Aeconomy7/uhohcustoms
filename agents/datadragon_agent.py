@@ -4,10 +4,14 @@ import os
 import json
 import base64
 import sqlite3
+import psycopg2
+from psycopg2 import sql
 import threading
 import schedule
 import time
 from sqlite3 import Error
+
+from config import DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD
 
 class DataDragonAgent:
 	# DEFAULT CONSTRUCTOR
@@ -74,10 +78,27 @@ class DataDragonAgent:
 	def __create_connection(self,db_file):
 		conn = None
 
+		# postgresql connection
+		# postgres connection
+		# try:
+		# 	conn = psycopg2.connect(
+		# 		host=DB_HOST,
+		# 		port=DB_PORT,
+		# 		dbname=DB_NAME,
+		# 		user=DB_USER,
+		# 		password=DB_PASSWORD
+		# 	)
+		# 	return conn
+		# except psycopg2.Error as e:
+		# 	print(f"Error connecting to PostgreSQL database: {e}")
+		# 	return None
+		
+		# sqlite3 connection
 		try:
 			conn = sqlite3.connect(db_file)
 		except Error as e:
 			print(e)
+
 
 		return conn
 	

@@ -19,6 +19,14 @@ CUSTOMS_HOST		= "127.0.0.1"
 CUSTOMS_PORT		= 8000
 CUSTOMS_DATA_CALLBACK	= f"http://{CUSTOMS_HOST}:{CUSTOMS_PORT}/data_callback"
 
+DB_HOST			= "127.0.0.1"
+DB_PORT			= "1433"
+DB_NAME             = "customsdb"
+DB_USER             = "USERNAME"
+DB_PASSWORD         = "PASSWORD"
+
+SQLALCHEMY_DATABASE_URI = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+
 # SECRETS
 FLASK_SECRET_KEY	= "<flask_secret_key>"
 SECRET_HEADER		= "<secret_header>"

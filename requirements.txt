@@ -25,6 +25,7 @@ oauthlib==2.1.0
 ordered-set==4.1.0
 packaging==24.1
 psutil==6.1.1
+psycopg2-binary==2.9.10
 Pygments==2.19.1
 python-engineio==4.9.1
 python-socketio==5.11.3
@@ -35,6 +36,7 @@ riotwatcher==3.3.0
 schedule==1.2.2
 setuptools==72.2.0
 simple-websocket==1.0.0
+SQLAlchemy==2.0.38
 typing_extensions==4.12.2
 urllib3==2.2.2
 Werkzeug==3.0.3

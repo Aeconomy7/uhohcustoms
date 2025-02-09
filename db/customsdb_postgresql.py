@@ -1,11 +1,18 @@
-import sqlite3
 import datetime
+import psycopg2
+from psycopg2 import sql
+from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, LargeBinary, Text
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship, sessionmaker
 
-from sqlite3 import Error
+from db.tables.base_db_class import BaseDbClass
+
+from config import DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD, SQLALCHEMY_DATABASE_URI
 
 class CustomsDbHandler:
 	def __init__(self):
-		self.__db_location = "./db/cs.db"
+		db_url = SQLALCHEMY_DATABASE_URI
+		self.__db_location = r"cowboy_db.db"
 
 		# DEBUG MODE
 		self.__DEBUG = True
@@ -16,6 +23,11 @@ class CustomsDbHandler:
 		if self.__conn is None:
 			print("[-][CUSTOMS_DB][__init__] Could not connect to Customs DB")
 			return
+
+		self.__base = declarative_base()
+		self.__engine = create_engine(SQLALCHEMY_DATABASE_URI, echo=False)
+		BaseDbClass.metadata.create_all(self.__engine)
+		self.__session = sessionmaker(bind=self.__engine)
 
 		# Create tables if not exist
 		self.__create_users_table()
@@ -37,18 +49,37 @@ class CustomsDbHandler:
 		print("[+][CUSTOMS_DB][__enter__] Connected to Customs DB")
 
 	def __exit__(self):
+		self.__session.commit()
+		self.__session.close()
+
 		# Commit changes to DB
 		self.__conn.commit()
 		# Close DB
 		self.__conn.close()
+		print(f"[+][CUSTOMS_DB][__exit__] Closed connection to Customs DB")
 
 	def __create_connection(self,db_file):
 		conn = None
 
+		# postgres connection
 		try:
-			conn = sqlite3.connect(db_file)
-		except Error as e:
-			print(e)
+			conn = psycopg2.connect(
+				host=DB_HOST,
+				port=DB_PORT,
+				dbname=DB_NAME,
+				user=DB_USER,
+				password=DB_PASSWORD
+			)
+			return conn
+		except psycopg2.Error as e:
+			print(f"Error connecting to PostgreSQL database: {e}")
+			return None
+
+		# sqlite3 connection
+		# try:
+		# 	conn = sqlite3.connect(db_file)
+		# except Error as e:
+		# 	print(e)
 
 		return conn
 
