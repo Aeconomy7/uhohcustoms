@@ -5,7 +5,7 @@
 <div class="d-flex flex-column flex-remaining-height justify-content-center align-items-center w-100">
 	<div class="card p-4 shadow text-center px-bg-inverted" style="width: 80%; border: 1px solid cyan; padding: 10px;">
 		<div class="card-body">
-			{% if session.get('user_uuid') | is_team_captain %}
+			{% if session.get('active_team_uuid') | is_team_captain %}
 			<small>If you don't have a game code, manually add your game</small>
 			<button class="btn btn-primary">
 				<a href="{{ url_for('manual_game_entry') }}" style="color: white;">Manual Game Entry</a>

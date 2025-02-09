@@ -96,19 +96,19 @@ html, body {
 
 /* ETC CSS */
 .team-blue {
-	color: blue !important;
+	color: cyan !important;
 }
 
 .team-red {
-	color: red !important;
+	color: rgb(234, 0, 255) !important;
 }
 
 .team-blue td {
-	color: blue !important;
+	color: cyan !important;
 }
 
 .team-red td {
-	color: red !important;
+	color: rgb(234, 0, 255) !important;
 }
 
 .funcolor {
@@ -123,44 +123,6 @@ html, body {
 }
 
 /* DATATABLES CSS */
-.dataTables_wrapper {
-	color: #ffffff;
-}
-.dataTables_wrapper .dataTables_filter input {
-	background-color: #333333;
-	color: #ffffff;
-}
-.dataTables_wrapper .dataTables_length select {
-	background-color: #333333;
-	color: #ffffff;
-}
-.dataTables_wrapper .dataTables_paginate .paginate_button {
-	background-color: #333333;
-	color: #ffffff !important;
-}
-.dataTables_wrapper .dataTables_paginate .paginate_button.current {
-	background-color: #555555;
-	color: #ffffff !important;
-}
-.dataTables_wrapper .dataTables_info {
-	color: #ffffff;
-}
-.dataTables_wrapper .dataTables_scrollBody {
-	background-color: #333333;
-}
-.dataTables_wrapper .dataTables_scrollBody table {
-	background-color: #333333;
-	color: #ffffff;
-}
-.dataTables_wrapper .dataTables_scrollBody table thead {
-	background-color: #444444;
-}
-.dataTables_wrapper .dataTables_scrollBody table tbody tr {
-	background-color: #333333;
-}
-.dataTables_wrapper .dataTables_scrollBody table tbody tr:hover {
-	background-color: #555555;
-}
 
 .dt-input option {
     color: #000000; /* Change this to your desired color */

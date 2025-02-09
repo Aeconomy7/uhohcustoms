@@ -282,6 +282,7 @@ class CustomsDbHandler:
 				id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
 				user_uuid TEXT NOT NULL,
 				team_uuid TEXT NOT NULL,
+				role TEXT NOT NULL DEFAULT 'Pending',
 				FOREIGN KEY(user_uuid) REFERENCES users(user_uuid),
 				FOREIGN KEY(team_uuid) REFERENCES teams(team_uuid)
 			);"""
@@ -435,12 +436,12 @@ class CustomsDbHandler:
 			return None
 
 
-	def join_user_to_team(self, user_uuid,  team_uuid):
-		sql_query = "INSERT INTO user_teams (user_uuid, team_uuid) VALUES (?, ?);"
+	def join_user_to_team(self, user_uuid,  team_uuid, role):
+		sql_query = "INSERT INTO user_teams (user_uuid, team_uuid, role) VALUES (?, ?, ?);"
 
 		try:
 			cursor = self.__conn.cursor()
-			cursor.execute(sql_query, (str(user_uuid), str(team_uuid)))
+			cursor.execute(sql_query, (str(user_uuid), str(team_uuid), role))
 			self.__conn.commit()
 			if self.__DEBUG:
 				print(f"[+][CUSTOMS_DB][join_user_to_team] Successfully joined user uuid {str(user_uuid)} to team uuid {str(team_uuid)} :D")

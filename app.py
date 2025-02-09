@@ -37,9 +37,9 @@ app = Flask(__name__)
 app.secret_key = FLASK_SECRET_KEY
 
 limiter = Limiter(
-    get_remote_address,
-    app=app,
-    default_limits=["200 per day", "50 per hour"]
+	get_remote_address,
+	app=app,
+	default_limits=["200 per day", "50 per hour"]
 )
 
 ########
@@ -380,7 +380,7 @@ def create_team():
 		if not CUSTOMS_DB.register_team(team_name, team_uuid, session['user_uuid']):
 			raise ValueError("Failed to create team.")
 
-		if not CUSTOMS_DB.join_user_to_team(session['user_uuid'], team_uuid):
+		if not CUSTOMS_DB.join_user_to_team(session['user_uuid'], team_uuid, 'Captain'):
 			raise ValueError("Failed to join team.")
 
 		session['user_teams'].append({'team_name': team_name, 'team_uuid': team_uuid})
@@ -433,7 +433,7 @@ def join_team(team_uuid='None'):
 				raise ValueError("You are already a member of this team.")
 
 		# perform the team join
-		if not CUSTOMS_DB.join_user_to_team(session['user_uuid'], team_uuid):
+		if not CUSTOMS_DB.join_user_to_team(session['user_uuid'], team_uuid, 'Pending'):
 			raise ValueError("Failed to join team.")
 
 		# LOOK HERE FOR ERRORS WITH JOIN_TEAM IN THE FUTURE MAYBE
@@ -985,9 +985,9 @@ def get_champion_image_base64(value):
 
 @app.template_filter('is_team_captain')
 def is_team_captain(value):
-	result = CUSTOMS_DB.is_user_captain_of_team(value, session.get('active_team_uuid')) != None
+	result = CUSTOMS_DB.is_user_captain_of_team(session.get('user_uuid'), value) != None
+	print(f"[?][APP][is_team_captain] result for user {session.get('user_uuid')} captain of {value}: {result}")
 	return result
-
 
 ########
 # MAIN #

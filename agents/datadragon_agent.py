@@ -4,6 +4,9 @@ import os
 import json
 import base64
 import sqlite3
+import threading
+import schedule
+import time
 from sqlite3 import Error
 
 class DataDragonAgent:
@@ -18,11 +21,17 @@ class DataDragonAgent:
 		self.__runes_data = {}
 		self.__current_patch = None
 
+		# uhg
+		self.__champion_name_matching = {
+
+		}
+
 		# DEBUG MODE
 		self.__DEBUG = True
 		print(f"[?][DD_AGENT][__init__] DATADRAGON AGENT DEBUG MODE: {self.__DEBUG}")
 
-		return
+		# Start the scheduler in a background thread
+		self.start_scheduler()
 		
 
 	def __enter__(self):
@@ -106,6 +115,9 @@ class DataDragonAgent:
 
 	# UTILITY FUNCTIONS
 	# convert image to base64
+	def get_internal_champion_name(self, proper_name):
+		return self.__champion_name_mapping.get(proper_name, proper_name)
+	
 	def convert_image_to_base64(self, image_path):
 			with open(image_path, "rb") as image_file:
 				return base64.b64encode(image_file.read()).decode('utf-8')
@@ -234,3 +246,22 @@ class DataDragonAgent:
 			return runes
 		else:
 			return []
+		
+	# SCHEDULER FUNCTION
+	def check_for_updates(self):
+		print("[+][DD_AGENT][check_for_updates] Checking for updates...")
+		self.update_current_patch()
+
+	def start_scheduler(self):
+		schedule.every(10).minutes.do(self.check_for_updates)  # Every 10 minutes
+		# schedule.every().hour.do(self.check_for_updates)  # Hourly
+		# schedule.every().day.at("00:00").do(self.check_for_updates)  # Daily at midnight
+		# schedule.every().wednesday.at("03:15").do(self.check_for_updates)  # 15 minutes after standard Riot patch release time
+
+		scheduler_thread = threading.Thread(target=self.run_scheduler, daemon=True)
+		scheduler_thread.start()
+
+	def run_scheduler(self):
+		while True:
+			schedule.run_pending()
+			time.sleep(1)
