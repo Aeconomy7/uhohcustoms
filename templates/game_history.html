@@ -43,7 +43,11 @@
             </tbody>
         </table>
         {% else %}
-        <p>No game history available.</p>
+            {% if session.get('active_team_uuid') | is_team_member %}
+                <p>No game history available. Time to get on the rift!</p>
+            {% else %}
+                <p>You are a pending member of this team. Game history will become available upon membership approval.</p>
+            {% endif %}
         {% endif %}
     </div>
 {% endblock %}

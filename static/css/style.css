@@ -1,6 +1,6 @@
 html, body {
 	font-family: OCR A Std, monospace;
-	background-color: #333333;
+	background-color: #2a2a2a;
     overflow: hidden;
 }
 
@@ -121,6 +121,11 @@ html, body {
     25%	  { color: #00FFFF; }
     50%	  { color: #FF0080; }
     75%	  { color: #8000FF; }
+}
+
+/* TABLE CSS */
+td input {
+	background-color: #504e4e; 
 }
 
 /* DATATABLES CSS */

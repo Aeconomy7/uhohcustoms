@@ -43,10 +43,20 @@ limiter = Limiter(
 	default_limits=["200 per day", "50 per hour"]
 )
 
-########
-# AUTH #
-########
+##############
+# BASIC AUTH #
+##############
 auth = HTTPBasicAuth()
+
+@auth.verify_password
+def verify_password(username, password):
+	if username in USERS and check_password_hash(USERS[username]["password"], password):
+		return username
+
+@auth.get_user_roles
+def get_user_roles(username):
+	return USERS[username]["role"] if username in USERS else None
+
 
 
 ##############
@@ -102,6 +112,15 @@ SUPPORTED_REGIONS	= ['NA1', 'EUW1', 'EUN1', 'KR', 'BR1', 'LA1', 'LA2', 'OC1', 'J
 #####################
 # UTILITY FUNCTIONS #
 #####################
+def get_active_page():
+    return request.path
+
+def is_user_member_of_team(user_uuid, team_uuid):
+	role = CUSTOMS_DB.get_user_team_role(user_uuid, team_uuid)
+	if role == 'Captain' or role == 'Member':
+		return True
+	return False
+
 def sanitize_game_code(game_code):
 	return re.sub(r'[^a-zA-Z0-9_]', '', game_code)
 
@@ -126,6 +145,10 @@ def get_match_region(game_region):
 	}
 	return region_mapping.get(game_region, 'unknown')
 
+
+############
+# WRAPPERS #
+############
 def app_login_required(f):
 	@wraps(f)
 	def decorated_function(*args, **kwargs):
@@ -134,15 +157,24 @@ def app_login_required(f):
 		return f(*args, **kwargs)
 	return decorated_function
 
-@auth.verify_password
-def verify_password(username, password):
-	if username in USERS and check_password_hash(USERS[username]["password"], password):
-		return username
+# maybe will use maybe not but its here...
+def team_membership_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        active_team_uuid = session.get('active_team_uuid')
+        if not active_team_uuid or not is_user_member_of_team(session['user_uuid'], session['active_team_uuid']):
+            flash("You must be a member or captain of the active team to access this page.", "danger")
+            return redirect(url_for('manage_teams'))
+        
+        return f(*args, **kwargs)
+    return decorated_function
 
-@auth.get_user_roles
-def get_user_roles(username):
-	return USERS[username]["role"] if username in USERS else None
-
+#############
+# INJECTORS #
+#############
+@app.context_processor
+def inject_active_page():
+    return dict(get_active_page=get_active_page)
 
 
 ##########
@@ -340,9 +372,11 @@ def manage_teams():
 		user_teams = CUSTOMS_DB.get_teams_for_user(user_uuid)
 		captain_team = None
 		for team in user_teams:
-			if CUSTOMS_DB.is_user_captain_of_team(user_uuid, str(team[0])) == 'Captain':
+			if CUSTOMS_DB.is_user_captain_of_team(user_uuid, str(team[0])):
 				captain_team = team
 				break
+
+		captain_team_members_pending = CUSTOMS_DB.get_team_members_pending(captain_team[0]) if captain_team else None
 
 		if DEBUG:
 			app.logger.debug(f"[?][APP][manage_teams][{session.get('username')}] user_teams: {user_teams}")
@@ -351,7 +385,42 @@ def manage_teams():
 		app.logger.error(f"[!][APP][manage_teams][{session.get('username')}] {str(e)}")
 		flash('An unexpected error occurred. Please try again.', 'danger')
 
-	return render_template('manage_teams.html', user_teams=user_teams, captain_team=captain_team)
+	return render_template('manage_teams.html', 
+						user_teams=user_teams, 
+						captain_team=captain_team, 
+						captain_team_members_pending=captain_team_members_pending
+						)
+
+
+# ACTION: Approve member
+@app.route('/approve_member', methods=['POST'])
+@app_login_required
+def approve_member():
+	
+	try:
+		team_uuid = request.form.get('team_uuid')
+		user_uuid = request.form.get('user_uuid')
+
+		if not team_uuid or not user_uuid:
+			raise ValueError("Missin team_uuid or user_uuid (this shouldn't happen).")
+
+		if not CUSTOMS_DB.is_user_captain_of_team(session['user_uuid'], team_uuid):
+			raise ValueError("You are not authorized to approve members for this team.")
+
+		if CUSTOMS_DB.approve_user_to_team(user_uuid, team_uuid):
+			flash("Member approved successfully.", "success")
+		else:
+			raise ValueError("Failed to approve member.", "danger")
+
+	except ValueError as e:
+		app.logger.error(f"[!][APP][approve_member][{session.get('username')}] {str(e)}")
+		flash(str(e), 'danger')
+
+	except Exception as e:
+		app.logger.error(f"[!][APP][approve_member][{session.get('username')}] {str(e)}")
+		flash('An unexpected error occurred. Please try again.', 'danger')
+
+	return redirect(url_for('manage_teams'))
 
 
 # ACTION: Create team
@@ -471,14 +540,14 @@ def leave_team(team_uuid):
 	if 'user_uuid' not in session:
 		return redirect(url_for('uhoh', error_code=401))
 	
-	# check if its POST or GET request
-	#if request.method == 'POST':
-	#	team_uuid = request.form['team_uuid']
-
 	try:
 
 		if team_uuid == 'None':
 			raise ValueError("Invalid team to leave")
+		
+		if not is_user_member_of_team(session['user_uuid'], team_uuid):
+			flash("You are not a member of this team.", "danger")
+			return redirect(url_for('manage_teams'))
 
 		if DEBUG:
 			app.logger.debug(f"[?][APP][leave_team][{session['username']}] Attempting to leave team {team_uuid}...")
@@ -519,6 +588,10 @@ def leave_team(team_uuid):
 #@auth.login_required
 @app_login_required
 def add_game():
+	if not is_user_member_of_team(session['user_uuid'], session['active_team_uuid']):
+		flash("You are not a member of this team.", "danger")
+		return redirect(url_for('manage_teams'))
+
 	if request.method == 'GET':
 		return render_template('add_game.html')
 
@@ -596,6 +669,10 @@ def game_history():
 	if 'user_uuid' not in session:
 		return redirect(url_for('uhoh', error_code=401))
 	
+	if not is_user_member_of_team(session['user_uuid'], session['active_team_uuid']):
+		flash("You are a pending member of this team.", "info")
+		return render_template('game_history.html')
+	
 	try:
 		team_game_data = CUSTOMS_DB.get_team_game_data_by_team_uuid(session.get('active_team_uuid', 'None'))
 		games_info = []
@@ -660,6 +737,10 @@ def view_game(game_code):
 	if 'user_uuid' not in session:
 		return redirect(url_for('uhoh', error_code=401))
 	
+	if not is_user_member_of_team(session['user_uuid'], session['active_team_uuid']):
+		flash("You are a pending member of this team.", "info")
+		return render_template('game_history.html')
+	
 	try:
 		# if not re.match(r"^(NA1|EUW1|EUNE1|KR|BR1|JP1|LAN|LAS|OCE|TR1|RU)_\d{1,32}$", game_code):
 		# 	raise ValueError("Invalid game code format.")
@@ -710,6 +791,10 @@ def view_game(game_code):
 def player_stats():
 	if 'user_uuid' not in session:
 		return redirect(url_for('uhoh', error_code=401))
+	
+	if not is_user_member_of_team(session['user_uuid'], session['active_team_uuid']):
+		flash("You are a pending member of this team.", "info")
+		return render_template('player_stats.html')
 	
 	try:
 		team_game_data = CUSTOMS_DB.get_team_game_data_by_team_uuid(session.get('active_team_uuid', 'None'))
@@ -765,6 +850,10 @@ def manual_game_entry():
 	if 'user_uuid' not in session:
 		return redirect(url_for('uhoh', error_code=401))
 	
+	if not is_user_member_of_team(session['user_uuid'], session['active_team_uuid']):
+		flash("You are a pending member of this team.", "info")
+		return render_template('game_history.html')
+	
 	try:
 		# Check that user is the captain of the team they are adding the game to
 		if not CUSTOMS_DB.is_user_captain_of_team(session['user_uuid'], session['active_team_uuid']):
@@ -772,7 +861,6 @@ def manual_game_entry():
 
 		if request.method == 'GET':
 			return render_template('manual_game_entry.html', champions=DD_AGENT.get_all_champion_names())
-		
 
 		if request.method == 'POST':
 			game_code = f"MANUAL_CUSTOMS_{uuid.uuid4()}"
@@ -994,6 +1082,15 @@ def get_champion_image_base64(value):
 def is_team_captain(value):
 	result = CUSTOMS_DB.is_user_captain_of_team(session.get('user_uuid'), value) != None
 	print(f"[?][APP][is_team_captain] result for user {session.get('user_uuid')} captain of {value}: {result}")
+	return result
+
+@app.template_filter('is_team_member')
+def is_team_member(value):
+	result = False
+	role = CUSTOMS_DB.get_user_team_role(session.get('user_uuid'), value)
+	if role == 'Captain' or role == 'Member':
+		result = True
+	print(f"[?][APP][is_team_member] result for user {session.get('user_uuid')} member of {value}: {result}")
 	return result
 
 ########

@@ -2,7 +2,11 @@
 
 {% block content %}
 <div class="d-flex flex-column flex-remaining-height m-3" style="overflow-y: auto;">
-	<div class="table-responsive">
+	<div class="d-flex w-100 justify-content-between">
+        <h3>Player Stats</h3>
+    </div>
+
+    <div class="table-responsive">
         {% if players_info %}
         <table id="playerStatsTable" class="table table-dark table-striped table-responsive-text">
             <thead>
@@ -35,7 +39,11 @@
             </tbody>
         </table>
         {% else %}
-        <p>No player stats available. Add games first!</p>
+            {% if session.get('active_team_uuid') | is_team_member %}
+                <p>No player stats available. Add games first!</p>
+            {% else %}
+                <p>You are a pending member of this team. Player data will become available upon membership approval.</p>
+            {% endif %}
         {% endif %}
     </div>
 </div>

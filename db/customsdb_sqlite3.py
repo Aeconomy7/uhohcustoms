@@ -499,6 +499,61 @@ class CustomsDbHandler:
 		except Error as e:
 			print(f"[!][CUSTOMS_DB][register_team]: {e}")
 			return False
+		
+	def get_user_team_role(self, user_uuid, team_uuid):
+		sql_query = "SELECT role FROM user_teams WHERE user_uuid = ? AND team_uuid = ?;"
+
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query, (str(user_uuid), str(team_uuid)))
+			row = cursor.fetchone()
+			if row:
+				if self.__DEBUG:
+					print(f"[?][CUSTOMS_DB][get_user_team_role] User {str(user_uuid)} is not a PENDING member of team {str(team_uuid)}")
+				return row[0]
+			else:
+				return None
+				
+		except Error as e:
+			print(f"[!][CUSTOMS_DB][check_if_user_is_member_of_team] ERROR: {e}")
+			return None
+
+	def approve_user_to_team(self, user_uuid, team_uuid):
+		sql_query = "UPDATE user_teams SET role = 'Member' WHERE user_uuid = ? AND team_uuid = ?;"
+
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query, (str(user_uuid), str(team_uuid)))
+			self.__conn.commit()
+			if self.__DEBUG:
+				print(f"[+][CUSTOMS_DB][approve_user_to_team] Successfully approved user uuid {str(user_uuid)} to team uuid {str(team_uuid)} :D")
+			return True
+		except Error as e:
+			print(f"[!][CUSTOMS_DB][approve_user_to_team] ERROR: {e}")
+			return False
+		
+	def get_team_members_pending(self, team_uuid):
+		sql_query = """
+			SELECT u.user_uuid, u.username
+			FROM user_teams ut
+			JOIN users u ON ut.user_uuid = u.user_uuid
+			WHERE ut.team_uuid = ? AND ut.role = 'Pending';
+		"""
+
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query, (str(team_uuid),))
+			row = cursor.fetchall()
+			if row:
+				if self.__DEBUG:
+					print(f"[?][CUSTOMS_DB][get_team_members_pending] Found {str(len(row))} pending members for team {str(team_uuid)}")
+				return row
+			else:
+				return None
+				
+		except Error as e:
+			print(f"[!][CUSTOMS_DB][get_team_members_pending] ERROR: {e}")
+			return None
 
 
 	###########

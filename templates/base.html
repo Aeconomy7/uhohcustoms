@@ -100,8 +100,11 @@
                         <ul class="list-unstyled" >
                             <li class="p-1" style="border-bottom: 1px solid cyan; ">
                                 <button class="btn btn-toggle align-items-center rounded collapsed" style="color: white;" data-bs-toggle="collapse" data-bs-target="#dashboard-collapse" aria-expanded="false">
-                                Active Team: {{ session.get('active_team_name', 'None') }}
+                                <div>Active Team: <span style="color: yellow">{{ session.get('active_team_name', 'None') }}</span></div>
                                 </button>
+                                {% if not session.get('active_team_uuid') | is_team_member %}
+                                <div style="border: 1px solid yellow; padding: 3px">PENDING MEMBERSHIP</div>
+                                {% endif %}
                                 <div class="collapse" id="dashboard-collapse">
                                 <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small">
                                     {% for team in session.get('user_teams', []) %}
@@ -115,12 +118,12 @@
                                 </div>
                             </li>
                             <li class="p-1" style="border-bottom: 1px solid cyan;">
-                                <a class="btn btn-toggle align-items-center rounded collapsed" style="color: white;" href="{{ url_for('game_history') }}">
+                                <a class="btn btn-toggle align-items-center rounded collapsed {% if get_active_page() == url_for('game_history') %}funcolor{% endif %}" style="color: white;" href="{{ url_for('game_history') }}">
                                     Game History
                                 </a>
                             </li>
                             <li class="p-1" style="border-bottom: 1px solid cyan;">
-                                <a class="btn btn-toggle align-items-center rounded collapsed" style="color: white;" href="{{ url_for('player_stats') }}">
+                                <a class="btn btn-toggle align-items-center rounded collapsed {% if get_active_page() == url_for('player_stats') %}funcolor{% endif %}" style="color: white;" href="{{ url_for('player_stats') }}">
                                     Player Stats
                                 </a>
                             </li>

@@ -46,10 +46,26 @@
                 <td>
                     <div class="input-group">
                         <p class="justify-content-center align-items-center">Team Invite Code:</p>
-                        <input type="text" id="teamCode" class="form-control" value="https://uhohcustoms.lol/join_team/{{ session['active_team_uuid'] }}" readonly>
+                        <input type="text" id="teamCode" class="form-control" value="https://uhohcustoms.lol/join_team/{{ team[0] }}" readonly>
                         <button id="copyButton" class="btn btn-outline-secondary" style="padding-left: 10px;"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#F"><path d="M360-240q-33 0-56.5-23.5T280-320v-480q0-33 23.5-56.5T360-880h360q33 0 56.5 23.5T800-800v480q0 33-23.5 56.5T720-240H360Zm0-80h360v-480H360v480ZM200-80q-33 0-56.5-23.5T120-160v-560h80v560h440v80H200Zm160-240v-480 480Z"/></svg></button>
                     </div>
-                    
+                    {% if captain_team_members_pending %}
+                    <div class="mt-3">
+                        <h6>Pending Members:</h6>
+                        <ul class="list-group">
+                            {% for member in captain_team_members_pending %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                {{ member[1] }}
+                                <form action="{{ url_for('approve_member') }}" method="POST">
+                                    <input type="hidden" name="team_uuid" value="{{ team[0] }}">
+                                    <input type="hidden" name="user_uuid" value="{{ member[0] }}">
+                                    <button type="submit" class="btn btn-success btn-sm">Approve</button>
+                                </form>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
                 </td>
                 {% else %}
                 <td>
