@@ -96,7 +96,7 @@
                 <!-- SIDE NAVBAR -->
                 {% if session.get('user_uuid') %}
                 <div id="side-navbar" class="px-bg-dark h-100" style="border-right: 1px solid cyan;">
-                    <div class="flex-shrink-0" style="width: 200px;">
+                    <div class="flex-shrink-0  flex-remaining-height" style="width: 200px;">
                         <ul class="list-unstyled" >
                             <li class="p-1" style="border-bottom: 1px solid cyan; ">
                                 <button class="btn btn-toggle align-items-center rounded collapsed" style="color: white;" data-bs-toggle="collapse" data-bs-target="#dashboard-collapse" aria-expanded="false">
@@ -126,6 +126,10 @@
                                 <a class="btn btn-toggle align-items-center rounded collapsed {% if get_active_page() == url_for('player_stats') %}funcolor{% endif %}" style="color: white;" href="{{ url_for('player_stats') }}">
                                     Player Stats
                                 </a>
+                            </li>
+                            <!-- BOTTOM SIDE NAVBAR -->
+                            <li class="p-1 text-center fixed-bottom" style="border-top: 1px solid cyan; width: 200px;">
+                                <div>Version {{ APP_VERSION }}</div>
                             </li>
                         </ul>
                     </div>

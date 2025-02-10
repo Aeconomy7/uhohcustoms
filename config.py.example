@@ -1,5 +1,8 @@
 from werkzeug.security import generate_password_hash
 
+# GENERAL
+APP_VERSION			= "Beta:0.1"
+
 # RIOT API CONFIGURATIONS
 RIOT_API_KEY		= "RGAPI-XXXX"
 RIOT_CLIENT_ID		= "PLACEHOLDER"
@@ -19,8 +22,10 @@ CUSTOMS_HOST		= "127.0.0.1"
 CUSTOMS_PORT		= 8000
 CUSTOMS_DATA_CALLBACK	= f"http://{CUSTOMS_HOST}:{CUSTOMS_PORT}/data_callback"
 
-DB_HOST			= "127.0.0.1"
-DB_PORT			= "1433"
+# DB INFO
+DB_TYPE				= "sqlite3"	# postgresql, sqlite3
+DB_HOST				= "127.0.0.1"
+DB_PORT				= "1433"
 DB_NAME             = "customsdb"
 DB_USER             = "USERNAME"
 DB_PASSWORD         = "PASSWORD"

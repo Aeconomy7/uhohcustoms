@@ -11,7 +11,7 @@ import schedule
 import time
 from sqlite3 import Error
 
-from config import DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD
+from config import DB_TYPE, DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD
 
 class DataDragonAgent:
 	# DEFAULT CONSTRUCTOR
@@ -24,11 +24,6 @@ class DataDragonAgent:
 		self.__spells_data = {}
 		self.__runes_data = {}
 		self.__current_patch = None
-
-		# uhg
-		self.__champion_name_matching = {
-
-		}
 
 		# DEBUG MODE
 		self.__DEBUG = True
@@ -79,25 +74,26 @@ class DataDragonAgent:
 		conn = None
 
 		# postgresql connection
-		# postgres connection
-		# try:
-		# 	conn = psycopg2.connect(
-		# 		host=DB_HOST,
-		# 		port=DB_PORT,
-		# 		dbname=DB_NAME,
-		# 		user=DB_USER,
-		# 		password=DB_PASSWORD
-		# 	)
-		# 	return conn
-		# except psycopg2.Error as e:
-		# 	print(f"Error connecting to PostgreSQL database: {e}")
-		# 	return None
+		if DB_TYPE == 'postgresql':
+			try:
+				conn = psycopg2.connect(
+					host=DB_HOST,
+					port=DB_PORT,
+					dbname=DB_NAME,
+					user=DB_USER,
+					password=DB_PASSWORD
+				)
+				return conn
+			except psycopg2.Error as e:
+				print(f"Error connecting to PostgreSQL database: {e}")
+				return None
 		
 		# sqlite3 connection
-		try:
-			conn = sqlite3.connect(db_file)
-		except Error as e:
-			print(e)
+		if DB_TYPE == 'sqlite3':
+			try:
+				conn = sqlite3.connect(db_file)
+			except Error as e:
+				print(e)
 
 
 		return conn
@@ -169,7 +165,7 @@ class DataDragonAgent:
 			return None
 
 	def get_all_champion_names(self):
-		return [champion['name'] for champion in self.__champions_data['data'].values()]
+		return [champion['id'] for champion in self.__champions_data['data'].values()]
 
 	# DOWNLOAD NEWEST DATA DRAGON ARCHIVE AND EXTRACT IT
 	def download_and_extract_archive(self):
@@ -233,19 +229,43 @@ class DataDragonAgent:
 
 	def get_single_image(self, category, image_name):
 		if category == 'champion':
-			champion = self.__champions_data['data'][image_name]
+			champion = None
+			try:
+				champion = self.__champions_data['data'][image_name]
+			except KeyError as e:
+				print(f"[-][DD_AGENT][get_single_image] No champion found named {image_name}")
+				return {"image_base64": "", "champion_name": image_name}
 			return {"image_base64": self.convert_image_to_base64(f"{self.__local_dd_path}/{self.__current_patch}/{self.__current_patch}/img/champion/{champion['image']['full']}"), "champion_name": champion['name']}
+		
 		elif category == 'item':
-			item = self.__items_data['data'][image_name]
+			item = None
+			try:
+				item = self.__items_data['data'][image_name]
+			except KeyError as e:
+				print(f"[-][DD_AGENT][get_single_image] No item found named {image_name}")
+				return {"image_base64": "", "item_name": ""}
 			return {"image_base64": self.convert_image_to_base64(f"{self.__local_dd_path}/{self.__current_patch}/{self.__current_patch}/img/item/{item['image']['full']}"), "item_name": item['name']}
+		
 		elif category == 'spell':
-			spell = self.__spells_data['data'][image_name]
+			spell = None
+			try:
+				spell = self.__spells_data['data'][image_name]
+			except KeyError as e:
+				print(f"[-][DD_AGENT][get_single_image] No spell found named {image_name}")
+				return {"image_base64": "", "spell_name": image_name}
 			return {"image_base64": self.convert_image_to_base64(f"{self.__local_dd_path}/{self.__current_patch}/{self.__current_patch}/img/spell/{spell['image']['full']}"), "spell_name": spell['name']}
-		elif category == 'runes':
-			rune = self.__runes_data['data'][image_name]
+		
+		elif category == 'rune':
+			rune = None
+			try:
+				rune = self.__runes_data['data'][image_name]
+			except KeyError as e:
+				print(f"[-][DD_AGENT][get_single_image] No rune found named {image_name}")
+				return {"image_base64": "", "runes_name": image_name}
 			return {"image_base64": self.convert_image_to_base64(f"{self.__local_dd_path}/{self.__current_patch}/{self.__current_patch}/img/rune/{rune['icon']}"), "rune_name": rune['name']}
+		
 		else:
-			return {}
+			return {{"image_base64": "", f"{category}_name": image_name}}
 		
 
 	# get all images in a certain category

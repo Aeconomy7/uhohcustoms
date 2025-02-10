@@ -24,11 +24,14 @@ from logging.handlers import RotatingFileHandler
 ##################
 # CUSTOM IMPORTS #
 ##################
-from db.customsdb_sqlite3 import CustomsDbHandler
-#from db.customsdb_postgresql import CustomsDbHandler
+from config import *
+if DB_TYPE == 'sqlite3':
+	from db.customsdb_sqlite3 import CustomsDbHandler
+if DB_TYPE == 'postgresql':
+	from db.customsdb_postgresql import CustomsDbHandler
 from agents.datadragon_agent import DataDragonAgent
 from agents.riot_agent import RiotAgent
-from config import *
+
 
 
 #########
@@ -175,6 +178,10 @@ def team_membership_required(f):
 @app.context_processor
 def inject_active_page():
     return dict(get_active_page=get_active_page)
+
+@app.context_processor
+def inject_globals():
+    return dict(get_active_page=get_active_page, APP_VERSION=APP_VERSION)
 
 
 ##########
@@ -588,6 +595,9 @@ def leave_team(team_uuid):
 #@auth.login_required
 @app_login_required
 def add_game():
+	if 'user_uuid' not in session:
+		return redirect(url_for('uhoh', error_code=401))
+
 	if session.get('active_team_uuid','None') != 'None' and not is_user_member_of_team(session['user_uuid'], session['active_team_uuid']):
 		flash("You are not a member of this team.", "danger")
 		return redirect(url_for('manage_teams'))
@@ -648,7 +658,7 @@ def add_game():
 			if not CUSTOMS_DB.add_team_game(session.get('active_team_uuid'), game_code):
 				raise ValueError("Failed to add game data to team.")
 
-			return redirect(url_for('game_history.html'))
+			return redirect(url_for('game_history'))
 		
 	except ValueError as e:
 		app.logger.error(f"[!][APP][add_game][{session.get('username')}] {str(e)}")
@@ -999,7 +1009,7 @@ def uhohadmin():
 		champions = DD_AGENT.get_images_by_category('champion')
 		items = DD_AGENT.get_images_by_category('item')
 		spells = DD_AGENT.get_images_by_category('spell')
-		runes = DD_AGENT.get_images_by_category('runes')
+		runes = DD_AGENT.get_images_by_category('rune')
 
 	except ValueError as e:
 		app.logger.error(f"[!][APP][uhohadmin][{session.get('username')}] {str(e)}")
