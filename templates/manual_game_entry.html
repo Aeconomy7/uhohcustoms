@@ -2,7 +2,7 @@
 
 {% block content %}
 <div class="d-flex flex-column flex-remaining-height justify-content-center align-items-center m-3 w-100">
-    <div class="p-4 shadow px-bg-dark" style="border: 1px solid cyan;">
+    <div class="p-4 h-100 shadow px-bg-dark" style="border: 1px solid cyan; overflow-y: auto;">
         <h3 class="text-center mb-2">Manual Game Entry</h3>
         <form action="{{ url_for('manual_game_entry') }}" method="post">
             <div class="mb-2">
