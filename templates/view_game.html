@@ -57,7 +57,12 @@
 	$(document).ready(function() {
 		$('#viewGameTable').DataTable({
             dom: '<"topEnd"f>rt<"clear">',
-            responsive: true
+            responsive: true,
+			columnDefs: [
+                { className: "text-start", targets: [1, 5] },
+                { className: "text-center", targets: [0, 2, 3, 4] },
+                { className: "text-end", targets: [6, 7] }
+            ]
 		});
 	});
 </script>

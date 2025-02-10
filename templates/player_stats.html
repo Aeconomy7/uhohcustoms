@@ -18,6 +18,7 @@
                     <th>Total Kills</th>
                     <th>Total Deaths</th>
                     <th>Total Assists</th>
+                    <th>KDA</th>
                     <th>Total Gold Earned</th>
                     <th>Total Champion Damage Dealt</th>
                 </tr>
@@ -32,6 +33,7 @@
                     <td>{{ stats.kills }}</td>
                     <td>{{ stats.deaths }}</td>
                     <td>{{ stats.assists }}</td>
+                    <td>{{ ((stats.kills + stats.assists) / stats.deaths) | round(3) }}</td>
                     <td>{{ stats.gold_earned }}</td>
                     <td>{{ stats.damage_dealt }}</td>
                 </tr>
@@ -39,10 +41,12 @@
             </tbody>
         </table>
         {% else %}
-            {% if session.get('active_team_uuid') | is_team_member %}
-                <p>No player stats available. Add games first!</p>
+            {% if session.get('active_team_uuid', 'None') == 'None' %}
+                <p>You must join or create a team before you can view player stats!</p>
+            {% elif not session.get('active_team_uuid') | is_team_member %}
+                <p>You are a pending member of this team. Player stats will become available upon membership approval.</p>
             {% else %}
-                <p>You are a pending member of this team. Player data will become available upon membership approval.</p>
+                <p>No player stats available. Time to get on the rift!</p>
             {% endif %}
         {% endif %}
     </div>
@@ -70,7 +74,12 @@
 					}
 				}
 			},
-			responsive: true
+			responsive: true,
+            columnDefs: [
+                { className: "text-start", targets: [0, 7] },
+                { className: "text-center", targets: [1, 2, 3, 4, 5, 6] },
+                { className: "text-end", targets: [8, 9] }
+            ]
 		});
 	});
 </script>

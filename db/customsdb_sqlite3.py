@@ -857,6 +857,25 @@ class CustomsDbHandler:
 		except Error as e:
 			print(f"[!][CUSTOMS_DB][__create_team_games_table] ERROR: {e}")
 			return False
+		
+	def get_total_team_games(self):
+		sql_query = "SELECT COUNT(*) FROM team_games;"
+
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query)
+			row = cursor.fetchone()
+			if row is None:
+				if self.__DEBUG:
+					print(f"[-][CUSTOMS_DB][get_total_team_games] No team games found :(")
+				return None
+			else:
+				if self.__DEBUG:
+					print(f"[+][CUSTOMS_DB][get_total_team_games] Found {str(row[0])} games!")
+				return row[0]
+		except Error as e:
+			print(f"[!][CUSTOMS_DB][get_total_team_games] ERROR: {e}")
+			return None
 
 	def add_team_game(self, team_uuid, game_id):
 		sql_query = "INSERT INTO team_games (team_uuid, game_id) VALUES (?, ?);"

@@ -196,6 +196,7 @@ class DataDragonAgent:
 				with tarfile.open(local_archive_path, 'r:gz') as tar:
 					tar.extractall(path=extract_path)
 				print(f"[+][DD_AGENT][download_and_extract_archive] Successfully extracted archive to: {extract_path}")
+				self.fetch_metadata()
 			else:
 				print("[-][DD_AGENT][download_and_extract_archive] The downloaded file is not a valid tar archive.")
 		else:

@@ -518,7 +518,7 @@ def join_team(team_uuid='None'):
 
 		if DEBUG:
 			app.logger.debug(f"[+][APP][join_team][{session['username']}] Successfully joined team {teamcheck[1]}:{team_uuid}")
-		flash(f"You have successfully joined {teamcheck[1]}!", 'success')
+		flash(f"Your membership is now pending for team {teamcheck[1]}!", 'success')
 
 	except ValueError as e:
 		app.logger.error(f"[!][APP][join_team][{session.get('username')}] {str(e)}")
@@ -545,7 +545,7 @@ def leave_team(team_uuid):
 		if team_uuid == 'None':
 			raise ValueError("Invalid team to leave")
 		
-		if not is_user_member_of_team(session['user_uuid'], team_uuid):
+		if session.get('active_team_uuid','None') != 'None' and not is_user_member_of_team(session['user_uuid'], team_uuid):
 			flash("You are not a member of this team.", "danger")
 			return redirect(url_for('manage_teams'))
 
@@ -588,7 +588,7 @@ def leave_team(team_uuid):
 #@auth.login_required
 @app_login_required
 def add_game():
-	if not is_user_member_of_team(session['user_uuid'], session['active_team_uuid']):
+	if session.get('active_team_uuid','None') != 'None' and not is_user_member_of_team(session['user_uuid'], session['active_team_uuid']):
 		flash("You are not a member of this team.", "danger")
 		return redirect(url_for('manage_teams'))
 
@@ -669,8 +669,8 @@ def game_history():
 	if 'user_uuid' not in session:
 		return redirect(url_for('uhoh', error_code=401))
 	
-	if not is_user_member_of_team(session['user_uuid'], session['active_team_uuid']):
-		flash("You are a pending member of this team.", "info")
+	if session.get('active_team_uuid','None') != 'None' and not is_user_member_of_team(session['user_uuid'], session['active_team_uuid']):
+		#flash("You are a pending member of this team.", "info")
 		return render_template('game_history.html')
 	
 	try:
@@ -737,8 +737,8 @@ def view_game(game_code):
 	if 'user_uuid' not in session:
 		return redirect(url_for('uhoh', error_code=401))
 	
-	if not is_user_member_of_team(session['user_uuid'], session['active_team_uuid']):
-		flash("You are a pending member of this team.", "info")
+	if session.get('active_team_uuid','None') != 'None' and not is_user_member_of_team(session['user_uuid'], session['active_team_uuid']):
+		#flash("You are a pending member of this team.", "info")
 		return render_template('game_history.html')
 	
 	try:
@@ -792,8 +792,8 @@ def player_stats():
 	if 'user_uuid' not in session:
 		return redirect(url_for('uhoh', error_code=401))
 	
-	if not is_user_member_of_team(session['user_uuid'], session['active_team_uuid']):
-		flash("You are a pending member of this team.", "info")
+	if session.get('active_team_uuid','None') != 'None' and not is_user_member_of_team(session['user_uuid'], session['active_team_uuid']):
+		#flash("You are a pending member of this team.", "info")
 		return render_template('player_stats.html')
 	
 	try:
@@ -850,8 +850,8 @@ def manual_game_entry():
 	if 'user_uuid' not in session:
 		return redirect(url_for('uhoh', error_code=401))
 	
-	if not is_user_member_of_team(session['user_uuid'], session['active_team_uuid']):
-		flash("You are a pending member of this team.", "info")
+	if session.get('active_team_uuid','None') != 'None' and not is_user_member_of_team(session['user_uuid'], session['active_team_uuid']):
+		#flash("You are a pending member of this team.", "info")
 		return render_template('game_history.html')
 	
 	try:
@@ -988,7 +988,7 @@ def uhohadmin():
 		# app stats
 		total_users = CUSTOMS_DB.get_total_users()
 		total_teams = CUSTOMS_DB.get_total_teams()
-		total_games = CUSTOMS_DB.get_total_games()
+		total_games = CUSTOMS_DB.get_total_team_games()
 
 		# server stats
 		uptime = datetime.datetime.now() - datetime.datetime.fromtimestamp(psutil.boot_time())
