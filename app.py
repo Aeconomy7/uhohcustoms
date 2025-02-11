@@ -776,6 +776,36 @@ def view_game(game_code):
 		teams = game_info['teams']
 		players_data = game_info['participants']
 
+		for player in players_data:
+			win_score = 1 if player['win'] else -1
+			player['score'] = (
+					# BASED ON PLAYER_STATS
+					# stats['wins'] * STAT_WEIGHTS['wins'] +
+					# stats['losses'] * STAT_WEIGHTS['losses'] +
+					# stats['kills'] * STAT_WEIGHTS['kills'] +
+					# stats['deaths'] * STAT_WEIGHTS['deaths'] +
+					# stats['assists'] * STAT_WEIGHTS['assists'] +
+					# stats['gold_earned'] * STAT_WEIGHTS['gold_earned'] +
+					# stats['damage_dealt'] * STAT_WEIGHTS['damage_dealt']
+					win_score * STAT_WEIGHTS['wins'] +
+					player['kills'] * STAT_WEIGHTS['kills'] +
+					player['deaths'] * STAT_WEIGHTS['deaths'] +
+					player['assists'] * STAT_WEIGHTS['assists'] +
+					player['goldEarned'] * STAT_WEIGHTS['gold_earned'] +
+					player['totalDamageDealtToChampions'] * STAT_WEIGHTS['damage_dealt']
+				)
+			player['score'] = format(player['score'], '.2f')
+
+		# Sort players by score
+		players_data = sorted(players_data, key=lambda x: (-float(x['score'])))
+
+		rank = 1
+		for player in players_data:
+			player['rank'] = rank
+			rank += 1
+
+		players_data = sorted(players_data, key=lambda x: (x['teamId']))
+
 		# Determine the winning team
 		blue_team = next(team for team in teams if team['teamId'] == 100)
 		game_result = "Blue" if blue_team['win'] else "Red"
@@ -834,7 +864,8 @@ def player_stats():
 						'gold_earned': 0,
 						'damage_dealt': 0,
 						'score': 0,
-						'games_played': 0
+						'games_played': 0,
+						'champions': {}
 					}
 				
 				players_info[summoner_name]['kills'] += player['kills']
@@ -848,6 +879,11 @@ def player_stats():
 					players_info[summoner_name]['wins'] += 1
 				else:
 					players_info[summoner_name]['losses'] += 1
+
+				champion_name = player['championName']
+				if champion_name not in players_info[summoner_name]['champions']:
+					players_info[summoner_name]['champions'][champion_name] = 0
+				players_info[summoner_name]['champions'][champion_name] += 1
 		
 		for summoner_name, stats in players_info.items():
 			# VERY IMPORTANT AND DYNAMIC
@@ -871,6 +907,11 @@ def player_stats():
 				stats['damage_dealt'] * STAT_WEIGHTS['damage_dealt']) / total_games
 			)
 			players_info[summoner_name]['score'] = score
+
+			# Determine the most played champions
+			max_games = max(players_info[summoner_name]['champions'].values())
+			most_played_champions = [champ for champ, count in players_info[summoner_name]['champions'].items() if count == max_games]
+			players_info[summoner_name]['most_played_champions'] = most_played_champions
 
 		# Sort players by score
 		sorted_players_info = dict(sorted(players_info.items(), key=lambda item: item[1]['score'], reverse=True))
@@ -1137,7 +1178,7 @@ def is_team_member(value):
 ########
 # MAIN #
 ########
-if __name__ == '__main__':
-	app.logger.debug(f"[?] APP DEBUG MODE: {DEBUG}")
-	socketio.run(app, debug=DEBUG)
+# if __name__ == '__main__':
+# 	app.logger.debug(f"[?] APP DEBUG MODE: {DEBUG}")
+# 	socketio.run(app, debug=DEBUG)
 

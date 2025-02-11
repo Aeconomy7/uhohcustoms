@@ -16,6 +16,8 @@
 			<table id="viewGameTable" class="table table-dark table-striped mt-3">
 				<thead>
 					<tr>
+						<th>Rank</th>
+						<th>Player Score</th>
 						<th>Champion</th>
 						<th>Summoner Name</th>
 						<th>Kills</th>
@@ -28,13 +30,15 @@
 				</thead>
 				<tbody>
 					{% for player in players_data %}
-					{% if player['teamId'] == 100 %}
-					<tr class="team-blue">
-					{% elif player['teamId'] == 200 %}
-					<tr class="team-red">
-					{% else %}
-					<tr>
-					{% endif %}
+						{% if player['teamId'] == 100 %}
+						<tr class="team-blue">
+						{% elif player['teamId'] == 200 %}
+						<tr class="team-red">
+						{% else %}
+						<tr>
+						{% endif %}
+						<td>{{ player['rank'] }}</td>
+						<td>{{ player['score'] }}</td>
 						<td><img src="{{ player['championName'] | get_champion_image_base64 }}" width="40px" height="40px" alt="{{ player['championName'] }}" title="{{ player['championName'] }}"></td>
 						<td>{{ player['riotIdGameName'] | e }}#{{ player['riotIdTagline'] | e }}</td>
 						<td>{{ player['kills'] }}</td>
@@ -56,6 +60,7 @@
 <script>
 	$(document).ready(function() {
 		$('#viewGameTable').DataTable({
+			order: [],
 			layout: {
 				topEnd: {
 					search: {

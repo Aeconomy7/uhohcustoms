@@ -112,6 +112,30 @@ html, body {
 	color: rgb(234, 0, 255) !important;
 }
 
+.rank-1, .rank-1 td {
+    color: white !important;
+    text-shadow: 0 0 3px #FFD700, 0 0 5px #FFD700;
+}
+.rank-1 img {
+	filter: drop-shadow(0 0 1px #FFD700) drop-shadow(0 0 3px #FFD700);
+}
+
+.rank-2, .rank-2 td {
+    color: white !important;
+    text-shadow: 0 0 3px #C0C0C0, 0 0 5px #C0C0C0;
+}
+.rank-2 img {
+	filter: drop-shadow(0 0 1px #C0C0C0) drop-shadow(0 0 3px #C0C0C0);
+}
+
+.rank-3, .rank-3 td {
+    color: white !important;
+    text-shadow: 0 0 3px #CD7F32, 0 0 5px #CD7F32;
+}
+.rank-3 img {
+	filter: drop-shadow(0 0 1px #CD7F32) drop-shadow(0 0 3px #CD7F32);
+}
+
 .funcolor {
     animation: colorizer 10s infinite;
 }
