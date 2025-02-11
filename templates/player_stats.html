@@ -11,7 +11,9 @@
         <table id="playerStatsTable" class="table table-dark table-striped table-responsive-text">
             <thead>
                 <tr>
+                    <th>Customs Rank</th>
                     <th>Summoner Name</th>
+                    <th>Player Score</th>
                     <th>Total Games</th>
                     <th>Wins</th>
                     <th>Losses</th>
@@ -24,9 +26,11 @@
                 </tr>
             </thead>
             <tbody>
-                {% for summoner_name, stats in players_info.items() %}
+                {% for rank, (summoner_name, stats) in enumerate(players_info.items(), start=1) %}
                 <tr>
+                    <td>{{ rank }}</td>
                     <td>{{ summoner_name }}</td>
+                    <td>{{ stats.score | round(2) }}</td>
                     <td>{{ stats.wins + stats.losses }}</td>
                     <td>{{ stats.wins }}</td>
                     <td>{{ stats.losses }}</td>
@@ -76,9 +80,9 @@
 			},
 			responsive: true,
             columnDefs: [
-                { className: "text-start", targets: [0, 7] },
-                { className: "text-center", targets: [1, 2, 3, 4, 5, 6] },
-                { className: "text-end", targets: [8, 9] }
+                { className: "text-start", targets: [1,  9] },
+                { className: "text-center", targets: [0, 3, 4, 5, 6, 7, 8 ] },
+                { className: "text-end", targets: [2, 10, 11] }
             ]
 		});
 	});

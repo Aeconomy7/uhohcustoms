@@ -116,7 +116,7 @@ SUPPORTED_REGIONS	= ['NA1', 'EUW1', 'EUN1', 'KR', 'BR1', 'LA1', 'LA2', 'OC1', 'J
 # UTILITY FUNCTIONS #
 #####################
 def get_active_page():
-    return request.path
+	return request.path
 
 def is_user_member_of_team(user_uuid, team_uuid):
 	role = CUSTOMS_DB.get_user_team_role(user_uuid, team_uuid)
@@ -162,26 +162,30 @@ def app_login_required(f):
 
 # maybe will use maybe not but its here...
 def team_membership_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        active_team_uuid = session.get('active_team_uuid')
-        if not active_team_uuid or not is_user_member_of_team(session['user_uuid'], session['active_team_uuid']):
-            flash("You must be a member or captain of the active team to access this page.", "danger")
-            return redirect(url_for('manage_teams'))
-        
-        return f(*args, **kwargs)
-    return decorated_function
+	@wraps(f)
+	def decorated_function(*args, **kwargs):
+		active_team_uuid = session.get('active_team_uuid')
+		if not active_team_uuid or not is_user_member_of_team(session['user_uuid'], session['active_team_uuid']):
+			flash("You must be a member or captain of the active team to access this page.", "danger")
+			return redirect(url_for('manage_teams'))
+		
+		return f(*args, **kwargs)
+	return decorated_function
 
 #############
 # INJECTORS #
 #############
 @app.context_processor
 def inject_active_page():
-    return dict(get_active_page=get_active_page)
+	return dict(get_active_page=get_active_page)
 
 @app.context_processor
 def inject_globals():
-    return dict(get_active_page=get_active_page, APP_VERSION=APP_VERSION)
+	return dict(get_active_page=get_active_page, APP_VERSION=APP_VERSION)
+
+@app.context_processor
+def inject_enumerate():
+	return dict(enumerate=enumerate)
 
 
 ##########
@@ -809,6 +813,7 @@ def player_stats():
 	try:
 		team_game_data = CUSTOMS_DB.get_team_game_data_by_team_uuid(session.get('active_team_uuid', 'None'))
 		players_info = {}
+		sorted_players_info = {}
 
 		for game in team_game_data:
 			# game blob data
@@ -827,7 +832,9 @@ def player_stats():
 						'wins': 0,
 						'losses': 0,
 						'gold_earned': 0,
-						'damage_dealt': 0
+						'damage_dealt': 0,
+						'score': 0,
+						'games_played': 0
 					}
 				
 				players_info[summoner_name]['kills'] += player['kills']
@@ -835,12 +842,38 @@ def player_stats():
 				players_info[summoner_name]['deaths'] += player['deaths']
 				players_info[summoner_name]['gold_earned'] += player['goldEarned']
 				players_info[summoner_name]['damage_dealt'] += player['totalDamageDealtToChampions']
+				players_info[summoner_name]['games_played'] += 1
 				
 				if player['win']:
 					players_info[summoner_name]['wins'] += 1
 				else:
 					players_info[summoner_name]['losses'] += 1
+		
+		for summoner_name, stats in players_info.items():
+			# VERY IMPORTANT AND DYNAMIC
+			total_games = stats['games_played']
+			score = (
+				# stats['wins'] * STAT_WEIGHTS['wins'] +
+				# stats['losses'] * STAT_WEIGHTS['losses'] +
+				# stats['kills'] * STAT_WEIGHTS['kills'] +
+				# stats['deaths'] * STAT_WEIGHTS['deaths'] +
+				# stats['assists'] * STAT_WEIGHTS['assists'] +
+				# (stats['gold_earned'] * STAT_WEIGHTS['gold_earned']) / total_games +
+				# (stats['damage_dealt'] * STAT_WEIGHTS['damage_dealt']) / total_games +
+				# (stats['kills'] / (stats['kills'] + stats['deaths'])) * STAT_WEIGHTS['kda'] +
+				# (stats['wins'] / (stats['wins'] + stats['losses'])) * STAT_WEIGHTS['win_rate']
+				(stats['wins'] * STAT_WEIGHTS['wins'] +
+				stats['losses'] * STAT_WEIGHTS['losses'] +
+				stats['kills'] * STAT_WEIGHTS['kills'] +
+				stats['deaths'] * STAT_WEIGHTS['deaths'] +
+				stats['assists'] * STAT_WEIGHTS['assists'] +
+				stats['gold_earned'] * STAT_WEIGHTS['gold_earned'] +
+				stats['damage_dealt'] * STAT_WEIGHTS['damage_dealt']) / total_games
+			)
+			players_info[summoner_name]['score'] = score
 
+		# Sort players by score
+		sorted_players_info = dict(sorted(players_info.items(), key=lambda item: item[1]['score'], reverse=True))
 
 	except ValueError as e:
 		app.logger.error(f"[!][APP][player_stats][{session.get('username')}] {str(e)}")
@@ -850,7 +883,7 @@ def player_stats():
 		app.logger.error(f"[!][APP][player_stats][{session.get('username')}] {str(e)}")
 		flash('An unexpected error occurred. Please try again.', 'danger')
 
-	return render_template('player_stats.html', players_info=players_info)
+	return render_template('player_stats.html', players_info=sorted_players_info)
 
 
 # ACTION: Manually add game stats
@@ -874,8 +907,6 @@ def manual_game_entry():
 
 		if request.method == 'POST':
 			game_code = f"MANUAL_CUSTOMS_{uuid.uuid4()}"
-
-			print(f"request.form: {request.form}")
 
 			blue_team_players = []
 			red_team_players = []
@@ -969,7 +1000,7 @@ def manual_game_entry():
 				raise ValueError("Failed to add game data to team.")
 
 			flash('Game data successfully saved!', 'success')
-			return render_template(url_for('game_history'))
+			return redirect(url_for('game_history'))
 		
 	except ValueError as e:
 		app.logger.error(f"[!][APP][manual_game_entry][{session.get('username')}] {str(e)}")
@@ -1091,7 +1122,7 @@ def get_champion_image_base64(value):
 @app.template_filter('is_team_captain')
 def is_team_captain(value):
 	result = CUSTOMS_DB.is_user_captain_of_team(session.get('user_uuid'), value) != None
-	print(f"[?][APP][is_team_captain] result for user {session.get('user_uuid')} captain of {value}: {result}")
+	#print(f"[?][APP][is_team_captain] result for user {session.get('user_uuid')} captain of {value}: {result}")
 	return result
 
 @app.template_filter('is_team_member')
@@ -1100,7 +1131,7 @@ def is_team_member(value):
 	role = CUSTOMS_DB.get_user_team_role(session.get('user_uuid'), value)
 	if role == 'Captain' or role == 'Member':
 		result = True
-	print(f"[?][APP][is_team_member] result for user {session.get('user_uuid')} member of {value}: {result}")
+	#print(f"[?][APP][is_team_member] result for user {session.get('user_uuid')} member of {value}: {result}")
 	return result
 
 ########

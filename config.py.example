@@ -3,6 +3,18 @@ from werkzeug.security import generate_password_hash
 # GENERAL
 APP_VERSION			= "Beta:0.1"
 
+# IMPORTANT STATS
+# will weigh the score of each player for player_stats
+STAT_WEIGHTS = {
+    'wins': 0.5,
+    'losses': -0.5,
+    'kills': 0.3,
+    'deaths': -0.3,
+    'assists': 0.2,
+    'gold_earned': 0.1,
+    'damage_dealt': 0.1
+}
+
 # RIOT API CONFIGURATIONS
 RIOT_API_KEY		= "RGAPI-XXXX"
 RIOT_CLIENT_ID		= "PLACEHOLDER"

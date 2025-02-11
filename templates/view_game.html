@@ -56,7 +56,14 @@
 <script>
 	$(document).ready(function() {
 		$('#viewGameTable').DataTable({
-            dom: '<"topEnd"f>rt<"clear">',
+			layout: {
+				topEnd: {
+					search: {
+						placeholder: 'Search whatever here!'
+					}
+				}
+			},
+			dom: '<"topEnd"f>rt<"clear">',
             responsive: true,
 			columnDefs: [
                 { className: "text-start", targets: [1, 5] },
