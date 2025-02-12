@@ -1,7 +1,7 @@
 from werkzeug.security import generate_password_hash
 
 # GENERAL
-APP_VERSION			= "Beta:0.1"
+APP_VERSION			= "0.1-beta"
 
 # IMPORTANT STATS
 # will weigh the score of each player for player_stats
@@ -26,6 +26,7 @@ MATCH_REGION		= "AMERICAS"
 SERVER_REGION		= "NA1"
 
 # NETWORK INFO
+# THESE ARE OUTDATED, uses an agent on someone's computer
 LOCAL_HOST		= "127.0.0.1"
 LOCAL_PORT		= 2999
 LC_EVENT_URL		= f"https://{LOCAL_HOST}:{LOCAL_PORT}/liveclientdata"
@@ -34,8 +35,14 @@ CUSTOMS_HOST		= "127.0.0.1"
 CUSTOMS_PORT		= 8000
 CUSTOMS_DATA_CALLBACK	= f"http://{CUSTOMS_HOST}:{CUSTOMS_PORT}/data_callback"
 
+# WEB INFO
+BASE_URL				= "https://example.com/"
+
 # DB INFO
-DB_TYPE				= "sqlite3"	# postgresql, sqlite3
+# DB_TYPE:
+# 	"sqlite3" 		: for use with local database (created automatically by the application, EASIEST)
+#	"postgresql"	: for use with postgresql database, locally or remotely
+DB_TYPE				= "sqlite3"	
 DB_HOST				= "127.0.0.1"
 DB_PORT				= "1433"
 DB_NAME             = "customsdb"

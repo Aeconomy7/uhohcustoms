@@ -28,7 +28,7 @@ from config import *
 if DB_TYPE == 'sqlite3':
 	from db.customsdb_sqlite3 import CustomsDbHandler
 if DB_TYPE == 'postgresql':
-	from db.customsdb_postgresql import CustomsDbHandler
+	from db.customsdb import CustomsDbHandler
 from agents.datadragon_agent import DataDragonAgent
 from agents.riot_agent import RiotAgent
 
@@ -188,9 +188,10 @@ def inject_enumerate():
 	return dict(enumerate=enumerate)
 
 
-##########
-# ROUTES #
-##########
+######################
+# REQUEST PROCESSING #
+######################
+# BEFORE #
 @app.before_request
 def limit_post_requests():
 	if request.method == 'POST':
@@ -198,6 +199,17 @@ def limit_post_requests():
 			if request.endpoint == 'login' or request.endpoint == 'register':
 				limiter.limit("10 per minute")(lambda: None)()
 
+# AFTER #
+@app.after_request
+def add_header(response):
+    if request.path.startswith('/static/'):
+        response.cache_control.max_age = 31536000  # Cache static files for 1 year
+    return response
+
+
+##########
+# ROUTES #
+##########
 @app.route('/')
 def index():
 	return render_template('index.html')
@@ -434,6 +446,37 @@ def approve_member():
 	return redirect(url_for('manage_teams'))
 
 
+# ACTION: Reject member
+@app.route('/reject_member', methods=['POST'])
+@app_login_required
+def reject_member():
+	
+	try:
+		team_uuid = request.form.get('team_uuid')
+		user_uuid = request.form.get('user_uuid')
+
+		if not team_uuid or not user_uuid:
+			raise ValueError("Missing team_uuid or user_uuid (this shouldn't happen).")
+
+		if not CUSTOMS_DB.is_user_captain_of_team(session['user_uuid'], team_uuid):
+			raise ValueError("You are not authorized to reject members for this team.")
+
+		if CUSTOMS_DB.reject_user_from_team(user_uuid, team_uuid):
+			flash("Member rejected successfully.", "success")
+		else:
+			raise ValueError("Failed to reject member.", "danger")
+
+	except ValueError as e:
+		app.logger.error(f"[!][APP][reject_member][{session.get('username')}] {str(e)}")
+		flash(str(e), 'danger')
+
+	except Exception as e:
+		app.logger.error(f"[!][APP][reject_member][{session.get('username')}] {str(e)}")
+		flash('An unexpected error occurred. Please try again.', 'danger')
+
+	return redirect(url_for('manage_teams'))
+
+
 # ACTION: Create team
 @app.route('/create_team', methods=['POST'])
 #@auth.login_required
@@ -591,10 +634,61 @@ def leave_team(team_uuid):
 	#return redirect(request.args.get('next', url_for('teams', team_uuid=session.get('active_team_uuid'))))
 
 
+# STATIC: Team captain page
+# 	- delete games
+# 	- approve/reject members
+@app.route('/team_captain', methods=['GET', 'POST'])
+@app_login_required
+def team_captain():
+	try:
+		if 'user_uuid' not in session:
+			return redirect(url_for('uhoh', error_code=401))
+
+		if not CUSTOMS_DB.is_user_captain_of_team(session['user_uuid'], session.get('active_team_uuid')):
+			flash('You do not have permission to access this page.', 'danger')
+			return redirect(url_for('index'))
+
+		if request.method == 'POST':
+			action = request.form.get('action')
+			if action == 'delete_game':
+				game_id = request.form.get('game_id')
+				CUSTOMS_DB.remove_team_game(session.get('active_team_uuid'), game_id)
+				flash('Game deleted successfully.', 'success')
+			elif action == 'remove_user':
+				user_uuid = request.form.get('user_uuid')
+				CUSTOMS_DB.remove_user_from_team(user_uuid, session.get('active_team_uuid'))
+				flash('User removed from team successfully.', 'success')
+			elif action == 'approve_user':
+				user_uuid = request.form.get('user_uuid')
+				CUSTOMS_DB.approve_user_to_team(user_uuid, session.get('active_team_uuid'))
+				flash('User approved to team successfully.', 'success')
+
+		
+
+		team_games = CUSTOMS_DB.get_team_game_id_data_by_team_uuid(session.get('active_team_uuid'))
+		
+		# all includes pending users too to be rendered by the team_captain page
+		all_team_members = CUSTOMS_DB.get_all_team_members(session.get('active_team_uuid'))
+		##team_members_pending = CUSTOMS_DB.get_team_members_pending(session.get('active_team_uuid'))
+
+		print(f"team_games: {team_games}")
+		print(f"all_team_members: {all_team_members}")
+		##print(f"team_members_pending: {team_members_pending}")
+
+		return render_template('team_captain.html', team_games=team_games, team_members=all_team_members, BASE_URL=BASE_URL)
+
+	except ValueError as e:
+		app.logger.error(f"[!][APP][team_captain][{session.get('username')}] {str(e)}")
+		flash(str(e), 'danger')
+
+	except Exception as e:
+		app.logger.error(f"[!][APP][team_captain][{session.get('username')}] {str(e)}")
+		flash('An unexpected error occurred. Please try again.', 'danger')
+
+	return render_template('team_captain.html')
 
 
-
-# New Game Upload - manual and file upload
+# ACTION: New Game Upload - manual and file upload
 @app.route('/add_game', methods=['GET', 'POST'])
 #@auth.login_required
 @app_login_required
@@ -779,14 +873,6 @@ def view_game(game_code):
 		for player in players_data:
 			win_score = 1 if player['win'] else -1
 			player['score'] = (
-					# BASED ON PLAYER_STATS
-					# stats['wins'] * STAT_WEIGHTS['wins'] +
-					# stats['losses'] * STAT_WEIGHTS['losses'] +
-					# stats['kills'] * STAT_WEIGHTS['kills'] +
-					# stats['deaths'] * STAT_WEIGHTS['deaths'] +
-					# stats['assists'] * STAT_WEIGHTS['assists'] +
-					# stats['gold_earned'] * STAT_WEIGHTS['gold_earned'] +
-					# stats['damage_dealt'] * STAT_WEIGHTS['damage_dealt']
 					win_score * STAT_WEIGHTS['wins'] +
 					player['kills'] * STAT_WEIGHTS['kills'] +
 					player['deaths'] * STAT_WEIGHTS['deaths'] +
@@ -889,15 +975,6 @@ def player_stats():
 			# VERY IMPORTANT AND DYNAMIC
 			total_games = stats['games_played']
 			score = (
-				# stats['wins'] * STAT_WEIGHTS['wins'] +
-				# stats['losses'] * STAT_WEIGHTS['losses'] +
-				# stats['kills'] * STAT_WEIGHTS['kills'] +
-				# stats['deaths'] * STAT_WEIGHTS['deaths'] +
-				# stats['assists'] * STAT_WEIGHTS['assists'] +
-				# (stats['gold_earned'] * STAT_WEIGHTS['gold_earned']) / total_games +
-				# (stats['damage_dealt'] * STAT_WEIGHTS['damage_dealt']) / total_games +
-				# (stats['kills'] / (stats['kills'] + stats['deaths'])) * STAT_WEIGHTS['kda'] +
-				# (stats['wins'] / (stats['wins'] + stats['losses'])) * STAT_WEIGHTS['win_rate']
 				(stats['wins'] * STAT_WEIGHTS['wins'] +
 				stats['losses'] * STAT_WEIGHTS['losses'] +
 				stats['kills'] * STAT_WEIGHTS['kills'] +

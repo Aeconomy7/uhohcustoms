@@ -127,6 +127,13 @@
                                     Player Stats
                                 </a>
                             </li>
+                            {% if session.get('active_team_uuid', 'None') | is_team_captain %}
+                            <li class="p-1" style="border-bottom: 1px solid cyan;">
+                                <a class="btn btn-toggle align-items-center rounded collapsed {% if get_active_page() == url_for('team_captain') %}funcolor{% endif %}" style="color: white;" href="{{ url_for('team_captain') }}">
+                                    Team Captain
+                                </a>
+                            </li>
+                            {% endif %}
                             <!-- BOTTOM SIDE NAVBAR -->
                             <li class="p-1 text-center fixed-bottom" style="border-top: 1px solid cyan; width: 200px;">
                                 <div>Version {{ APP_VERSION }}</div>

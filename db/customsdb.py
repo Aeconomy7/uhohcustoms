@@ -7,7 +7,8 @@ from sqlalchemy.orm import relationship, sessionmaker
 
 from db.tables.base_db_class import BaseDbClass
 
-from config import DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD, SQLALCHEMY_DATABASE_URI
+from config import DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD, SQLITESQLALCHEMY_DATABASE_URI
+from .tables import BaseDbClass, User, Team, UserTeam, gameDataTable, TeamGame, currentPatchTable
 
 class CustomsDbHandler:
 	def __init__(self):

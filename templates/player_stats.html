@@ -42,7 +42,7 @@
                     <td>{{ summoner_name }}</td>
                     <td>
                         {% for champion in stats.most_played_champions %}
-                            <img src="{{ champion | get_champion_image_base64 }}" width="40px" height="40px" alt="{{ champion }}" title="{{ champion }}">
+                            <img src="{{ champion | get_champion_image_base64 }}" width="30px" height="30px" alt="{{ champion }}" title="{{ champion }}">
                         {% endfor %}
                     </td>
                     <td>{{ stats.wins + stats.losses }}</td>

@@ -18,8 +18,8 @@
 					<tr>
 						<th>Rank</th>
 						<th>Player Score</th>
-						<th>Champion</th>
 						<th>Summoner Name</th>
+						<th>Champion</th>
 						<th>Kills</th>
 						<th>Deaths</th>
 						<th>Assists</th>
@@ -39,8 +39,8 @@
 						{% endif %}
 						<td>{{ player['rank'] }}</td>
 						<td>{{ player['score'] }}</td>
-						<td><img src="{{ player['championName'] | get_champion_image_base64 }}" width="40px" height="40px" alt="{{ player['championName'] }}" title="{{ player['championName'] }}"></td>
 						<td>{{ player['riotIdGameName'] | e }}#{{ player['riotIdTagline'] | e }}</td>
+						<td><img src="{{ player['championName'] | get_champion_image_base64 }}" width="35px" height="35px" alt="{{ player['championName'] }}" title="{{ player['championName'] }}"></td>
 						<td>{{ player['kills'] }}</td>
 						<td>{{ player['deaths'] }}</td>
 						<td>{{ player['assists'] }}</td>
@@ -71,9 +71,9 @@
 			dom: '<"topEnd"f>rt<"clear">',
             responsive: true,
 			columnDefs: [
-                { className: "text-start", targets: [1, 5] },
-                { className: "text-center", targets: [0, 2, 3, 4] },
-                { className: "text-end", targets: [6, 7] }
+                { className: "text-start", targets: [1, 7] },
+                { className: "text-center", targets: [0, 3, 4, 5, 6] },
+                { className: "text-end", targets: [8, 9] }
             ]
 		});
 	});

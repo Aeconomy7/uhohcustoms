@@ -532,6 +532,43 @@ class CustomsDbHandler:
 			print(f"[!][CUSTOMS_DB][approve_user_to_team] ERROR: {e}")
 			return False
 		
+	def reject_user_from_team(self, user_uuid, team_uuid):
+		sql_query = "DELETE FROM user_teams WHERE user_uuid = ? AND team_uuid = ?;"
+
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query, (str(user_uuid), str(team_uuid)))
+			self.__conn.commit()
+			if self.__DEBUG:
+				print(f"[+][CUSTOMS_DB][reject_user_from_team] Successfully rejected user uuid {str(user_uuid)} from team uuid {str(team_uuid)} :D")
+			return True
+		except Error as e:
+			print(f"[!][CUSTOMS_DB][reject_user_from_team] ERROR: {e}")
+			return False
+		
+	def get_all_team_members(self, team_uuid):
+		sql_query = """
+			SELECT u.username, ut.role, u.user_uuid 
+			FROM user_teams ut
+			JOIN users u ON ut.user_uuid = u.user_uuid
+			WHERE ut.team_uuid = ?;
+			"""
+
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query, (str(team_uuid),))
+			row = cursor.fetchall()
+			if row:
+				if self.__DEBUG:
+					print(f"[?][CUSTOMS_DB][get_all_team_members] Found {str(len(row))} members for team {str(team_uuid)}")
+				return row
+			else:
+				return None
+				
+		except Error as e:
+			print(f"[!][CUSTOMS_DB][get_all_team_members] ERROR: {e}")
+			return None
+
 	def get_team_members_pending(self, team_uuid):
 		sql_query = """
 			SELECT u.user_uuid, u.username
@@ -902,6 +939,29 @@ class CustomsDbHandler:
 		except Error as e:
 			print(f"[!][CUSTOMS_DB][remove_team_game] ERROR: {e}")
 			return False
+
+	def get_team_game_id_data_by_team_uuid(self, team_uuid):
+		sql_query = """
+			SELECT gd.game_id
+			FROM game_data gd
+			JOIN team_games tg ON gd.game_id = tg.game_id
+			WHERE tg.team_uuid = ?;
+		"""
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query, (str(team_uuid),))
+			row = cursor.fetchall()
+			if row is None:
+				if self.__DEBUG:
+					print(f"[-][CUSTOMS_DB][get_team_game_id_data_by_team_uuid] Could not find any game data for team {team_uuid} :(")
+				return None
+			else:
+				if self.__DEBUG:
+					print(f"[+][CUSTOMS_DB][get_team_game_id_data_by_team_uuid] Found {str(len(row))} game(s) for team {team_uuid} :D")
+				return row
+		except Error as e:
+			print(f"[!][CUSTOMS_DB][get_team_game_id_data_by_team_uuid] ERROR: {e}")
+			return None
 
 	def get_team_game_data_by_team_uuid(self, team_uuid):
 		sql_query = """
