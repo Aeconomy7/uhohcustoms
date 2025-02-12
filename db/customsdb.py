@@ -4,85 +4,108 @@ from psycopg2 import sql
 from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, LargeBinary, Text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
+import sqlite3
+from sqlite3 import Error
 
 from db.tables.base_db_class import BaseDbClass
 
-from config import DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD, SQLITESQLALCHEMY_DATABASE_URI
-from .tables import BaseDbClass, User, Team, UserTeam, gameDataTable, TeamGame, currentPatchTable
+from config import DB_TYPE, DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD, SQLALCHEMY_DATABASE_URI, SCHEMA_NAME
+from .tables.base_db_class import BaseDbClass
+from .tables.teams_table import teamsTable
+from .tables.users_table import usersTable
+
+from .tables.user_teams_table import userTeamsTable
+from .tables.game_data_table import gameDataTable
+from .tables.team_games_table import teamGamesTable
+from .tables.current_patch_table import currentPatchTable
 
 class CustomsDbHandler:
 	def __init__(self):
-		db_url = SQLALCHEMY_DATABASE_URI
-		self.__db_location = r"cowboy_db.db"
-
 		# DEBUG MODE
 		self.__DEBUG = True
 		print(f"[?][CUSTOMS_DB][__init__] DB DEBUG MODE: {self.__DEBUG}")
 
-		# Create connection for initiating tables
-		self.__conn = self.__create_connection(self.__db_location)
-		if self.__conn is None:
-			print("[-][CUSTOMS_DB][__init__] Could not connect to Customs DB")
-			return
+		# Create customs database if it does not exist
+		try:
+			conn = psycopg2.connect(f"dbname=postgres user={DB_USER} password={DB_PASSWORD} host={DB_HOST} port={DB_PORT}")
+			conn.autocommit = True
+			cur = conn.cursor()
+			cur.execute(f"SELECT 1 FROM pg_database WHERE datname='{DB_NAME}'")
+			if not cur.fetchone():
+				cur.execute(f"CREATE DATABASE {DB_NAME}")
+				if self.__DEBUG:
+					print(f"[+][CUSTOMS_DB][__init__] Successfully created database {DB_NAME}!")
+			else:
+				if self.__DEBUG:
+					print(f"[-][CUSTOMS_DB][__init__] Database {DB_NAME} already exists!")
+			cur.close()
+			conn.close()
+		except Exception as e:
+			print(f"[!][CUSTOMS_DB][__init__] Error creating database: {e}")
 
-		self.__base = declarative_base()
+		# Reconnect to the newly created database
+		try:
+			conn = psycopg2.connect(f"dbname={DB_NAME} user={DB_USER} password={DB_PASSWORD} host={DB_HOST} port={DB_PORT}")
+			conn.autocommit = True
+			cur = conn.cursor()
+			cur.execute(f"CREATE SCHEMA IF NOT EXISTS {SCHEMA_NAME}")
+			cur.close()
+			conn.close()
+			if self.__DEBUG:
+				print(f"[+][CUSTOMS_DB][__init__] Successfully created schema {SCHEMA_NAME}")
+		except Exception as e:
+			print(f"[!][CUSTOMS_DB][__init__] Error creating schema: {e}")
+
 		self.__engine = create_engine(SQLALCHEMY_DATABASE_URI, echo=False)
 		BaseDbClass.metadata.create_all(self.__engine)
 		self.__session = sessionmaker(bind=self.__engine)
 
-		# Create tables if not exist
-		self.__create_users_table()
-		self.__create_teams_table()
-		self.__create_user_teams_table()
-		#self.__create_players_table()
-		#self.__create_game_events_table()
-		self.__create_game_data_table()
-		self.__create_team_games_table()
-		self.__create_current_patch_table()
 		print("[+][CUSTOMS_DB][__init__] Successfully initiated Customs database tables!")
-
-		# Close connection
-		self.__conn.close()
 
 	def __enter__(self):
 		#Establish connection with Customs DB
-		self.__conn = self.__create_connection(self.__db_location)
+		#self.__conn = self.__create_connection(self.__db_location)
 		print("[+][CUSTOMS_DB][__enter__] Connected to Customs DB")
 
 	def __exit__(self):
 		self.__session.commit()
 		self.__session.close()
 
-		# Commit changes to DB
-		self.__conn.commit()
-		# Close DB
-		self.__conn.close()
+		# # Commit changes to DB
+		# self.__conn.commit()
+		# # Close DB
+		# self.__conn.close()
 		print(f"[+][CUSTOMS_DB][__exit__] Closed connection to Customs DB")
 
-	def __create_connection(self,db_file):
-		conn = None
+	def get_session(self):
+		return self.__session()
 
-		# postgres connection
-		try:
-			conn = psycopg2.connect(
-				host=DB_HOST,
-				port=DB_PORT,
-				dbname=DB_NAME,
-				user=DB_USER,
-				password=DB_PASSWORD
-			)
-			return conn
-		except psycopg2.Error as e:
-			print(f"Error connecting to PostgreSQL database: {e}")
-			return None
+	# def __create_connection(self,db_file):
+	# 	conn = None
 
-		# sqlite3 connection
-		# try:
-		# 	conn = sqlite3.connect(db_file)
-		# except Error as e:
-		# 	print(e)
+	# 	# postgres connection
+	# 	if DB_TYPE == 'postgresql':
+	# 		try:
+	# 			conn = psycopg2.connect(
+	# 				host=DB_HOST,
+	# 				port=DB_PORT,
+	# 				dbname=DB_NAME,
+	# 				user=DB_USER,
+	# 				password=DB_PASSWORD
+	# 			)
+	# 			return conn
+	# 		except psycopg2.Error as e:
+	# 			print(f"Error connecting to PostgreSQL database: {e}")
+	# 			return None
 
-		return conn
+	# 	if DB_TYPE == 'sqlite3':
+	# 	# sqlite3 connection
+	# 		try:
+	# 			conn = sqlite3.connect(db_file)
+	# 		except Error as e:
+	# 			print(e)
+
+	# 	return conn
 
 	#########
 	# TEAMS #
@@ -509,6 +532,98 @@ class CustomsDbHandler:
 		except Error as e:
 			print(f"[!][CUSTOMS_DB][register_team]: {e}")
 			return False
+		
+	def get_user_team_role(self, user_uuid, team_uuid):
+		sql_query = "SELECT role FROM user_teams WHERE user_uuid = ? AND team_uuid = ?;"
+
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query, (str(user_uuid), str(team_uuid)))
+			row = cursor.fetchone()
+			if row:
+				if self.__DEBUG:
+					print(f"[?][CUSTOMS_DB][get_user_team_role] User {str(user_uuid)} is not a PENDING member of team {str(team_uuid)}")
+				return row[0]
+			else:
+				return None
+				
+		except Error as e:
+			print(f"[!][CUSTOMS_DB][check_if_user_is_member_of_team] ERROR: {e}")
+			return None
+
+	def approve_user_to_team(self, user_uuid, team_uuid):
+		sql_query = "UPDATE user_teams SET role = 'Member' WHERE user_uuid = ? AND team_uuid = ?;"
+
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query, (str(user_uuid), str(team_uuid)))
+			self.__conn.commit()
+			if self.__DEBUG:
+				print(f"[+][CUSTOMS_DB][approve_user_to_team] Successfully approved user uuid {str(user_uuid)} to team uuid {str(team_uuid)} :D")
+			return True
+		except Error as e:
+			print(f"[!][CUSTOMS_DB][approve_user_to_team] ERROR: {e}")
+			return False
+		
+	def reject_user_from_team(self, user_uuid, team_uuid):
+		sql_query = "DELETE FROM user_teams WHERE user_uuid = ? AND team_uuid = ?;"
+
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query, (str(user_uuid), str(team_uuid)))
+			self.__conn.commit()
+			if self.__DEBUG:
+				print(f"[+][CUSTOMS_DB][reject_user_from_team] Successfully rejected user uuid {str(user_uuid)} from team uuid {str(team_uuid)} :D")
+			return True
+		except Error as e:
+			print(f"[!][CUSTOMS_DB][reject_user_from_team] ERROR: {e}")
+			return False
+		
+	def get_all_team_members(self, team_uuid):
+		sql_query = """
+			SELECT u.username, ut.role, u.user_uuid 
+			FROM user_teams ut
+			JOIN users u ON ut.user_uuid = u.user_uuid
+			WHERE ut.team_uuid = ?;
+			"""
+
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query, (str(team_uuid),))
+			row = cursor.fetchall()
+			if row:
+				if self.__DEBUG:
+					print(f"[?][CUSTOMS_DB][get_all_team_members] Found {str(len(row))} members for team {str(team_uuid)}")
+				return row
+			else:
+				return None
+				
+		except Error as e:
+			print(f"[!][CUSTOMS_DB][get_all_team_members] ERROR: {e}")
+			return None
+
+	def get_team_members_pending(self, team_uuid):
+		sql_query = """
+			SELECT u.user_uuid, u.username
+			FROM user_teams ut
+			JOIN users u ON ut.user_uuid = u.user_uuid
+			WHERE ut.team_uuid = ? AND ut.role = 'Pending';
+		"""
+
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query, (str(team_uuid),))
+			row = cursor.fetchall()
+			if row:
+				if self.__DEBUG:
+					print(f"[?][CUSTOMS_DB][get_team_members_pending] Found {str(len(row))} pending members for team {str(team_uuid)}")
+				return row
+			else:
+				return None
+				
+		except Error as e:
+			print(f"[!][CUSTOMS_DB][get_team_members_pending] ERROR: {e}")
+			return None
 
 
 	###########
@@ -812,6 +927,25 @@ class CustomsDbHandler:
 		except Error as e:
 			print(f"[!][CUSTOMS_DB][__create_team_games_table] ERROR: {e}")
 			return False
+		
+	def get_total_team_games(self):
+		sql_query = "SELECT COUNT(*) FROM team_games;"
+
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query)
+			row = cursor.fetchone()
+			if row is None:
+				if self.__DEBUG:
+					print(f"[-][CUSTOMS_DB][get_total_team_games] No team games found :(")
+				return None
+			else:
+				if self.__DEBUG:
+					print(f"[+][CUSTOMS_DB][get_total_team_games] Found {str(row[0])} games!")
+				return row[0]
+		except Error as e:
+			print(f"[!][CUSTOMS_DB][get_total_team_games] ERROR: {e}")
+			return None
 
 	def add_team_game(self, team_uuid, game_id):
 		sql_query = "INSERT INTO team_games (team_uuid, game_id) VALUES (?, ?);"
@@ -838,6 +972,29 @@ class CustomsDbHandler:
 		except Error as e:
 			print(f"[!][CUSTOMS_DB][remove_team_game] ERROR: {e}")
 			return False
+
+	def get_team_game_id_data_by_team_uuid(self, team_uuid):
+		sql_query = """
+			SELECT gd.game_id
+			FROM game_data gd
+			JOIN team_games tg ON gd.game_id = tg.game_id
+			WHERE tg.team_uuid = ?;
+		"""
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query, (str(team_uuid),))
+			row = cursor.fetchall()
+			if row is None:
+				if self.__DEBUG:
+					print(f"[-][CUSTOMS_DB][get_team_game_id_data_by_team_uuid] Could not find any game data for team {team_uuid} :(")
+				return None
+			else:
+				if self.__DEBUG:
+					print(f"[+][CUSTOMS_DB][get_team_game_id_data_by_team_uuid] Found {str(len(row))} game(s) for team {team_uuid} :D")
+				return row
+		except Error as e:
+			print(f"[!][CUSTOMS_DB][get_team_game_id_data_by_team_uuid] ERROR: {e}")
+			return None
 
 	def get_team_game_data_by_team_uuid(self, team_uuid):
 		sql_query = """

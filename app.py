@@ -87,7 +87,7 @@ DD_AGENT.__enter__()
 ##############
 if not os.path.exists('static/game_data'):
 	os.makedirs('static/game_data')
-RIOT_AGENT = RiotAgent(RIOT_API_KEY, RIOT_AUTH_URL, RIOT_TOKEN_URL, REDIRECT_URI, SERVER_REGION, MATCH_REGION)
+RIOT_AGENT = RiotAgent(RIOT_API_KEY, RIOT_AUTH_URL, RIOT_TOKEN_URL, REDIRECT_URI)
 RIOT_AGENT.__enter__()
 
 
@@ -108,7 +108,6 @@ app.logger.setLevel(logging.DEBUG)
 ###########
 # GLOBALS #
 ###########
-DEBUG				= True
 SUPPORTED_REGIONS	= ['NA1', 'EUW1', 'EUN1', 'KR', 'BR1', 'LA1', 'LA2', 'OC1', 'JP1', 'TR1', 'RU']
 
 
@@ -175,13 +174,14 @@ def team_membership_required(f):
 #############
 # INJECTORS #
 #############
-@app.context_processor
-def inject_active_page():
-	return dict(get_active_page=get_active_page)
+# @app.context_processor
+# def inject_active_page():
+# 	return dict(get_active_page=get_active_page)
 
 @app.context_processor
 def inject_globals():
-	return dict(get_active_page=get_active_page, APP_VERSION=APP_VERSION)
+	USER_ROLE = CUSTOMS_DB.get_user_team_role(session.get('user_uuid'), session.get('active_team_uuid'))
+	return dict(get_active_page=get_active_page, APP_VERSION=APP_VERSION, USER_ROLE=USER_ROLE)
 
 @app.context_processor
 def inject_enumerate():
@@ -202,9 +202,9 @@ def limit_post_requests():
 # AFTER #
 @app.after_request
 def add_header(response):
-    if request.path.startswith('/static/'):
-        response.cache_control.max_age = 31536000  # Cache static files for 1 year
-    return response
+	if request.path.startswith('/static/'):
+		response.cache_control.max_age = 31536000  # Cache static files for 1 year
+	return response
 
 
 ##########
@@ -663,17 +663,11 @@ def team_captain():
 				CUSTOMS_DB.approve_user_to_team(user_uuid, session.get('active_team_uuid'))
 				flash('User approved to team successfully.', 'success')
 
-		
 
 		team_games = CUSTOMS_DB.get_team_game_id_data_by_team_uuid(session.get('active_team_uuid'))
 		
 		# all includes pending users too to be rendered by the team_captain page
 		all_team_members = CUSTOMS_DB.get_all_team_members(session.get('active_team_uuid'))
-		##team_members_pending = CUSTOMS_DB.get_team_members_pending(session.get('active_team_uuid'))
-
-		print(f"team_games: {team_games}")
-		print(f"all_team_members: {all_team_members}")
-		##print(f"team_members_pending: {team_members_pending}")
 
 		return render_template('team_captain.html', team_games=team_games, team_members=all_team_members, BASE_URL=BASE_URL)
 
@@ -695,6 +689,10 @@ def team_captain():
 def add_game():
 	if 'user_uuid' not in session:
 		return redirect(url_for('uhoh', error_code=401))
+
+	if session.get('active_team_uuid','None') == 'None':
+		flash("You are not a member of any team.", "danger")
+		return redirect(url_for('manage_teams'))
 
 	if session.get('active_team_uuid','None') != 'None' and not is_user_member_of_team(session['user_uuid'], session['active_team_uuid']):
 		flash("You are not a member of this team.", "danger")
@@ -1011,6 +1009,10 @@ def manual_game_entry():
 	if 'user_uuid' not in session:
 		return redirect(url_for('uhoh', error_code=401))
 	
+	if session.get('active_team_uuid','None') == 'None':
+		flash("You are not a member of any team.", "danger")
+		return redirect(url_for('manage_teams'))
+
 	if session.get('active_team_uuid','None') != 'None' and not is_user_member_of_team(session['user_uuid'], session['active_team_uuid']):
 		#flash("You are a pending member of this team.", "info")
 		return render_template('game_history.html')

@@ -7,30 +7,6 @@
     </div>
 
     <div class="table-responsive">
-        <h4>Manage Games</h4>
-        <table id="teamGamesTable" class="table table-dark table-striped table-responsive-text">
-            <thead>
-                <tr>
-                    <th>Game ID</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for game in team_games %}
-                <tr>
-                    <td>{{ game[0] }}</td>
-                    <td>
-                        <form method="POST" action="{{ url_for('team_captain') }}">
-                            <input type="hidden" name="action" value="delete_game">
-                            <input type="hidden" name="game_id" value="{{ game[0] }}">
-                            <button type="submit" class="btn btn-danger">Delete game</button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-
         <h4>Manage Team Members</h4>
         <table id="teamMembersTable" class="table table-dark table-striped table-responsive-text">
             <thead>
@@ -45,10 +21,10 @@
                     {% if member[1] == 'Captain' %}
                     <td><span>{{ member[0] }} <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#ffbf04"><path d="M200-160v-80h560v80H200Zm0-140-51-321q-2 0-4.5.5t-4.5.5q-25 0-42.5-17.5T80-680q0-25 17.5-42.5T140-740q25 0 42.5 17.5T200-680q0 7-1.5 13t-3.5 11l125 56 125-171q-11-8-18-21t-7-28q0-25 17.5-42.5T480-880q25 0 42.5 17.5T540-820q0 15-7 28t-18 21l125 171 125-56q-2-5-3.5-11t-1.5-13q0-25 17.5-42.5T820-740q25 0 42.5 17.5T880-680q0 25-17.5 42.5T820-620q-2 0-4.5-.5t-4.5-.5l-51 321H200Zm68-80h424l26-167-105 46-133-183-133 183-105-46 26 167Zm212 0Z"/></svg></span></td>
                     <td>
-                        <div class="input-group">
-                            <p class="justify-content-center align-items-center">Team Invite Code:</p>
+                        <div class="input-group justify-content-center align-items-center">
+                            <p>Team Invite Code: </p>
                             <input type="text" id="teamCode" class="form-control" value="{{ BASE_URL }}/join_team/{{ session.get('active_team_uuid','None') }}" readonly>
-                            <button id="copyButton" class="btn btn-outline-secondary" style="padding-left: 10px;"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#F"><path d="M360-240q-33 0-56.5-23.5T280-320v-480q0-33 23.5-56.5T360-880h360q33 0 56.5 23.5T800-800v480q0 33-23.5 56.5T720-240H360Zm0-80h360v-480H360v480ZM200-80q-33 0-56.5-23.5T120-160v-560h80v560h440v80H200Zm160-240v-480 480Z"/></svg></button>
+                            <button id="copyButton" class="btn btn-outline-secondary" style="padding-left: 10px;"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#0"><path d="M360-240q-33 0-56.5-23.5T280-320v-480q0-33 23.5-56.5T360-880h360q33 0 56.5 23.5T800-800v480q0 33-23.5 56.5T720-240H360Zm0-80h360v-480H360v480ZM200-80q-33 0-56.5-23.5T120-160v-560h80v560h440v80H200Zm160-240v-480 480Z"/></svg></button>
                         </div>
                     </td>
                     {% elif member[1] == 'Member' %}
@@ -74,6 +50,34 @@
                 {% endfor %}
             </tbody>
         </table>
+
+        <hr>
+        
+        <h4>Manage Games</h4>
+        <table id="teamGamesTable" class="table table-dark table-striped table-responsive-text">
+            <thead>
+                <tr>
+                    <th>Game ID</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for game in team_games %}
+                <tr>
+                    <td>{{ game[0] }}</td>
+                    <td>
+                        <form method="POST" action="{{ url_for('team_captain') }}">
+                            <input type="hidden" name="action" value="delete_game">
+                            <input type="hidden" name="game_id" value="{{ game[0] }}">
+                            <button type="submit" class="btn btn-danger">Delete game</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+       
     </div>
 </div>
 {% endblock %}

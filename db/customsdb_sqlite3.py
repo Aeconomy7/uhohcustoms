@@ -8,14 +8,14 @@ from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Large
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 
-from config import DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD, SQLALCHEMY_DATABASE_URI
+from config import DEBUG, SQLITE_DB_PATH
 
 class CustomsDbHandler:
 	def __init__(self):
-		self.__db_location = "./db/cs.db"
+		self.__db_location = SQLITE_DB_PATH
 
 		# DEBUG MODE
-		self.__DEBUG = True
+		self.__DEBUG = DEBUG
 		print(f"[?][CUSTOMS_DB][__init__] DB DEBUG MODE: {self.__DEBUG}")
 
 		# Create connection for initiating tables

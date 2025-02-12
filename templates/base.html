@@ -99,10 +99,13 @@
                     <div class="flex-shrink-0  flex-remaining-height" style="width: 200px;">
                         <ul class="list-unstyled" >
                             <li class="p-1" style="border-bottom: 1px solid cyan; ">
+                                <a class="btn btn-toggle align-items-center rounded collapsed {% if get_active_page() == url_for('manage_teams') %}funcolor{% endif %}" style="color: white;" href="{{ url_for('manage_teams') }}">
+                                    Manage Your Teams
+                                </a>
                                 <button class="btn btn-toggle align-items-center rounded collapsed" style="color: white;" data-bs-toggle="collapse" data-bs-target="#dashboard-collapse" aria-expanded="false">
-                                <div>Active Team: <span style="color: yellow">{{ session.get('active_team_name', 'None') }}</span></div>
+                                    <div class="dropdown-toggle">Active Team: <span style="color: yellow">{{ session.get('active_team_name', 'None') }}</span></div>
                                 </button>
-                                {% if session.get('active_team_uuid', 'None') != 'None' and not session.get('active_team_uuid') | is_team_member %}
+                                {% if USER_ROLE == 'Pending' %}
                                 <div style="border: 1px solid yellow; padding: 3px">PENDING MEMBERSHIP</div>
                                 {% endif %}
                                 <div class="collapse" id="dashboard-collapse">
@@ -110,13 +113,14 @@
                                     {% for team in session.get('user_teams', []) %}
                                     <li>
                                         <a class="dropdown-item" href="{{ url_for('set_active_team', team_uuid=team['team_uuid'], next=request.path) }}">
-                                            {{ team['team_name'] }}
+                                            > {{ team['team_name'] }}
                                         </a>
                                     </li>
                                     {% endfor %}
                                 </ul>
                                 </div>
                             </li>
+                            {% if session.get('active_team_uuid', 'None') | is_team_member %}
                             <li class="p-1" style="border-bottom: 1px solid cyan;">
                                 <a class="btn btn-toggle align-items-center rounded collapsed {% if get_active_page() == url_for('game_history') %}funcolor{% endif %}" style="color: white;" href="{{ url_for('game_history') }}">
                                     Game History
@@ -127,6 +131,7 @@
                                     Player Stats
                                 </a>
                             </li>
+                            {% endif %}
                             {% if session.get('active_team_uuid', 'None') | is_team_captain %}
                             <li class="p-1" style="border-bottom: 1px solid cyan;">
                                 <a class="btn btn-toggle align-items-center rounded collapsed {% if get_active_page() == url_for('team_captain') %}funcolor{% endif %}" style="color: white;" href="{{ url_for('team_captain') }}">

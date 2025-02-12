@@ -3,10 +3,10 @@ from urllib.parse import quote
 import time
 import requests
 
+from config import DEBUG
+
 class RiotAgent:
-	def __init__(self, api_key, riot_auth_url, riot_token_url, redirect_uri, server_region="NA1", match_region="AMERICAS"):
-		self.__server_region = server_region
-		self.__match_region = match_region
+	def __init__(self, api_key, riot_auth_url, riot_token_url, redirect_uri):
 
 		#self.__base_riot_api_url = f"https://{self.__match_region}.api.riotgames.com"
 		self.__summoner_api_url = f"/lol/summoner/v4/summoners"
@@ -21,7 +21,7 @@ class RiotAgent:
 		# self.__lol_watcher = None
 		# self.__riot_watcher = None
 
-		self.__DEBUG = True
+		self.__DEBUG = DEBUG
 		print(f"[?][RIOT_AGENT][__init__] DATADRAGON AGENT DEBUG MODE: {self.__DEBUG}")
 
 		return

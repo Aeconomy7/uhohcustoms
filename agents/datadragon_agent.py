@@ -11,22 +11,25 @@ import schedule
 import time
 from sqlite3 import Error
 
-from config import DB_TYPE, DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD
+#from db.customsdb import CustomsDBHandler
+from config import DEBUG
 
 class DataDragonAgent:
 	# DEFAULT CONSTRUCTOR
 	def __init__(self):
 		self.__base_dd_url = "https://ddragon.leagueoflegends.com"
 		self.__local_dd_path = "./static/dd"
-		self.__db_location = "./db/cs.db"
+		#self.__db_location = "./db/cs.db"
 		self.__champions_data = {}
 		self.__items_data = {}
 		self.__spells_data = {}
 		self.__runes_data = {}
 		self.__current_patch = None
 
+		#self.__csdb = CustomsDBHandler()
+
 		# DEBUG MODE
-		self.__DEBUG = True
+		self.__DEBUG = DEBUG
 		print(f"[?][DD_AGENT][__init__] DATADRAGON AGENT DEBUG MODE: {self.__DEBUG}")
 
 		# Start the scheduler in a background thread
@@ -38,10 +41,10 @@ class DataDragonAgent:
 		self.__ensure_directories_exist()
 
 		#Establish connection with Customs DB
-		self.__conn = self.__create_connection(self.__db_location)
+		# self.__conn = self.__create_connection(self.__db_location)
 		print("[+][DD_AGENT][__enter__] Connected DataDragon to Customs DB")
 		self.update_current_patch()
-		self.__current_patch = self.get_current_patch_from_db()
+		self.__current_patch = self.get_current_patch_from_directories()
 		if self.__current_patch:
 			print(f"[+][DD_AGENT][__enter__] Current patch in DB: {self.__current_patch}")
 		else:
@@ -70,53 +73,67 @@ class DataDragonAgent:
 				print(f"[+][DD_AGENT][__ensure_directories_exist] Created directory: {directory}")
 
 
-	def __create_connection(self,db_file):
-		conn = None
-
-		# postgresql connection
-		if DB_TYPE == 'postgresql':
-			try:
-				conn = psycopg2.connect(
-					host=DB_HOST,
-					port=DB_PORT,
-					dbname=DB_NAME,
-					user=DB_USER,
-					password=DB_PASSWORD
-				)
-				return conn
-			except psycopg2.Error as e:
-				print(f"Error connecting to PostgreSQL database: {e}")
+	# DIRECTORY FUNCTIONS
+	def get_current_patch_from_directories(self):
+		try:
+			patch_dirs = [d for d in os.listdir(self.__local_dd_path) if os.path.isdir(os.path.join(self.__local_dd_path, d))]
+			patch_dirs = [d for d in patch_dirs if d.count('.') == 2]  # Ensure the directory name is in the format x.x.x
+			if patch_dirs:
+				patch_dirs.sort(key=lambda s: list(map(int, s.split('.'))), reverse=True)
+				return patch_dirs[0]
+			else:
 				return None
+		except Exception as e:
+			print(f"[!][DD_AGENT][get_current_patch_from_directories] ERROR: {e}")
+			return None
+
+	# def __create_connection(self,db_file):
+	# 	conn = None
+
+	# 	# postgresql connection
+	# 	if DB_TYPE == 'postgresql':
+	# 		try:
+	# 			conn = psycopg2.connect(
+	# 				host=DB_HOST,
+	# 				port=DB_PORT,
+	# 				dbname=DB_NAME,
+	# 				user=DB_USER,
+	# 				password=DB_PASSWORD
+	# 			)
+	# 			return conn
+	# 		except psycopg2.Error as e:
+	# 			print(f"Error connecting to PostgreSQL database: {e}")
+	# 			return None
 		
-		# sqlite3 connection
-		if DB_TYPE == 'sqlite3':
-			try:
-				conn = sqlite3.connect(db_file)
-			except Error as e:
-				print(e)
+	# 	# sqlite3 connection
+	# 	if DB_TYPE == 'sqlite3':
+	# 		try:
+	# 			conn = sqlite3.connect(db_file)
+	# 		except Error as e:
+	# 			print(e)
 
 
-		return conn
+	# 	return conn
 	
 	# GETTERS
 	def get_current_patch(self):
 		return self.__current_patch
 
 	# DB FUNCTIONS
-	def get_current_patch_from_db(self):
-		sql_query = "SELECT patch_version FROM current_patch ORDER BY id DESC LIMIT 1;"
-		try:
-			cursor = self.__conn.cursor()
-			cursor.execute(sql_query)
-			row = cursor.fetchone()
-			if row:
-				self.__current_patch = row[0]
-				return row[0]
-			else:
-				return None
-		except Error as e:
-			print(f"[!][DD_AGENT][get_current_patch_in_db] get_current_patch_from_db: {e}")
-			return None
+	# def get_current_patch_from_db(self):
+	# 	sql_query = "SELECT patch_version FROM current_patch ORDER BY id DESC LIMIT 1;"
+	# 	try:
+	# 		cursor = self.__conn.cursor()
+	# 		cursor.execute(sql_query)
+	# 		row = cursor.fetchone()
+	# 		if row:
+	# 			self.__current_patch = row[0]
+	# 			return row[0]
+	# 		else:
+	# 			return None
+	# 	except Error as e:
+	# 		print(f"[!][DD_AGENT][get_current_patch_in_db] get_current_patch_from_db: {e}")
+	# 		return None
 
 
 	def set_current_patch_in_db(self, patch_version):
@@ -147,12 +164,12 @@ class DataDragonAgent:
 			versions = response.json()
 			if len(versions) > 0:
 				current_patch = versions[0]
-				if current_patch == self.get_current_patch_from_db():
+				if current_patch == self.get_current_patch_from_directories():
 					self.__current_patch = current_patch
 					print(f"[+][DD_AGENT][update_current_patch] Current patch is already up to date: {current_patch}")
 					return current_patch
 				else:
-					self.set_current_patch_in_db(current_patch)
+					#self.set_current_patch_in_db(current_patch)
 					self.__current_patch = current_patch
 					self.download_and_extract_archive()
 					print(f"[+][DD_AGENT][update_current_patch] Successfully updated current patch to {current_patch} and downloaded the archive.")
