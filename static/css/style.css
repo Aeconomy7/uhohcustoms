@@ -1,7 +1,12 @@
+/* GENERAL CSS */
 html, body {
 	font-family: OCR A Std, monospace;
 	background-color: #2a2a2a;
     overflow: hidden;
+}
+
+li a:hover {
+	color: cyan !important;
 }
 
 /* BOOTSTRAP OVERRIDES */

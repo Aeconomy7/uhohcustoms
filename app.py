@@ -318,6 +318,14 @@ def logout():
 	return redirect(url_for('login'))
 
 
+# STATIC: Account page:
+@app.route('/account', methods=['GET'])
+#@auth.login_required
+@app_login_required
+def account():
+	return render_template('account.html')
+
+
 # AUTH: RSO Callback
 @app.route('/callback')
 def callback():
