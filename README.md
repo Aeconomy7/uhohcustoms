@@ -27,6 +27,7 @@ A flask based web application to archive League of Legends customs
 
 	# GENERAL
 	APP_VERSION			= "0.1-beta"
+	DEBUG				= True
 
 	# IMPORTANT STATS
 	# will weigh the score of each player for player_stats
@@ -35,7 +36,7 @@ A flask based web application to archive League of Legends customs
 		'losses': -0.5,
 		'kills': 0.3,
 		'deaths': -0.3,
-		'assists': 0.2,
+		'assists': 0.3,
 		'gold_earned': 0.1,
 		'damage_dealt': 0.1
 	}
@@ -74,7 +75,15 @@ A flask based web application to archive League of Legends customs
 	DB_USER             = "USERNAME"
 	DB_PASSWORD         = "PASSWORD"
 
-	SQLALCHEMY_DATABASE_URI = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+	SQLITE_DB_PATH		= f"./db/cs.db"
+
+	# SQLAlchemy Database URI
+	if DB_TYPE == 'postgresql':
+		SQLALCHEMY_DATABASE_URI = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+		SCHEMA_NAME = f"customs_schema"
+	elif DB_TYPE == 'sqlite3':
+		SQLALCHEMY_DATABASE_URI = f"sqlite:///{SQLITE_DB_PATH}"
+		SCHEMA_NAME = None
 
 	# SECRETS
 	FLASK_SECRET_KEY	= "<flask_secret_key>"
