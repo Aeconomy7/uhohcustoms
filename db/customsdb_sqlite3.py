@@ -33,6 +33,7 @@ class CustomsDbHandler:
 		self.__create_game_data_table()
 		self.__create_team_games_table()
 		self.__create_current_patch_table()
+		self.__create_summoner_data_privacy_table()
 		print("[+][CUSTOMS_DB][__init__] Successfully initiated Customs database tables!")
 
 		# Close connection
@@ -1046,3 +1047,68 @@ class CustomsDbHandler:
 		except Error as e:
 			print(f"[!][CUSTOMS_DB][get_current_patch] ERROR: {e}")
 			return None
+	
+
+
+	#########################
+	# SUMMONER DATA PRIVACY #
+	#########################
+	def __create_summoner_data_privacy_table(self):
+		sql_query = """ CREATE TABLE IF NOT EXISTS summoner_data_privacy (
+				id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+				riot_id TEXT NOT NULL,
+				team_uuid TEXT NOT NULL
+			);"""
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query)
+			self.__conn.commit()
+			return True
+		except Error as e:
+			print(f"[!][CUSTOMS_DB][__create_summoner_data_privacy_table] ERROR: {e}")
+			return False
+		
+	def get_team_data_removed_users(self, team_uuid):
+		sql_query = "SELECT riot_id FROM summoner_data_privacy WHERE team_uuid = ?;"
+
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query, (str(team_uuid),))
+			row = cursor.fetchall()
+			if row is None:
+				if self.__DEBUG:
+					print(f"[-][CUSTOMS_DB][get_team_data_removed_users] Could not find any users for team {team_uuid} :(")
+				return None
+			else:
+				if self.__DEBUG:
+					print(f"[+][CUSTOMS_DB][get_team_data_removed_users] Found {str(len(row))} users for team {team_uuid} :D")
+				return row
+		except Error as e:
+			print(f"[!][CUSTOMS_DB][get_team_data_removed_users] ERROR: {e}")
+			return None
+
+	def add_user_to_removed_data(self, riot_id, team_uuid):
+		sql_query = "INSERT INTO summoner_data_privacy (riot_id, team_uuid) VALUES (?, ?);"
+
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query, (riot_id, str(team_uuid)))
+			self.__conn.commit()
+			if self.__DEBUG:
+				print(f"[+][CUSTOMS_DB][add_user_to_removed_data] Successfully added user {riot_id} to team {team_uuid} :D")
+			return True
+		except Error as e:
+			print(f"[!][CUSTOMS_DB][add_user_to_removed_data] ERROR: {e}")
+			return False
+		
+	def remove_user_from_removed_data(self, riot_id, team_uuid):
+		sql_query = "DELETE FROM summoner_data_privacy WHERE riot_id = ? AND team_uuid = ?;"
+
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query, (riot_id, str(team_uuid)))
+			self.__conn.commit()
+			return True
+		except Error as e:
+			print(f"[!][CUSTOMS_DB][remove_user_from_removed_data] ERROR: {e}")
+			return False

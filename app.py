@@ -670,14 +670,24 @@ def team_captain():
 				user_uuid = request.form.get('user_uuid')
 				CUSTOMS_DB.approve_user_to_team(user_uuid, session.get('active_team_uuid'))
 				flash('User approved to team successfully.', 'success')
+			elif action == 'redact_summoner':
+				summoner = request.form.get('summoner')
+				CUSTOMS_DB.add_user_to_removed_data(summoner, session.get('active_team_uuid'))
+				flash('Summoner name redacted successfully.', 'success')
+			elif action == 'unredact_summoner':
+				summoner = request.form.get('summoner')
+				CUSTOMS_DB.remove_user_from_removed_data(summoner, session.get('active_team_uuid'))
+				flash('Summoner name unredacted successfully.', 'success')
 
 
 		team_games = CUSTOMS_DB.get_team_game_id_data_by_team_uuid(session.get('active_team_uuid'))
+		redacted_summoners = CUSTOMS_DB.get_team_data_removed_users(session.get('active_team_uuid', 'None'))
+		print(f"redacted_summoners: {redacted_summoners}")
 		
 		# all includes pending users too to be rendered by the team_captain page
 		all_team_members = CUSTOMS_DB.get_all_team_members(session.get('active_team_uuid'))
 
-		return render_template('team_captain.html', team_games=team_games, team_members=all_team_members, BASE_URL=BASE_URL)
+		return render_template('team_captain.html', team_games=team_games, team_members=all_team_members, redacted_summoners=redacted_summoners, BASE_URL=BASE_URL)
 
 	except ValueError as e:
 		app.logger.error(f"[!][APP][team_captain][{session.get('username')}] {str(e)}")
@@ -789,8 +799,12 @@ def game_history():
 	
 	try:
 		team_game_data = CUSTOMS_DB.get_team_game_data_by_team_uuid(session.get('active_team_uuid', 'None'))
+		redacted_summoners = CUSTOMS_DB.get_team_data_removed_users(session.get('active_team_uuid', 'None'))
 		games_info = []
 		for game in team_game_data:
+			blue_team_players = []
+			red_team_players = []
+
 			game_code = game[0]
 
 			# game blob data
@@ -802,20 +816,30 @@ def game_history():
 
 			# player data
 			players_data = game_info['participants']
-			blue_team_players = [
-				{
-					'summoner_name': f"{player['riotIdGameName']}#{player['riotIdTagline']}",
-					'champion_name': player['championName']
-				}
-				for player in players_data if player['teamId'] == 100
-			]
-			red_team_players = [
-				{
-					'summoner_name': f"{player['riotIdGameName']}#{player['riotIdTagline']}",
-					'champion_name': player['championName']
-				}
-				for player in players_data if player['teamId'] == 200
-			]
+			for player in players_data:
+				summoner_name = f"{player['riotIdGameName']}#{player['riotIdTagline']}"
+				champion_name = player['championName']
+				
+				if len(redacted_summoners) > 0:
+					if summoner_name in redacted_summoners[0]:
+						player['riotIdGameName'] = "data"
+						player['riotIdTagline'] = "redacted"
+						summoner_name = f"{player['riotIdGameName']}#{player['riotIdTagline']}"
+
+				if player['teamId'] == 100:
+					blue_team_players.append({
+							'summoner_name': summoner_name,
+							'champion_name': champion_name
+						})
+
+				if player['teamId'] == 200:
+					red_team_players.append({
+							'summoner_name': summoner_name,
+							'champion_name': champion_name
+						})
+					
+			print(f"blue_team_players: {blue_team_players}")
+			print(f"red_team_players: {red_team_players}")
 
 			# team data
 			teams = game_info['teams']
@@ -864,6 +888,7 @@ def view_game(game_code):
 
 		#team_game_data = CUSTOMS_DB.get_team_game_data_by_team_uuid(session.get('active_team_uuid', 'None'))
 		team_game_data = CUSTOMS_DB.get_game_data_blob_by_game_id(game_code)
+		redacted_summoners = CUSTOMS_DB.get_team_data_removed_users(session.get('active_team_uuid', 'None'))
 
 		if team_game_data == None:
 			raise ValueError("No games found for active team.")
@@ -877,6 +902,12 @@ def view_game(game_code):
 		players_data = game_info['participants']
 
 		for player in players_data:
+			summoner = f"{player['riotIdGameName']}#{player['riotIdTagline']}"
+			
+			if len(redacted_summoners) > 0:
+				if summoner in redacted_summoners[0]:
+					player['riotIdGameName'] = "data"
+					player['riotIdTagline'] = "redacted"
 			win_score = 1 if player['win'] else -1
 			player['score'] = (
 					win_score * STAT_WEIGHTS['wins'] +
@@ -936,6 +967,7 @@ def player_stats():
 		team_game_data = CUSTOMS_DB.get_team_game_data_by_team_uuid(session.get('active_team_uuid', 'None'))
 		players_info = {}
 		sorted_players_info = {}
+		redacted_summoners = CUSTOMS_DB.get_team_data_removed_users(session.get('active_team_uuid', 'None'))
 
 		for game in team_game_data:
 			# game blob data
@@ -945,6 +977,10 @@ def player_stats():
 			players_data = game_info['participants']
 			for player in players_data:
 				summoner_name = f"{player['riotIdGameName']}#{player['riotIdTagline']}"
+
+				if len(redacted_summoners) > 0:
+					if summoner_name in redacted_summoners[0]:
+						continue
 				
 				if summoner_name not in players_info:
 					players_info[summoner_name] = {
