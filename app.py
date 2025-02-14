@@ -46,6 +46,8 @@ limiter = Limiter(
 	default_limits=["200 per day", "50 per hour"]
 )
 
+app.config['PERMANENT_SESSION_LIFETIME'] = datetime.timedelta(days=1)
+
 ##############
 # BASIC AUTH #
 ##############
@@ -292,6 +294,8 @@ def login():
 		if user	and check_password_hash(user[4], password):
 			session['user_uuid'] 	= user[3]
 			session['username'] 	= user[1]
+
+			session.permanent = True
 
 			user_teams = CUSTOMS_DB.get_teams_for_user(session['user_uuid'])
 
