@@ -686,7 +686,7 @@ def team_captain():
 
 		team_games = CUSTOMS_DB.get_team_game_id_data_by_team_uuid(session.get('active_team_uuid'))
 		redacted_summoners = CUSTOMS_DB.get_team_data_removed_users(session.get('active_team_uuid', 'None'))
-		print(f"redacted_summoners: {redacted_summoners}")
+		# print(f"redacted_summoners: {redacted_summoners}")
 		
 		# all includes pending users too to be rendered by the team_captain page
 		all_team_members = CUSTOMS_DB.get_all_team_members(session.get('active_team_uuid'))
@@ -842,8 +842,8 @@ def game_history():
 							'champion_name': champion_name
 						})
 					
-			print(f"blue_team_players: {blue_team_players}")
-			print(f"red_team_players: {red_team_players}")
+			# print(f"blue_team_players: {blue_team_players}")
+			# print(f"red_team_players: {red_team_players}")
 
 			# team data
 			teams = game_info['teams']
