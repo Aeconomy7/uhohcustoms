@@ -25,6 +25,7 @@ from logging.handlers import RotatingFileHandler
 # CUSTOM IMPORTS #
 ##################
 from config import *
+#from db.customsdb import CustomsDbHandler
 if DB_TYPE == 'sqlite3':
 	from db.customsdb_sqlite3 import CustomsDbHandler
 if DB_TYPE == 'postgresql':
@@ -646,6 +647,53 @@ def leave_team(team_uuid):
 	#return redirect(request.args.get('next', url_for('teams', team_uuid=session.get('active_team_uuid'))))
 
 
+# STATIC: Team member page
+# 	- redact/unredact your data on the team
+#	- turn of team settings such as player score / ranking
+@app.route('/team_member', methods=['GET', 'POST'])
+@app_login_required
+def team_member():
+	try:
+		if 'user_uuid' not in session:
+			return redirect(url_for('uhoh', error_code=401))
+
+		if not CUSTOMS_DB.is_user_member_of_team(session['user_uuid'], session.get('active_team_uuid')):
+			flash('You do not have permission to access this page.', 'danger')
+			return redirect(url_for('manage_teams'))
+
+		if request.method == 'POST':
+			action = request.form.get('action')
+			if action == 'redact_summoner':
+				summoner = request.form.get('summoner')
+				CUSTOMS_DB.add_user_to_removed_data(summoner, session.get('active_team_uuid'))
+				flash('Summoner name redacted successfully.', 'success')
+			elif action == 'unredact_summoner':
+				summoner = request.form.get('summoner')
+				CUSTOMS_DB.remove_user_from_removed_data(summoner, session.get('active_team_uuid'))
+				flash('Summoner name unredacted successfully.', 'success')
+
+
+		team_games = CUSTOMS_DB.get_team_game_id_data_by_team_uuid(session.get('active_team_uuid'))
+		redacted_summoners = CUSTOMS_DB.get_team_data_removed_users(session.get('active_team_uuid', 'None'))
+		# print(f"redacted_summoners: {redacted_summoners}")
+		
+		# all includes pending users too to be rendered by the team_member page
+		all_team_members = CUSTOMS_DB.get_all_team_members(session.get('active_team_uuid'))
+
+		return render_template('team_member.html', team_games=team_games, team_members=all_team_members, redacted_summoners=redacted_summoners, BASE_URL=BASE_URL)
+
+	except ValueError as e:
+		app.logger.error(f"[!][APP][team_member][{session.get('username')}] {str(e)}")
+		flash(str(e), 'danger')
+
+	except Exception as e:
+		app.logger.error(f"[!][APP][team_member][{session.get('username')}] {str(e)}")
+		flash('An unexpected error occurred. Please try again.', 'danger')
+
+	return render_template('team_member.html')
+
+
+
 # STATIC: Team captain page
 # 	- delete games
 # 	- approve/reject members
@@ -658,7 +706,7 @@ def team_captain():
 
 		if not CUSTOMS_DB.is_user_captain_of_team(session['user_uuid'], session.get('active_team_uuid')):
 			flash('You do not have permission to access this page.', 'danger')
-			return redirect(url_for('index'))
+			return redirect(url_for('manage_teams'))
 
 		if request.method == 'POST':
 			action = request.form.get('action')

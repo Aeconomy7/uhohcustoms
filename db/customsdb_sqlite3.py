@@ -239,6 +239,25 @@ class CustomsDbHandler:
 			print(f"[!][CUSTOMS_DB][is_user_captain] ERROR: {e}")
 			return None
 
+	def is_user_member_of_team(self, user_uuid, team_uuid):
+		sql_query = "SELECT 1 FROM user_teams WHERE user_uuid = ? AND team_uuid = ? LIMIT 1;"
+
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query, (str(user_uuid), str(team_uuid)))
+			row = cursor.fetchone()
+			if row is None:
+				if self.__DEBUG:
+					print(f"[-][CUSTOMS_DB][is_user_member_of_team] User {str(user_uuid)} is not a member of team {str(team_uuid)}")
+				return None
+			else:
+				if self.__DEBUG:
+					print(f"[+][CUSTOMS_DB][is_user_member_of_team] User {str(user_uuid)} is a member of team {str(team_uuid)}")
+				return row
+
+		except Error as e:
+			print(f"[!][CUSTOMS_DB][is_user_member_of_team] ERROR: {e}")
+			return None
 
 	def is_user_captain_of_team(self, user_uuid, team_uuid):
 		sql_query = "SELECT 1 FROM teams WHERE team_captain_uuid = ? AND team_uuid = ? LIMIT 1;"

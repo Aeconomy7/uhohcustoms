@@ -236,6 +236,7 @@ class DataDragonAgent:
 
 			with open(runes_path, 'r') as runes_file:
 				self.__runes_data = json.load(runes_file)
+				#print(f"runes data: {self.__runes_data}")
 
 		except FileNotFoundError as e:
 			print(f"[-][DD_AGENT][fetch_metadata] Failed to load metadata: {e}")

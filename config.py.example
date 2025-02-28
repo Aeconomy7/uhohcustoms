@@ -42,7 +42,7 @@ BASE_URL				= "https://example.com"
 # DB INFO
 # DB_TYPE:
 # 	"sqlite3" 		: for use with local database (created automatically by the application, EASIEST)
-#	"postgresql"	: for use with postgresql database, locally or remotely
+#	"postgresql"	: for use with postgresql database, locally or remotely (WIP)
 DB_TYPE				= "sqlite3"	
 DB_HOST				= "127.0.0.1"
 DB_PORT				= "1433"
