@@ -985,7 +985,7 @@ def view_game(game_code):
 					player['assists'] * STAT_WEIGHTS['assists'] +
 					player['goldEarned'] * STAT_WEIGHTS['gold_earned'] +
 					player['totalDamageDealtToChampions'] * STAT_WEIGHTS['damage_dealt']
-				)
+				) + 500
 			player['score'] = format(player['score'], '.2f')
 
 		# Sort players by score
