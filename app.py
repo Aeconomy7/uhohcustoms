@@ -1,3 +1,8 @@
+###########################
+# the big bad app.py file #
+###########################
+
+
 ###########
 # LIBRARY #
 ###########
@@ -663,24 +668,36 @@ def team_member():
 
 		if request.method == 'POST':
 			action = request.form.get('action')
-			if action == 'redact_summoner':
-				summoner = request.form.get('summoner')
-				CUSTOMS_DB.add_user_to_removed_data(summoner, session.get('active_team_uuid'))
-				flash('Summoner name redacted successfully.', 'success')
-			elif action == 'unredact_summoner':
-				summoner = request.form.get('summoner')
-				CUSTOMS_DB.remove_user_from_removed_data(summoner, session.get('active_team_uuid'))
-				flash('Summoner name unredacted successfully.', 'success')
+			if action == 'toggle_redact_summoner':
+				toggle = request.form.get('toggle')
+				if toggle == 'on':
+					CUSTOMS_DB.add_user_to_removed_data(session.get('user_uuid'), session.get('active_team_uuid'))
+					flash('Summoner name redacted successfully.', 'info')
+				elif toggle == 'off':
+					CUSTOMS_DB.remove_user_from_removed_data(session.get('user_uuid'), session.get('active_team_uuid'))
+					flash('Summoner name unredacted successfully.', 'success')
+				else:
+					flash('What are you doing mate?', 'danger')
+			elif action == 'toggle_player_score':
+				toggle = request.form.get('toggle')
+				if toggle == 'on':
+					CUSTOMS_DB.set_player_score_setting_for_team(session.get('user_uuid'), session.get('active_team_uuid'), True)
+					flash('Player score setting enabled.', 'success')
+				elif toggle == 'off':
+					CUSTOMS_DB.set_player_score_setting_for_team(session.get('user_uuid'), session.get('active_team_uuid'), False)
+					flash('Player score setting disabled.', 'info')
+				else:
+					flash('What are you doing mate?', 'danger')
 
 
 		team_games = CUSTOMS_DB.get_team_game_id_data_by_team_uuid(session.get('active_team_uuid'))
 		redacted_summoners = CUSTOMS_DB.get_team_data_removed_users(session.get('active_team_uuid', 'None'))
-		# print(f"redacted_summoners: {redacted_summoners}")
+		player_score_setting = CUSTOMS_DB.get_player_score_setting_for_team(session.get('user_uuid'), session.get('active_team_uuid'))
 		
 		# all includes pending users too to be rendered by the team_member page
 		all_team_members = CUSTOMS_DB.get_all_team_members(session.get('active_team_uuid'))
 
-		return render_template('team_member.html', team_games=team_games, team_members=all_team_members, redacted_summoners=redacted_summoners, BASE_URL=BASE_URL)
+		return render_template('team_member.html', team_games=team_games, team_members=all_team_members, redacted_summoners=redacted_summoners, player_score_setting=player_score_setting, BASE_URL=BASE_URL)
 
 	except ValueError as e:
 		app.logger.error(f"[!][APP][team_member][{session.get('username')}] {str(e)}")
@@ -1069,13 +1086,13 @@ def player_stats():
 			# VERY IMPORTANT AND DYNAMIC
 			total_games = stats['games_played']
 			score = (
-				(stats['wins'] * STAT_WEIGHTS['wins'] +
+				((stats['wins'] * STAT_WEIGHTS['wins'] +
 				stats['losses'] * STAT_WEIGHTS['losses'] +
 				stats['kills'] * STAT_WEIGHTS['kills'] +
 				stats['deaths'] * STAT_WEIGHTS['deaths'] +
 				stats['assists'] * STAT_WEIGHTS['assists'] +
 				stats['gold_earned'] * STAT_WEIGHTS['gold_earned'] +
-				stats['damage_dealt'] * STAT_WEIGHTS['damage_dealt']) / total_games
+				stats['damage_dealt'] * STAT_WEIGHTS['damage_dealt']) / total_games) + 500
 			)
 			players_info[summoner_name]['score'] = score
 
@@ -1349,6 +1366,14 @@ def is_team_member(value):
 		result = True
 	#print(f"[?][APP][is_team_member] result for user {session.get('user_uuid')} member of {value}: {result}")
 	return result
+
+@app.template_filter('get_player_score_setting')
+def get_player_score_setting(value):
+	result = CUSTOMS_DB.get_player_score_setting_for_team(value, session.get('active_team_uuid'))
+	if result == None or result == False:
+		return False
+	else:
+		return True
 
 ########
 # MAIN #

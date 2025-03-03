@@ -1,3 +1,5 @@
+# this is an awful file and I want to convert it to sqlalchemy with postgres and sqlite3 support but im not much of a DB architect
+
 import sqlite3
 import datetime
 import psycopg2
@@ -324,6 +326,7 @@ class CustomsDbHandler:
 				id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
 				user_uuid TEXT NOT NULL,
 				team_uuid TEXT NOT NULL,
+				player_score_setting BOOLEAN DEFAULT 0,
 				role TEXT NOT NULL DEFAULT 'Pending',
 				FOREIGN KEY(user_uuid) REFERENCES users(user_uuid),
 				FOREIGN KEY(team_uuid) REFERENCES teams(team_uuid)
@@ -611,7 +614,38 @@ class CustomsDbHandler:
 		except Error as e:
 			print(f"[!][CUSTOMS_DB][get_team_members_pending] ERROR: {e}")
 			return None
+		
+	def get_player_score_setting_for_team(self, user_uuid, team_uuid):
+		sql_query = "SELECT player_score_setting FROM user_teams WHERE user_uuid = ? AND team_uuid = ?;"
 
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query, (str(user_uuid), str(team_uuid)))
+			row = cursor.fetchone()
+			if row:
+				if self.__DEBUG:
+					print(f"[?][CUSTOMS_DB][get_player_score_setting_for_team] Found player score setting for user {str(user_uuid)} in team {str(team_uuid)}")
+				return row[0]
+			else:
+				return None
+				
+		except Error as e:
+			print(f"[!][CUSTOMS_DB][get_player_score_setting_for_team] ERROR: {e}")
+			return None
+
+	def set_player_score_setting_for_team(self, user_uuid, team_uuid, player_score_setting):
+		sql_query = "UPDATE user_teams SET player_score_setting = ? WHERE user_uuid = ? AND team_uuid = ?;"
+
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query, (player_score_setting, str(user_uuid), str(team_uuid)))
+			self.__conn.commit()
+			if self.__DEBUG:
+				print(f"[+][CUSTOMS_DB][set_player_score_setting_for_team] Successfully set player score setting for user {str(user_uuid)} in team {str(team_uuid)} :D")
+			return True
+		except Error as e:
+			print(f"[!][CUSTOMS_DB][set_player_score_setting_for_team] ERROR: {e}")
+			return False
 
 	###########
 	# CONTENT #

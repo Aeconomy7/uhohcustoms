@@ -11,8 +11,10 @@
         <table id="playerStatsTable" class="table table-dark table-striped table-responsive-text">
             <thead>
                 <tr>
+                    {% if session.get('user_uuid') | get_player_score_setting %}
                     <th>Customs Rank</th>
                     <th>Player Score</th>
+                    {% endif %}
                     <th>Summoner Name</th>
                     <th>Most Played Champions</th>
                     <th>Total Games</th>
@@ -28,17 +30,21 @@
             </thead>
             <tbody>
                 {% for rank, (summoner_name, stats) in enumerate(players_info.items(), start=1) %}
-                {% if rank == 1 %}
-                <tr class="rank-1">
-                {% elif rank == 2 %}
-                <tr class="rank-2">
-                {% elif rank == 3 %}
-                <tr class="rank-3">
-                {% else %}
-                <tr>
+                {% if session.get('user_uuid') | get_player_score_setting %}
+                    {% if rank == 1 %}
+                    <tr class="rank-1">
+                    {% elif rank == 2 %}
+                    <tr class="rank-2">
+                    {% elif rank == 3 %}
+                    <tr class="rank-3">
+                    {% else %}
+                    <tr>
+                    {% endif %} 
                 {% endif %}
+                {% if session.get('user_uuid') | get_player_score_setting %}
                     <td>{{ rank }}</td>
                     <td>{{ stats.score | round(2) }}</td>
+                {% endif %}
                     <td>{{ summoner_name }}</td>
                     <td>
                         {% for champion in stats.most_played_champions %}
@@ -74,6 +80,20 @@
 {% block scripts %}
 <script>
 	$(document).ready(function() {
+        var columnDefs = [
+            { className: "text-start", targets: [0, 8] },
+            { className: "text-center", targets: [ 1, 2, 3, 4, 5, 6, 7 ] },
+            { className: "text-end", targets: [] }
+        ]
+
+        {% if session.get('user_uuid') | get_player_score_setting %}
+        columnDefs = [
+            { className: "text-start", targets: [2, 10] },
+            { className: "text-center", targets: [0, 3, 4, 5, 6, 7, 8, 9 ] },
+            { className: "text-end", targets: [1, 11, 12] }
+        ]
+        {% endif %}
+
 		$('#playerStatsTable').DataTable({
 			order: [[0, 'asc']],
             layout: {
@@ -94,11 +114,7 @@
 				}
 			},
 			responsive: true,
-            columnDefs: [
-                { className: "text-start", targets: [2, 10] },
-                { className: "text-center", targets: [0, 3, 4, 5, 6, 7, 8, 9 ] },
-                { className: "text-end", targets: [1, 11, 12] }
-            ]
+            columnDefs:  columnDefs,
 		});
 	});
 </script>

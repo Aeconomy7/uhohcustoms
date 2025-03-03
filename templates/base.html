@@ -101,7 +101,7 @@
                                     Manage Your Teams
                                 </a>
                                 <button class="btn btn-toggle align-items-center rounded collapsed" style="color: white;" data-bs-toggle="collapse" data-bs-target="#dashboard-collapse" aria-expanded="false">
-                                    <div class="dropdown-toggle">Active Team: <span style="color: yellow">{{ session.get('active_team_name', 'None') }}</span></div>
+                                    <div class="dropdown-toggle text-wrap text-start">Active Team: <span style="color: yellow">{{ session.get('active_team_name', 'None') }}</span></div>
                                 </button>
                                 {% if USER_ROLE == 'Pending' %}
                                 <div style="border: 1px solid yellow; padding: 3px">PENDING MEMBERSHIP</div>
@@ -134,6 +134,12 @@
                             <li class="p-1" style="border-bottom: 1px solid cyan;">
                                 <a class="btn btn-toggle align-items-center rounded collapsed {% if get_active_page() == url_for('team_captain') %}funcolor{% endif %}" style="color: white;" href="{{ url_for('team_captain') }}">
                                     Team Captain
+                                </a>
+                            </li>
+                            {% elif session.get('active_team_uuid', 'None') | is_team_member %}
+                            <li class="p-1" style="border-bottom: 1px solid cyan;">
+                                <a class="btn btn-toggle align-items-center rounded collapsed {% if get_active_page() == url_for('team_member') %}funcolor{% endif %}" style="color: white;" href="{{ url_for('team_member') }}">
+                                    Team Member
                                 </a>
                             </li>
                             {% endif %}
