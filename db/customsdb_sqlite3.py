@@ -623,8 +623,8 @@ class CustomsDbHandler:
 			cursor.execute(sql_query, (str(user_uuid), str(team_uuid)))
 			row = cursor.fetchone()
 			if row:
-				if self.__DEBUG:
-					print(f"[?][CUSTOMS_DB][get_player_score_setting_for_team] Found player score setting for user {str(user_uuid)} in team {str(team_uuid)}")
+				# if self.__DEBUG:
+				# 	print(f"[?][CUSTOMS_DB][get_player_score_setting_for_team] Found player score setting for user {str(user_uuid)} in team {str(team_uuid)}")
 				return row[0]
 			else:
 				return None
@@ -641,7 +641,7 @@ class CustomsDbHandler:
 			cursor.execute(sql_query, (player_score_setting, str(user_uuid), str(team_uuid)))
 			self.__conn.commit()
 			if self.__DEBUG:
-				print(f"[+][CUSTOMS_DB][set_player_score_setting_for_team] Successfully set player score setting for user {str(user_uuid)} in team {str(team_uuid)} :D")
+				print(f"[+][CUSTOMS_DB][set_player_score_setting_for_team] Successfully set player score setting to {player_score_setting} for user {str(user_uuid)} in team {str(team_uuid)} :D")
 			return True
 		except Error as e:
 			print(f"[!][CUSTOMS_DB][set_player_score_setting_for_team] ERROR: {e}")

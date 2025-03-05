@@ -227,6 +227,9 @@ def index():
 def about():
 	return render_template('about.html')
 
+@app.route('/health', methods=['GET'])
+def health():
+    return jsonify(status="UP"), 200
 
 # for riot site verification
 @app.route('/riot.txt')
