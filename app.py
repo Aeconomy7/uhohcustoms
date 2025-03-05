@@ -317,7 +317,7 @@ def login():
 				app.logger.debug(f"[?][APP][login][{session['username']}] user_teams: {str(session['user_teams'])}")
 				app.logger.debug(f"[?][APP][login][{session['username']}] active_team_uuid: {str(session['active_team_uuid'])}")
 
-			return redirect(request.args.get('next', url_for('game_history')))
+			return redirect(request.args.get('next', url_for('manage_teams')))
 		else:
 			flash('Invalid email or password.', 'danger')
 
