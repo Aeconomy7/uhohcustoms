@@ -2,7 +2,7 @@
 games/
 *.swp
 config.py
-*.log
+*.log*
 static/dd/
 static/game_data/
 venv/

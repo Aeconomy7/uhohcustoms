@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- <div class="container d-flex flex-column justify-content-center align-items-center"> -->
+<div class="d-flex flex-column flex-remaining-height m-3" >
+        <!-- <div class="card p-4 shadow text-center px-bg-inverted" style="padding: 10px;"> -->
+	<div>
+		<h1 class="m-1">Game ID: {{ game_code }}</h1>
+
+		<h2 class="m-1">Game Result</h2>
+		<p><strong>Winning Team:</strong> <span class="team-{{ game_result | to_lowercase }}">{{ game_result }}</span></p>
+	</div>
+
+	<div style="overflow-y: auto;">
+		<div class="table-responsive">
+			<table id="viewGameTable" class="table table-dark table-striped mt-3">
+				<thead>
+					<tr>
+						<th>Rank</th>
+						<th>Player Score</th>
+						<th>Summoner Name</th>
+						<th>Champion</th>
+						<th>Kills</th>
+						<th>Deaths</th>
+						<th>Assists</th>
+						<th>KDA</th>
+						<th>Gold Earned</th>
+						<th>Total Champion Damage</th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for player in players_data %}
+						{% if player['teamId'] == 100 %}
+						<tr class="team-blue">
+						{% elif player['teamId'] == 200 %}
+						<tr class="team-red">
+						{% else %}
+						<tr>
+						{% endif %}
+						<td>{{ player['rank'] }}</td>
+						<td>{{ player['score'] }}</td>
+						<td>{{ player['riotIdGameName'] | e }}#{{ player['riotIdTagline'] | e }}</td>
+						<td><img src="{{ player['championName'] | get_champion_image_base64 }}" width="35px" height="35px" alt="{{ player['championName'] }}" title="{{ player['championName'] }}"></td>
+						<td>{{ player['kills'] }}</td>
+						<td>{{ player['deaths'] }}</td>
+						<td>{{ player['assists'] }}</td>
+						<td>{{ ((player['kills'] + player['assists']) / player['deaths']) | round(3) }}</td>
+						<td>{{ player['goldEarned'] }}</td>
+						<td>{{ player['totalDamageDealtToChampions'] }}</td>			
+					</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+	$(document).ready(function() {
+		$('#viewGameTable').DataTable({
+			order: [],
+			layout: {
+				topEnd: {
+					search: {
+						placeholder: 'Search whatever here!'
+					}
+				}
+			},
+			dom: '<"topEnd"f>rt<"clear">',
+            responsive: true,
+			columnDefs: [
+                { className: "text-start", targets: [1, 7] },
+                { className: "text-center", targets: [0, 3, 4, 5, 6] },
+                { className: "text-end", targets: [8, 9] }
+            ]
+		});
+	});
+</script>
+{% endblock %}

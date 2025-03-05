@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex flex-column flex-remaining-height m-3" style="overflow-y: auto;">
+	<div class="d-flex w-100 justify-content-between">
+        <h3>Player Stats</h3>
+    </div>
+
+    <div class="table-responsive">
+        {% if players_info %}
+        <table id="playerStatsTable" class="table table-dark table-striped table-responsive-text">
+            <thead>
+                <tr>
+                    {% if session.get('user_uuid') | get_player_score_setting %}
+                    <th>Customs Rank</th>
+                    <th>Player Score</th>
+                    {% endif %}
+                    <th>Summoner Name</th>
+                    <th>Most Played Champions</th>
+                    <th>Total Games</th>
+                    <th>Wins</th>
+                    <th>Losses</th>
+                    <th>Total Kills</th>
+                    <th>Total Deaths</th>
+                    <th>Total Assists</th>
+                    <th>KDA</th>
+                    <th>Total Gold Earned</th>
+                    <th>Total Champion Damage Dealt</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for rank, (summoner_name, stats) in enumerate(players_info.items(), start=1) %}
+                {% if session.get('user_uuid') | get_player_score_setting %}
+                    {% if rank == 1 %}
+                    <tr class="rank-1">
+                    {% elif rank == 2 %}
+                    <tr class="rank-2">
+                    {% elif rank == 3 %}
+                    <tr class="rank-3">
+                    {% else %}
+                    <tr>
+                    {% endif %} 
+                {% endif %}
+                {% if session.get('user_uuid') | get_player_score_setting %}
+                    <td>{{ rank }}</td>
+                    <td>{{ stats.score | round(2) }}</td>
+                {% endif %}
+                    <td>{{ summoner_name }}</td>
+                    <td>
+                        {% for champion in stats.most_played_champions %}
+                            <img src="{{ champion | get_champion_image_base64 }}" width="30px" height="30px" alt="{{ champion }}" title="{{ champion }}">
+                        {% endfor %}
+                    </td>
+                    <td>{{ stats.wins + stats.losses }}</td>
+                    <td>{{ stats.wins }}</td>
+                    <td>{{ stats.losses }}</td>
+                    <td>{{ stats.kills }}</td>
+                    <td>{{ stats.deaths }}</td>
+                    <td>{{ stats.assists }}</td>
+                    <td>{{ ((stats.kills + stats.assists) / stats.deaths) | round(3) }}</td>
+                    <td>{{ stats.gold_earned }}</td>
+                    <td>{{ stats.damage_dealt }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+            {% if session.get('active_team_uuid', 'None') == 'None' %}
+                <p>You must join or create a team before you can view player stats!</p>
+            {% elif not session.get('active_team_uuid') | is_team_member %}
+                <p>You are a pending member of this team. Player stats will become available upon membership approval.</p>
+            {% else %}
+                <p>No player stats available. Time to get on the rift!</p>
+            {% endif %}
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+	$(document).ready(function() {
+        var columnDefs = [
+            { className: "text-start", targets: [0, 8] },
+            { className: "text-center", targets: [ 1, 2, 3, 4, 5, 6, 7 ] },
+            { className: "text-end", targets: [] }
+        ]
+
+        {% if session.get('user_uuid') | get_player_score_setting %}
+        columnDefs = [
+            { className: "text-start", targets: [2, 10] },
+            { className: "text-center", targets: [0, 3, 4, 5, 6, 7, 8, 9 ] },
+            { className: "text-end", targets: [1, 11, 12] }
+        ]
+        {% endif %}
+
+		$('#playerStatsTable').DataTable({
+			order: [[0, 'asc']],
+            layout: {
+				topStart: {
+					pageLength: {
+						menu: [ 5, 10, 15, 20 ]
+					}
+				},
+				topEnd: {
+					search: {
+						placeholder: 'Search whatever here!'
+					}
+				},
+				bottomEnd: {
+					paging: {
+						buttons: 3
+					}
+				}
+			},
+			responsive: true,
+            columnDefs:  columnDefs,
+		});
+	});
+</script>
+{% endblock %}

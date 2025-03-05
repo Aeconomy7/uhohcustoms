@@ -1,0 +1,229 @@
+/* GENERAL CSS */
+html, body {
+	font-family: OCR A Std, monospace;
+	background-color: #2a2a2a;
+    overflow: hidden;
+}
+
+li a:hover {
+	color: cyan !important;
+}
+
+/* BOOTSTRAP OVERRIDES */
+.vr {
+	width: 3px;
+	opacity: 0.5;
+	background-color: white;
+}
+
+/* ALERT CSS */
+.alert-container {
+	position: fixed; 
+	top: 40px; 
+	right: 0; 
+	z-index: 1050; 
+	width: 250px; 
+	padding: 1rem;
+}
+
+/* BACKGROUND IMAGE CSS */
+.px-bg-dark {
+	background-image: url("../img/px_bg_dark.png");
+	background-repeat: repeat;
+	color: white;
+}
+
+.px-bg-blue {
+	background-image: url("../img/px_bg_blue.png");
+	background-repeat: repeat;
+	color: white;
+}
+
+.px-bg-darkblue {
+	background-image: url("../img/px_bg_darkblue.png");
+	background-repeat: repeat;
+	color: white;
+}
+
+.px-bg-darkpink {
+	background-image: url("../img/px_bg_darkpink.png");
+	background-repeat: repeat;
+	color: white;
+}
+
+.px-bg-darkgreenblue {
+	background-image: url("../img/px_bg_darkgreenblue.jpg");
+	background-repeat: repeat;
+	color: white;
+}
+
+.px-bg-inverted {
+	background-image: url("../img/px_bg_inverted.png");
+	background-repeat: repeat;
+	color: black;
+}
+
+.px-bg-lightcyan {
+	background-image: url("../img/px_bg_lightcyan.png");
+	background-repeat: repeat;
+	color: black;
+}
+
+.px-bg-danger {
+	background-image: url("../img/px_bg_darkred.png");
+	background-repeat: repeat;
+	color: white;
+}
+
+.px-bg-success {
+	background-image: url("../img/px_bg_darkgreen.png");
+	background-repeat: repeat;
+	color: white;
+}
+
+.px-bg-selected {
+	background-image: url("../img/px_bg_selected.png");
+	background-repeat: repeat;
+	color: black;
+}
+
+.px-bg-sea {
+	background-image: url("../img/px_bg_sea.png");
+	background-repeat: repeat;
+	color: white;
+}
+
+/* MAGIC CLASSES THANKS MESIN */
+.flex-remaining-height {
+    flex-grow: 1;
+    flex-basis: 0;
+    min-height: 0.0625rem;
+}
+
+/* ETC CSS */
+.team-blue {
+	color: cyan !important;
+}
+
+.team-red {
+	color: rgb(234, 0, 255) !important;
+}
+
+.team-blue td {
+	color: cyan !important;
+}
+
+.team-red td {
+	color: rgb(234, 0, 255) !important;
+}
+
+.rank-1, .rank-1 td {
+    color: white !important;
+    text-shadow: 0 0 3px #FFD700, 0 0 5px #FFD700;
+}
+.rank-1 img {
+	filter: drop-shadow(0 0 1px #FFD700) drop-shadow(0 0 3px #FFD700);
+}
+
+.rank-2, .rank-2 td {
+    color: white !important;
+    text-shadow: 0 0 3px #C0C0C0, 0 0 5px #C0C0C0;
+}
+.rank-2 img {
+	filter: drop-shadow(0 0 1px #C0C0C0) drop-shadow(0 0 3px #C0C0C0);
+}
+
+.rank-3, .rank-3 td {
+    color: white !important;
+    text-shadow: 0 0 3px #CD7F32, 0 0 5px #CD7F32;
+}
+.rank-3 img {
+	filter: drop-shadow(0 0 1px #CD7F32) drop-shadow(0 0 3px #CD7F32);
+}
+
+.funcolor {
+    animation: colorizer 10s infinite;
+}
+
+@keyframes colorizer {
+    from, to { color: #00FF00; }
+    25%	  { color: #00FFFF; }
+    50%	  { color: #FF0080; }
+    75%	  { color: #8000FF; }
+}
+
+/* TABLE CSS */
+td input {
+	background-color: #504e4e; 
+}
+
+/* DATATABLES CSS */
+
+.dt-input option {
+    color: #000000; /* Change this to your desired color */
+}
+
+/* NAVBAR CSS */
+.dropdown-menu {
+	/* background-image: url("../img/px_bg_lightcyan.png");
+	background-repeat: repeat; */
+	border: 1px solid yellow;
+}
+
+.dropdown-menu a:hover {
+	/* background-image: url("../img/px_bg_lightcyan.png");
+	background-repeat: repeat; */
+	color: cyan;
+}
+
+/* SIDEBAR CSS */
+/* .version-tab {
+    margin-top: auto;
+    padding: 10px;
+    background-color: #2a2a2a;
+    color: white;
+    text-align: center;
+} */
+
+.btn-toggle {
+	display: inline-flex;
+	align-items: center;
+	padding: .25rem .5rem;
+	font-weight: 600;
+	color: yellow;
+	background-color: transparent;
+	border: 0;
+  }
+  .btn-toggle:hover,
+  .btn-toggle:focus {
+	color: rgba(255, 255, 255, 0.85);
+	/*background-color: #d2f4ea;*/
+  }
+  
+  .btn-toggle::before {
+	width: 1.25em;
+	line-height: 0;
+	content: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='rgba%280,0,0,.5%29' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M5 14l6-6-6-6'/%3e%3c/svg%3e");
+	transition: transform .35s ease;
+	transform-origin: .5em 50%;
+  }
+  
+  .btn-toggle[aria-expanded="true"] {
+	color: yellow;
+  }
+  .btn-toggle[aria-expanded="true"]::before {
+	transform: rotate(90deg);
+  }
+  
+  .btn-toggle-nav a {
+	display: inline-flex;
+	padding: .1875rem .5rem;
+	margin-top: .125rem;
+	margin-left: 1.25rem;
+	text-decoration: none;
+  }
+  .btn-toggle-nav a:hover,
+  .btn-toggle-nav a:focus {
+	color: cyan
+	/*background-color: #d2f4ea;*/
+  }

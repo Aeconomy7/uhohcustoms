@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex flex-column flex-remaining-height m-3 w-100">
+    <h1 class="m-1">Admin Dashboard</h1>
+    <ul class="nav nav-tabs" id="adminTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <a class="nav-link active" id="config-tab" data-bs-toggle="tab" href="#config" role="tab" aria-controls="config" aria-selected="true">Config</a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link" id="images-tab" data-bs-toggle="tab" href="#images" role="tab" aria-controls="images" aria-selected="false">Images</a>
+        </li>
+    </ul>
+    <div class="tab-content" id="adminTabContent">
+        <div class="tab-pane fade show active" id="config" role="tabpanel" aria-labelledby="config-tab">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card mb-3" style="border: 1px solid cyan;">
+                        <div class="card-body px-bg-dark">
+                            <h5 class="card-title">Current Patch</h5>
+                            <p class="card-text">{{ current_patch }}</p>
+                            <hr>
+                            <h5 class="card-title">Application Stats</h5>
+                            <p class="card-text"><strong>Total Users:</strong> {{ total_users }}</p>
+                            <p class="card-text"><strong>Total Teams:</strong> {{ total_teams }}</p>
+                            <p class="card-text"><strong>Total Games:</strong> {{ total_games }}</p>
+                            <hr>
+                            <h5 class="card-title">Server Stats</h5>
+                            <p class="card-text"><strong>Server Uptime:</strong> {{ uptime }}</p>
+                            <p class="card-text"><strong>Memory Usage:</strong>  {{ memory }}</p>
+                            <p class="card-text"><strong>CPU Usage:</strong>     {{ cpu }}%</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="tab-pane fade" id="images" role="tabpanel" aria-labelledby="images-tab">
+            <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist" >
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link active" id="pills-champions-tab" data-bs-toggle="pill" href="#pills-champions" role="tab" aria-controls="pills-champions" aria-selected="true">Champions</a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" id="pills-items-tab" data-bs-toggle="pill" href="#pills-items" role="tab" aria-controls="pills-items" aria-selected="false">Items</a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" id="pills-spells-tab" data-bs-toggle="pill" href="#pills-spells" role="tab" aria-controls="pills-spells" aria-selected="false">Spells</a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" id="pills-runes-tab" data-bs-toggle="pill" href="#pills-runes" role="tab" aria-controls="pills-runes" aria-selected="false">Runes</a>
+                </li>
+            </ul>
+            <div class="card m-1 px-bg-dark">
+                <div class="tab-content" id="pills-tabContent">
+                    <div class="tab-pane fade show active" id="pills-champions" role="tabpanel" aria-labelledby="pills-champions-tab">
+                        
+                            <p><strong>Total Champions:</strong> {{ champions|length }}</p>
+                            <div class="row" style="height: calc(100vh - 150px); overflow: auto;">
+                                {% for image in champions %}
+                                <div class="col-md-2">
+                                    <div class="card mb-1 px-bg-darkblue">
+                                        <img src="data:image/png;base64,{{ image['image_base64'] }}" class="card-img-top" alt="{{ image['champion_name'] }}" title="{{ image['champion_name'] }}">
+                                        <div class="card-body">
+                                            <p class="card-text responsive-text">{{ image['champion_name'] }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        
+                    </div>
+                    <div class="tab-pane fade" id="pills-items" role="tabpanel" aria-labelledby="pills-items-tab">
+                        <p><strong>Total Items:</strong> {{ items|length }}</p>
+                        <div class="row" style="height: calc(100vh - 150px); overflow: auto;">
+                            {% for image in items %}
+                            <div class="col-md-2">
+                                <div class="card mb-1 px-bg-darkblue">
+                                    <img src="data:image/png;base64,{{ image['image_base64'] }}" class="card-img-top" alt="{{ image['item_name'] }}" title="{{ image['item_name'] }}">
+                                    <div class="card-body">
+                                        <p class="card-text responsive-text">{{ image['item_name'] }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="pills-spells" role="tabpanel" aria-labelledby="pills-spells-tab">
+                        <p><strong>Total Spells:</strong> {{ spells|length }}</p>
+                        <div class="row" style="height: calc(100vh - 150px); overflow: auto;">
+                            {% for image in spells %}
+                            <div class="col-md-2">
+                                <div class="card mb-1 px-bg-darkblue">
+                                    <img src="data:image/png;base64,{{ image['image_base64'] }}" class="card-img-top" alt="{{ image['spell_name'] }}" title="{{ image['spell_name'] }}">
+                                    <div class="card-body">
+                                        <p class="card-text responsive-text">{{ image['spell_name'] }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="pills-runes" role="tabpanel" aria-labelledby="pills-runes-tab">
+                        <p><strong>Total Runes:</strong> {{ runes|length }}</p>
+                        <div class="row" style="height: calc(100vh - 150px); overflow: auto;">
+                            {% for image in runes %}
+                            <div class="col-md-2">
+                                <div class="card mb-1 px-bg-darkblue">
+                                    <img src="data:image/png;base64,{{ image['image_base64'] }}" class="card-img-top" alt="{{ image['rune_name'] }}" title="{{ image['rune_name'] }}">
+                                    <div class="card-body">
+                                        <p class="card-text responsive-text">{{ image['rune_name'] }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

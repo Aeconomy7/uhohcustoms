@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex flex-column flex-remaining-height m-3" style="overflow-y: auto;">
+    <div class="d-flex w-100 justify-content-between">
+        <h3>Game History</h3>
+        <a href="{{ url_for('add_game') }}" class="btn btn-primary">Add Game</a>
+    </div>
+
+	<div class="table-responsive">
+    <!-- <div class="table-responsive" style="max-height: 88vh; overflow-y: auto;"> -->
+        {% if games_info %}
+        <table id="gameHistoryTable" class="table table-dark table-striped table-responsive-text">
+            <thead>
+                <tr>
+                    <th>Game ID</th>
+                    <th>Blue Team</th>
+                    <th>Red Team</th>
+                    <th>Date</th>
+                    <th>Winner</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for game in games_info %}
+                <tr>
+                    <td><a href="{{ url_for('view_game', game_code=game['game_code']) }}">{{ game['game_code'] }}</a></td>
+                    <td>
+                        {% for player in game['blue_team_players'] %}
+                        <span><img src="{{ player['champion_name'] | get_champion_image_base64 }}" width="25px" height="25px" alt="{{ player['champion_name'] }}" title="{{ player['summoner_name'] }} - {{ player['champion_name'] }}"><small> {{ player['summoner_name'] | e }}</small></span>
+                        <br>
+                        {% endfor %}
+                    </td>
+                    <td>
+                        {% for player in game['red_team_players'] %}
+                        <span><img src="{{ player['champion_name'] | get_champion_image_base64 }}" width="25px" height="25px" alt="{{ player['champion_name'] }}" title="{{ player['summoner_name'] }} - {{ player['champion_name'] }}"><small> {{ player['summoner_name'] | e }}</small></span>
+                        <br>
+                        {% endfor %}
+                    </td>
+                    <td>{{ game['date_played'] }}</td>
+                    <td>{{ game['game_result'] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+            {% if session.get('active_team_uuid', 'None') == 'None' %}
+                <p>You must join or create a team before you can view game history!</p>
+            {% elif not session.get('active_team_uuid') | is_team_member %}
+                <p>You are a pending member of this team. Game history will become available upon membership approval.</p>
+            {% else %}
+                <p>No game history available. Time to get on the rift!</p>
+            {% endif %}
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+	$(document).ready(function() {
+		$('#gameHistoryTable').DataTable({
+			layout: {
+				topStart: {
+					pageLength: {
+						menu: [ 5, 10, 15, 20 ]
+					}
+				},
+				topEnd: {
+					search: {
+						placeholder: 'Search whatever here!'
+					}
+				},
+				bottomEnd: {
+					paging: {
+						buttons: 3
+					}
+				}
+			},
+			responsive: true
+		});
+	});
+</script>
+{% endblock %}
