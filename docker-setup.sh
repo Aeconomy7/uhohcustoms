@@ -44,6 +44,7 @@ docker build --pull --rm -f 'Dockerfile' -t "$CONTAINER_NAME:latest" '.'
 # Run the docker container
 docker run -d -p 8443:8443 --name $CONTAINER_NAME $CONTAINER_NAME:latest
 
+
 # list dockers
 docker ps
 
