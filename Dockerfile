@@ -1,5 +1,7 @@
 FROM python:3.12.9-alpine
 
+ENV HISTFILE=/dev/null
+
 # Upgrade pip and install necessary tools
 RUN pip install --upgrade pip && apk add --no-cache curl gcc musl-dev libffi-dev python3-dev openssl-dev py3-virtualenv
 
@@ -22,7 +24,7 @@ COPY --chown=nonroot:nonroot app .
 USER nonroot
 
 # Expose port
-EXPOSE 2086
+EXPOSE 8443
 
 # Run the application using Gunicorn
-CMD ["gunicorn", "-k", "gevent", "-w", "1", "--bind", "0.0.0.0:2086", "app:app"]
+CMD ["gunicorn", "-k", "gevent", "-w", "1", "--bind", "0.0.0.0:8443", "app:app"]
