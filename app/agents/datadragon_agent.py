@@ -187,8 +187,8 @@ class DataDragonAgent:
 	# DOWNLOAD NEWEST DATA DRAGON ARCHIVE AND EXTRACT IT
 	def download_and_extract_archive(self):
 		url = f'{self.__base_dd_url}/cdn/dragontail-{self.__current_patch}.tgz'
-		local_archive_path = f'./static/dd/archives/dragontail-{self.__current_patch}.tgz'
-		extract_path = f'./static/dd/{self.__current_patch}'
+		local_archive_path = f'{DD_PATH}/archives/dragontail-{self.__current_patch}.tgz'
+		extract_path = f'{DD_PATH}/{self.__current_patch}'
 
 		 # Check if the folder already exists
 		if os.path.exists(extract_path):
