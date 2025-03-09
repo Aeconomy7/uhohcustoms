@@ -12,13 +12,13 @@ import time
 from sqlite3 import Error
 
 #from db.customsdb import CustomsDBHandler
-from config import DEBUG
+from config import DEBUG, DD_PATH
 
 class DataDragonAgent:
 	# DEFAULT CONSTRUCTOR
 	def __init__(self):
 		self.__base_dd_url = "https://ddragon.leagueoflegends.com"
-		self.__local_dd_path = "./static/dd"
+		self.__local_dd_path = DD_PATH
 		#self.__db_location = "./db/cs.db"
 		self.__champions_data = {}
 		self.__items_data = {}

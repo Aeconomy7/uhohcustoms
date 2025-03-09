@@ -6,10 +6,10 @@ RUN pip install --upgrade pip && apk add --no-cache curl gcc musl-dev libffi-dev
 # Create a non-root user and set permissions
 RUN adduser -D nonroot
 WORKDIR /srv/uhohcustoms
-RUN mkdir -p /var/log/uhohcustoms && \
+RUN mkdir -p /var/log/uhohcustoms /static/dd /db && \
     touch /var/log/uhohcustoms/uhohcustoms.err.log && \
     touch /var/log/uhohcustoms/uhohcustoms.out.log && \
-    chown -R nonroot:nonroot /var/log/uhohcustoms /srv/uhohcustoms
+    chown -R nonroot:nonroot /var/log/uhohcustoms /srv/uhohcustoms /static/dd /db
 
 # Copy and install dependencies before switching users
 COPY app .

@@ -42,10 +42,10 @@ sleep 3
 docker build --pull --rm -f 'Dockerfile' -t "$CONTAINER_NAME:latest" '.'
 
 # Run the docker container
-docker run -d -p 80:80 -p 443:443 --name $CONTAINER_NAME $CONTAINER_NAME:latest
+docker run -d -p 8443 --name $CONTAINER_NAME $CONTAINER_NAME:latest
 
 # list dockers
 docker ps
 
 # start interactive session
-docker exec -it $CONTAINER_NAME /bin/bash
+#docker exec -it $CONTAINER_NAME /bin/bash
