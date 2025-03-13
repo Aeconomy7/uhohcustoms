@@ -702,7 +702,12 @@ def team_member():
 		# all includes pending users too to be rendered by the team_member page
 		all_team_members = CUSTOMS_DB.get_all_team_members(session.get('active_team_uuid'))
 
-		return render_template('team_member.html', team_games=team_games, team_members=all_team_members, redacted_summoners=redacted_summoners, player_score_setting=player_score_setting, BASE_URL=BASE_URL)
+		return render_template('team_member.html', 
+						 team_games=team_games, 
+						 team_members=all_team_members, 
+						 redacted_summoners=redacted_summoners, 
+						 player_score_setting=player_score_setting, 
+						 BASE_URL=BASE_URL)
 
 	except ValueError as e:
 		app.logger.error(f"[!][APP][team_member][{session.get('username')}] {str(e)}")
@@ -752,16 +757,32 @@ def team_captain():
 				summoner = request.form.get('summoner')
 				CUSTOMS_DB.remove_user_from_removed_data(summoner, session.get('active_team_uuid'))
 				flash('Summoner name unredacted successfully.', 'success')
+			elif action == 'toggle_player_score':
+				toggle = request.form.get('toggle')
+				if toggle == 'on':
+					CUSTOMS_DB.set_player_score_setting_for_team(session.get('user_uuid'), session.get('active_team_uuid'), True)
+					flash('Player score setting enabled.', 'success')
+				elif toggle == 'off':
+					CUSTOMS_DB.set_player_score_setting_for_team(session.get('user_uuid'), session.get('active_team_uuid'), False)
+					flash('Player score setting disabled.', 'info')
+				else:
+					flash('What are you doing mate?', 'danger')
 
 
 		team_games = CUSTOMS_DB.get_team_game_id_data_by_team_uuid(session.get('active_team_uuid'))
 		redacted_summoners = CUSTOMS_DB.get_team_data_removed_users(session.get('active_team_uuid', 'None'))
+		player_score_setting = CUSTOMS_DB.get_player_score_setting_for_team(session.get('user_uuid'), session.get('active_team_uuid'))
 		# print(f"redacted_summoners: {redacted_summoners}")
 		
 		# all includes pending users too to be rendered by the team_captain page
 		all_team_members = CUSTOMS_DB.get_all_team_members(session.get('active_team_uuid'))
 
-		return render_template('team_captain.html', team_games=team_games, team_members=all_team_members, redacted_summoners=redacted_summoners, BASE_URL=BASE_URL)
+		return render_template('team_captain.html', 
+						 team_games=team_games, 
+						 team_members=all_team_members, 
+						 redacted_summoners=redacted_summoners,
+						 player_score_setting=player_score_setting,
+						 BASE_URL=BASE_URL)
 
 	except ValueError as e:
 		app.logger.error(f"[!][APP][team_captain][{session.get('username')}] {str(e)}")

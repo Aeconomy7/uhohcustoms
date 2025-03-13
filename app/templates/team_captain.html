@@ -78,40 +78,60 @@
         </div>
     </div>
 
-    <div class="px-bg-dark h-50 p-3" style="border-top: 1px solid cyan;">
-        <h4>Manage Summoner Data</h4>
-        <p>Data privacy is important and all users should have the option to redact summoner data if they so choose.</p>
-        <form action="{{ url_for('team_captain') }}" method="POST">
-            <div class="mb-3">
-                <label for="summoner_name" class="form-label">Summoner Name:</label>
-                <input type="hidden" name="action" value="redact_summoner">
-                <input type="text" class="form-control" id="summoner" name="summoner" placeholder="EX: Sc00by#NA1" required>
+    <div class="d-flex flex-row" style="flex: 1;" >
+        <div class="flex-item px-bg-dark w-50 p-3" style="border-top: 1px solid cyan;">
+            <h4>Manage Summoner Data</h4>
+            <p>Data privacy is important and all users should have the option to redact summoner data if they so choose.</p>
+            <form action="{{ url_for('team_captain') }}" method="POST">
+                <div class="mb-3">
+                    <label for="summoner_name" class="form-label">Summoner Name:</label>
+                    <input type="hidden" name="action" value="redact_summoner">
+                    <input type="text" class="form-control" id="summoner" name="summoner" placeholder="EX: Sc00by#NA1" required>
+                </div>
+                <button type="submit" class="btn btn-success">Redact summoner data</button>
+            </form>
+            <table id="teamGamesTable" class="table table-dark table-striped table-responsive-text">
+                <thead>
+                    <tr>
+                        <th>User Name</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in redacted_summoners %}
+                    <tr>
+                        <td>{{ user[0] }}</td>
+                        <td>
+                            <form method="POST" action="{{ url_for('team_captain') }}">
+                                <input type="hidden" name="action" value="unredact_summoner">
+                                <input type="hidden" name="summoner" value="{{ user[0] }}">
+                                <button type="submit" class="btn btn-danger">Unredact user</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="flex-item px-bg-dark w-50 p-3" style="flex: 1; overflow-y: auto; border-left: 1px solid cyan; border-top: 1px solid cyan;">
+            <div class="table-responsive">
+                <h4 class="p-3">Team Settings</h4>
+                <form method="POST" action="{{ url_for('team_captain') }}">
+                    <div class="form-group">
+                        <label>Display Player Score and Ranking?</label>
+                        <input type="hidden" name="action" value="toggle_player_score">
+                        {% if player_score_setting %}
+                        <input type="hidden" name="toggle" value="off">
+                        <button type="submit" class="btn btn-danger">No</button>
+                        {% else %}
+                        <input type="hidden" name="toggle" value="on">
+                        <button type="submit" class="btn btn-success">Yes</button>
+                        {% endif %}
+                    </div>
+                </form>
             </div>
-            <button type="submit" class="btn btn-success">Redact summoner data</button>
-        </form>
-        <table id="teamGamesTable" class="table table-dark table-striped table-responsive-text">
-            <thead>
-                <tr>
-                    <th>User Name</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for user in redacted_summoners %}
-                <tr>
-                    <td>{{ user[0] }}</td>
-                    <td>
-                        <form method="POST" action="{{ url_for('team_captain') }}">
-                            <input type="hidden" name="action" value="unredact_summoner">
-                            <input type="hidden" name="summoner" value="{{ user[0] }}">
-                            <button type="submit" class="btn btn-danger">Unredact user</button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+        </div>
     </div>
 </div>
 {% endblock %}
