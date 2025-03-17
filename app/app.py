@@ -1013,6 +1013,7 @@ def view_game(game_code):
 					player['totalDamageDealtToChampions'] * STAT_WEIGHTS['damage_dealt']
 				) + 500
 			player['score'] = format(player['score'], '.2f')
+			player['kda'] = (player['kills'] + player['assists']) / player['deaths'] if player['deaths'] > 0 else player['kills'] + player['assists']
 
 		# Sort players by score
 		players_data = sorted(players_data, key=lambda x: (-float(x['score'])))
@@ -1121,6 +1122,7 @@ def player_stats():
 				stats['damage_dealt'] * STAT_WEIGHTS['damage_dealt']) / total_games) + 500
 			)
 			players_info[summoner_name]['score'] = score
+			players_info[summoner_name]['kda'] = stats['kills'] + stats['assists'] / stats['deaths'] if stats['deaths'] > 0 else stats['kills'] + stats['assists']
 
 			# Determine the most played champions
 			max_games = max(players_info[summoner_name]['champions'].values())
