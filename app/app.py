@@ -1122,7 +1122,7 @@ def player_stats():
 				stats['damage_dealt'] * STAT_WEIGHTS['damage_dealt']) / total_games) + 500
 			)
 			players_info[summoner_name]['score'] = score
-			players_info[summoner_name]['kda'] = stats['kills'] + stats['assists'] / stats['deaths'] if stats['deaths'] > 0 else stats['kills'] + stats['assists']
+			players_info[summoner_name]['kda'] = (stats['kills'] + stats['assists']) / stats['deaths'] if stats['deaths'] > 0 else stats['kills'] + stats['assists']
 
 			# Determine the most played champions
 			max_games = max(players_info[summoner_name]['champions'].values())
