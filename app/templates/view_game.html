@@ -44,7 +44,7 @@
 						<td>{{ player['kills'] }}</td>
 						<td>{{ player['deaths'] }}</td>
 						<td>{{ player['assists'] }}</td>
-						<td>{{ player['kda'] }}</td>
+						<td>{{ player['kda'] | round(3) }}</td>
 						<td>{{ player['goldEarned'] }}</td>
 						<td>{{ player['totalDamageDealtToChampions'] }}</td>			
 					</tr>
