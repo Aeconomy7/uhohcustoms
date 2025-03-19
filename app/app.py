@@ -238,6 +238,11 @@ def health():
 def riot_app_verification():
 	return send_from_directory('static', 'riot.txt')
 
+# serve static routes
+@app.route('/static/js/<path:filename>')
+def custom_static(filename):
+	return send_from_directory(os.path.join(app.root_path, 'static', 'js'), filename)
+
 
 # ACTION: User Registration
 @app.route('/register', methods=['GET','POST'])
@@ -946,8 +951,11 @@ def game_history():
 				'blue_team_players': blue_team_players,
 				'red_team_players': red_team_players,
 				'date_played': date_played,
+				'date_played_timestamp': date_played_timestamp,
 				'game_result': game_result
 			})
+
+		#games_info = sorted(games_info, key=lambda x: x['date_played_timestamp'], reverse=True)
 
 		return render_template('game_history.html', games_info=games_info)
 	
