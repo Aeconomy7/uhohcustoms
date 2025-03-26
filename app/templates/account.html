@@ -1,9 +1,38 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="d-flex flex-column flex-remaining-height w-100">
-    <div class="m-3 justify-content-center align-items-center h-100">
-        This page is still being implemented...
-    </div>
+<div class="d-flex flex-column flex-remaining-height w-100 m-3">
+    <h2>Account Settings</h2>
+
+    <form method="POST" class="mt-4">
+        <h4>Update Email</h4>
+        <div class="form-group">
+            <label for="email">New Email</label>
+            <input type="email" class="form-control" id="email" name="email" value="{{ user_data[2] }}" required>
+        </div>
+        <button type="submit" class="btn btn-primary mt-2" name="action" value="update_email">Update Email</button>
+    </form>
+
+    <form method="POST" class="mt-4">
+        <h4>Update Password</h4>
+        <div class="form-group">
+            <label for="current_password">Current Password</label>
+            <input type="password" class="form-control" id="current_password" name="current_password" required>
+        </div>
+        <div class="form-group">
+            <label for="new_password">New Password</label>
+            <input type="password" class="form-control" id="new_password" name="new_password" required>
+        </div>
+        <div class="form-group">
+            <label for="confirm_password">Confirm New Password</label>
+            <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+        </div>
+        <button type="submit" class="btn btn-primary mt-2" name="action" value="update_password">Update Password</button>
+    </form>
+
+    <!-- <form method="POST" class="mt-4">
+        <h4>Link Riot Account</h4>
+        <button type="submit" class="btn btn-primary" name="action" value="link_riot_account">Link Riot Account</button>
+    </form> -->
 </div>
 {% endblock %}

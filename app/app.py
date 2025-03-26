@@ -227,6 +227,13 @@ def index():
 def about():
 	return render_template('about.html')
 
+@app.route('/terms')
+def terms():
+	return render_template('terms.html')
+
+@app.route('/privacy')
+def privacy():
+	return render_template('privacy.html')
 
 @app.route('/health', methods=['GET'])
 def health():
@@ -243,6 +250,65 @@ def riot_app_verification():
 def custom_static(filename):
 	return send_from_directory(os.path.join(app.root_path, 'static', 'js'), filename)
 
+
+# STATIC: Account page
+@app.route('/account', methods=['GET', 'POST'])
+@app_login_required
+def account():
+    try:
+        if 'user_uuid' not in session:
+            return redirect(url_for('uhoh', error_code=401))
+
+        user_uuid = session['user_uuid']
+        user_data = CUSTOMS_DB.get_user_by_user_uuid(user_uuid)
+
+        if request.method == 'POST':
+            action = request.form.get('action')
+
+            # Update email
+            if action == 'update_email':
+                new_email = request.form.get('email')
+                if not re.match(r"^[^\s@]+@[^\s@]+\.[^\s@]+$", new_email):
+                    flash('Invalid email format.', 'danger')
+                elif CUSTOMS_DB.check_if_user_email_exists(None, new_email):
+                    flash('Email is already in use.', 'danger')
+                else:
+                    if CUSTOMS_DB.update_user_email(user_uuid, new_email):
+                        flash('Email updated successfully.', 'success')
+                        session['email'] = new_email
+                    else:
+                        flash('Failed to update email.', 'danger')
+
+            # Update password
+            elif action == 'update_password':
+                current_password = request.form.get('current_password')
+                new_password = request.form.get('new_password')
+                confirm_password = request.form.get('confirm_password')
+
+                if not check_password_hash(user_data[4], current_password):
+                    flash('Current password is incorrect.', 'danger')
+                elif len(new_password) < 10:
+                    flash('New password must be at least 10 characters long.', 'danger')
+                elif new_password != confirm_password:
+                    flash('New passwords do not match.', 'danger')
+                else:
+                    new_password_hash = generate_password_hash(new_password)
+                    if CUSTOMS_DB.update_user_password(user_uuid, new_password_hash):
+                        flash('Password updated successfully.', 'success')
+                    else:
+                        flash('Failed to update password.', 'danger')
+
+            # Link Riot account
+            elif action == 'link_riot_account':
+                riot_auth_url = f"{RIOT_AUTH_URL}?response_type=code&client_id={RIOT_CLIENT_ID}&redirect_uri={REDIRECT_URI}&scope=openid"
+                return redirect(riot_auth_url)
+
+        return render_template('account.html', user_data=user_data)
+
+    except Exception as e:
+        app.logger.error(f"[!][APP][account][{session.get('username')}] {str(e)}")
+        flash('An unexpected error occurred. Please try again.', 'danger')
+        return redirect(url_for('uhoh', error_code=500))
 
 # ACTION: User Registration
 @app.route('/register', methods=['GET','POST'])
@@ -338,12 +404,12 @@ def logout():
 	return redirect(url_for('login'))
 
 
-# STATIC: Account page:
-@app.route('/account', methods=['GET'])
-#@auth.login_required
-@app_login_required
-def account():
-	return render_template('account.html')
+# # STATIC: Account page:
+# @app.route('/account', methods=['GET'])
+# #@auth.login_required
+# @app_login_required
+# def account():
+# 	return render_template('account.html')
 
 
 # AUTH: RSO Callback

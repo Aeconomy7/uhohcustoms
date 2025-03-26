@@ -34,6 +34,7 @@ class CustomsDbHandler:
 		#self.__create_game_events_table()
 		self.__create_game_data_table()
 		self.__create_team_games_table()
+		self.__create_daily_score_snapshots_table()
 		self.__create_current_patch_table()
 		self.__create_summoner_data_privacy_table()
 		print("[+][CUSTOMS_DB][__init__] Successfully initiated Customs database tables!")
@@ -646,6 +647,32 @@ class CustomsDbHandler:
 		except Error as e:
 			print(f"[!][CUSTOMS_DB][set_player_score_setting_for_team] ERROR: {e}")
 			return False
+		
+	def update_user_email(self, user_uuid, new_email):
+		sql_query = "UPDATE users SET email = ? WHERE user_uuid = ?;"
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query, (new_email, user_uuid))
+			self.__conn.commit()
+			if self.__DEBUG:
+				print(f"[+][CUSTOMS_DB][update_user_email] Updated email for user {user_uuid}.")
+			return True
+		except Error as e:
+			print(f"[!][CUSTOMS_DB][update_user_email] ERROR: {e}")
+			return False
+
+	def update_user_password(self, user_uuid, new_password_hash):
+		sql_query = "UPDATE users SET password_hash = ? WHERE user_uuid = ?;"
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query, (new_password_hash, user_uuid))
+			self.__conn.commit()
+			if self.__DEBUG:
+				print(f"[+][CUSTOMS_DB][update_user_password] Updated password for user {user_uuid}.")
+			return True
+		except Error as e:
+			print(f"[!][CUSTOMS_DB][update_user_password] ERROR: {e}")
+			return False	
 
 	###########
 	# CONTENT #
@@ -803,6 +830,7 @@ class CustomsDbHandler:
 		sql_query = """ CREATE TABLE IF NOT EXISTS game_data (
 				id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
 				game_id TEXT NOT NULL UNIQUE,
+				created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 				game_data_blob BLOB NOT NULL
 			);"""
 
@@ -896,14 +924,16 @@ class CustomsDbHandler:
 
 
 	def add_game(self, game_id, game_data_blob):
-		sql_query = f"INSERT INTO game_data (game_id, game_data_blob) VALUES (?, ?);"
-
+		sql_query = """
+			INSERT INTO game_data (game_id, game_data_blob, created_at)
+			VALUES (?, ?, datetime('now'));
+		"""
 		try:
 			cursor = self.__conn.cursor()
 			cursor.execute(sql_query, (game_id, game_data_blob))
 			self.__conn.commit()
 			if self.__DEBUG:
-				print(f"[+][CUSTOMS_DB][add_game] Successfully added game id {game_id} :)")
+				print(f"[+][CUSTOMS_DB][add_game] Successfully added game id {game_id} with created_at timestamp.")
 			return True
 		except Error as e:
 			print(f"[!][CUSTOMS_DB][add_game] ERROR: {e}")
@@ -1057,6 +1087,112 @@ class CustomsDbHandler:
 				return True
 		except Error as e:
 			print(f"[!][CUSTOMS_DB][check_if_team_game_exists] ERROR: {e}")
+			return False
+
+
+	################
+	# DAILY SCORES #
+	################
+	def __create_daily_score_snapshots_table(self):
+		sql_query = """
+			CREATE TABLE IF NOT EXISTS daily_score_snapshots (
+				id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+				user_uuid TEXT NOT NULL,
+				team_uuid TEXT NOT NULL,
+				score INTEGER NOT NULL,
+				snapshot_date TEXT NOT NULL,
+				FOREIGN KEY(user_uuid) REFERENCES users(user_uuid),
+				FOREIGN KEY(team_uuid) REFERENCES teams(team_uuid)
+			);
+		"""
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query)
+			self.__conn.commit()
+			if self.__DEBUG:
+				print("[+][CUSTOMS_DB][__create_daily_score_snapshots_table] Successfully created daily_score_snapshots table!")
+			return True
+		except Error as e:
+			print(f"[!][CUSTOMS_DB][__create_daily_score_snapshots_table] ERROR: {e}")
+			return False
+
+	def insert_daily_score_snapshot(self, user_uuid, team_uuid, score):
+		sql_query = """
+			INSERT INTO daily_score_snapshots (user_uuid, team_uuid, score, snapshot_date)
+			VALUES (?, ?, ?, DATE('now'));
+		"""
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query, (str(user_uuid), str(team_uuid), score))
+			self.__conn.commit()
+			if self.__DEBUG:
+				print(f"[+][CUSTOMS_DB][insert_daily_score_snapshot] Snapshot added for user {user_uuid} in team {team_uuid} with score {score}.")
+			return True
+		except Error as e:
+			print(f"[!][CUSTOMS_DB][insert_daily_score_snapshot] ERROR: {e}")
+			return False
+
+	def get_all_player_scores(self, team_uuid):
+		sql_query = """
+			SELECT u.user_uuid, ut.team_uuid, ut.player_score_setting AS score
+			FROM user_teams ut
+			JOIN users u ON ut.user_uuid = u.user_uuid
+			WHERE ut.team_uuid = ?;
+		"""
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query, (str(team_uuid),))
+			rows = cursor.fetchall()
+			if self.__DEBUG:
+				print(f"[+][CUSTOMS_DB][get_all_player_scores] Found {len(rows)} players for team {team_uuid}.")
+			return rows
+		except Error as e:
+			print(f"[!][CUSTOMS_DB][get_all_player_scores] ERROR: {e}")
+			return None
+		
+	def get_daily_snapshots(self, user_uuid, team_uuid):
+		sql_query = """
+			SELECT snapshot_date, score
+			FROM daily_score_snapshots
+			WHERE user_uuid = ? AND team_uuid = ?
+			ORDER BY snapshot_date ASC;
+		"""
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query, (str(user_uuid), str(team_uuid)))
+			rows = cursor.fetchall()
+			if self.__DEBUG:
+				print(f"[+][CUSTOMS_DB][get_daily_snapshots] Found {len(rows)} snapshots for user {user_uuid} in team {team_uuid}.")
+			return rows
+		except Error as e:
+			print(f"[!][CUSTOMS_DB][get_daily_snapshots] ERROR: {e}")
+			return None
+		
+	def take_daily_snapshots(self):
+		try:
+			# Fetch all teams
+			teams = self.get_all_teams()  # Assuming this method exists and returns all teams
+			for team in teams:
+				team_uuid = team['team_uuid']
+
+				# Check if the team had games added today
+				if not self.has_team_games_today(team_uuid):
+					continue  # Skip this team if no games were added today
+
+				# Fetch all player scores for the team
+				player_scores = self.get_all_player_scores(team_uuid)
+				for player in player_scores:
+					user_uuid = player['user_uuid']
+					score = player['score']
+
+					# Insert the daily snapshot
+					self.insert_daily_score_snapshot(user_uuid, team_uuid, score)
+
+			if self.__DEBUG:
+				print("[+][CUSTOMS_DB][take_daily_snapshots] Daily snapshots completed successfully.")
+			return True
+		except Exception as e:
+			print(f"[!][CUSTOMS_DB][take_daily_snapshots] ERROR: {e}")
 			return False
 
 	##########
