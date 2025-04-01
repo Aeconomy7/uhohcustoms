@@ -589,7 +589,7 @@ def create_team():
 			raise ValueError("Team name must be alphanumeric and <= 20 characters.")
 
 		if DEBUG:
-			app.logger.debug(f"[?][create_team][{session['username']}] Attempting to create team {team_name}...")
+			app.logger.debug(f"[?][APP][create_team][{session['username']}] Attempting to create team {team_name}...")
 
 		# check if already a team captain
 		if CUSTOMS_DB.is_user_captain(session['user_uuid']):
@@ -611,7 +611,7 @@ def create_team():
 		session['active_team_name'] = team_name
 
 		if DEBUG:
-			app.logger.debug(f"[+][create_team][{session['username']}] Successfully created team {team_name}:{session['active_team_uuid']}")
+			app.logger.debug(f"[+][APP][create_team][{session['username']}] Successfully created team {team_name}:{session['active_team_uuid']}")
 		flash(f"Successfully created {team_name}, you are the captain now!", 'success')
 
 	except ValueError as e:
@@ -911,19 +911,19 @@ def add_game():
 			file_path = os.path.join("static", "game_data", sanitize_game_code(game_code) + ".json")
 			game_data = None
 
-			# check if json file already exists
-			if os.path.exists(file_path):
-				with open (file_path, 'r') as f:
-					game_data = json.load(f)
-					checker = False
+			# # check if json file already exists
+			# if os.path.exists(file_path):
+			# 	with open (file_path, 'r') as f:
+			# 		game_data = json.load(f)
+			# 		checker = False
 
 			# if not, attempt to fetch from riot api
 			if game_data == None:	
 				game_data = RIOT_AGENT.fetch_match_data(game_code, get_match_region(game_region))
-				if game_data:
-					flash(f"Game {game_code} successfully added!", 'success')
-					with open(file_path, 'w') as f:
-						json.dump(game_data, f)
+				# if game_data:
+				# 	flash(f"Game {game_code} successfully added!", 'success')
+				# 	with open(file_path, 'w') as f:
+				# 		json.dump(game_data, f)
 
 			# check if file and riot API failed
 			if game_data == None:
@@ -938,6 +938,7 @@ def add_game():
 			if not CUSTOMS_DB.add_team_game(session.get('active_team_uuid'), game_code):
 				raise ValueError("Failed to add game data to team.")
 
+			flash(f"Game {game_code} successfully added!", 'success')
 			return redirect(url_for('game_history'))
 		
 	except ValueError as e:
@@ -1322,9 +1323,9 @@ def manual_game_entry():
 			}
 
 			# write game data to file
-			file_path = os.path.join("static", "game_data", sanitize_game_code(game_code) + ".json")
-			with open(file_path, 'w') as f:
-				json.dump(game_data, f)
+			# file_path = os.path.join("static", "game_data", sanitize_game_code(game_code) + ".json")
+			# with open(file_path, 'w') as f:
+			# 	json.dump(game_data, f)
 
 			# Save to database (example function, replace with actual implementation)
 			if not CUSTOMS_DB.add_game(game_code, json.dumps(game_data)):

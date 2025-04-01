@@ -60,6 +60,15 @@ elif DB_TYPE == 'sqlite3':
 	SQLALCHEMY_DATABASE_URI = f"sqlite:///{SQLITE_DB_PATH}"
 	SCHEMA_NAME = None
 
+# EMAIL CONFIGURATION
+MAIL_SERVER = 'mail.example.com'
+MAIL_PORT = 587 
+MAIL_USE_TLS = True
+MAIL_USE_SSL = False
+MAIL_USERNAME = 'mailbot@mail.example.com'
+MAIL_PASSWORD = 'PASSWORD'
+MAIL_DEFAULT_SENDER = ('UhOhCustoms Mail Bot', 'mailbot@mail.example.com')
+
 # DATADRAGON INFO
 DD_PATH = "./static/dd"
 

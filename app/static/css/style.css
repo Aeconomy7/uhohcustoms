@@ -106,7 +106,7 @@ li a:hover {
 }
 
 .team-red {
-	color: rgb(234, 0, 255) !important;
+	color: rgb(255, 120, 230) !important;
 }
 
 .team-blue td {
@@ -114,7 +114,7 @@ li a:hover {
 }
 
 .team-red td {
-	color: rgb(234, 0, 255) !important;
+	color: rgb(255, 120, 230) !important;
 }
 
 .rank-1, .rank-1 td {
