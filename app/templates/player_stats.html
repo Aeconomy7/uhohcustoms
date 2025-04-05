@@ -21,9 +21,9 @@
                     <th>Winrate %</th>
                     <th>Wins</th>
                     <th>Losses</th>
-                    <th>Total Kills</th>
-                    <th>Total Deaths</th>
-                    <th>Total Assists</th>
+                    <th>Avg Kills</th>
+                    <th>Avg Deaths</th>
+                    <th>Avg Assists</th>
                     <th>KDA</th>
                     <th>Avg Gold Earned</th>
                     <th>Avg Damage Dealt</th>
@@ -50,9 +50,9 @@
                     <td>{{ stats.winrate }}</td>
                     <td>{{ stats.wins }}</td>
                     <td>{{ stats.losses }}</td>
-                    <td>{{ stats.kills }}</td>
-                    <td>{{ stats.deaths }}</td>
-                    <td>{{ stats.assists }}</td>
+                    <td>{{ stats.avg_kills }}</td>
+                    <td>{{ stats.avg_deaths }}</td>
+                    <td>{{ stats.avg_assists }}</td>
                     <td>{{ stats.kda | round(3) }}</td>
                     <td>{{ stats.avg_gold_earned }}</td>
                     <td>{{ stats.avg_damage_dealt }}</td>

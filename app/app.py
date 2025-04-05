@@ -1208,9 +1208,12 @@ def player_stats():
 				
 				if summoner_name not in players_info:
 					players_info[summoner_name] = {
-						'kills': 0,
-						'assists': 0,
-						'deaths': 0,
+						'total_kills': 0,
+						'avg_kills': 0.0,
+						'total_assists': 0,
+						'avg_assists': 0.0,
+						'total_deaths': 0,
+						'avg_deaths': 0.0,
 						'wins': 0,
 						'losses': 0,
 						'total_gold_earned': 0,
@@ -1222,9 +1225,9 @@ def player_stats():
 						'champions': {}
 					}
 				
-				players_info[summoner_name]['kills'] += player['kills']
-				players_info[summoner_name]['assists'] += player['assists']
-				players_info[summoner_name]['deaths'] += player['deaths']
+				players_info[summoner_name]['total_kills'] += player['kills']
+				players_info[summoner_name]['total_assists'] += player['assists']
+				players_info[summoner_name]['total_deaths'] += player['deaths']
 				players_info[summoner_name]['total_gold_earned'] += player['goldEarned']
 				players_info[summoner_name]['total_damage_dealt'] += player['totalDamageDealtToChampions']
 				players_info[summoner_name]['games_played'] += 1
@@ -1242,20 +1245,23 @@ def player_stats():
 		for summoner_name, stats in players_info.items():
 			# VERY IMPORTANT AND DYNAMIC
 			total_games = stats['games_played']
+			stats['avg_kills'] = f"{float(stats['total_kills']/total_games):.2f}"
+			stats['avg_assists'] = f"{float(stats['total_assists']/total_games):.2f}"
+			stats['avg_deaths'] = f"{float(stats['total_deaths']/total_games):.2f}"
 			stats['avg_gold_earned'] = round(stats['total_gold_earned'] / total_games) if total_games > 0 else 0
 			stats['avg_damage_dealt'] = round(stats['total_damage_dealt'] / total_games) if total_games > 0 else 0
 			score = (
 				((stats['wins'] * STAT_WEIGHTS['wins'] +
 				stats['losses'] * STAT_WEIGHTS['losses'] +
-				stats['kills'] * STAT_WEIGHTS['kills'] +
-				stats['deaths'] * STAT_WEIGHTS['deaths'] +
-				stats['assists'] * STAT_WEIGHTS['assists'] +
+				stats['total_kills'] * STAT_WEIGHTS['kills'] +
+				stats['total_deaths'] * STAT_WEIGHTS['deaths'] +
+				stats['total_assists'] * STAT_WEIGHTS['assists'] +
 				stats['total_gold_earned'] * STAT_WEIGHTS['gold_earned'] +
 				stats['total_damage_dealt'] * STAT_WEIGHTS['damage_dealt']) / total_games) + 500
 			)
 			players_info[summoner_name]['score'] = score
-			players_info[summoner_name]['winrate'] = f"{float(stats['wins']/(stats['wins'] + stats['losses']) * 100.0):.2f}%"
-			players_info[summoner_name]['kda'] = (stats['kills'] + stats['assists']) / stats['deaths'] if stats['deaths'] > 0 else stats['kills'] + stats['assists']
+			players_info[summoner_name]['winrate'] = f"{float(stats['wins']/total_games * 100.0):.2f}%"
+			players_info[summoner_name]['kda'] = (stats['total_kills'] + stats['total_assists']) / stats['total_deaths'] if stats['total_deaths'] > 0 else stats['total_kills'] + stats['total_assists']
 			players_info[summoner_name]['avg_gold_earned'] = stats['avg_gold_earned'] 
 			players_info[summoner_name]['avg_damage_dealt'] = stats['avg_damage_dealt'] 
 
