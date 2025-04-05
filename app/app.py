@@ -37,6 +37,7 @@ if DB_TYPE == 'postgresql':
 	from db.customsdb import CustomsDbHandler
 from agents.datadragon_agent import DataDragonAgent
 from agents.riot_agent import RiotAgent
+from agents.wu_bot_agent import WuBotAgent
 
 
 
@@ -98,6 +99,12 @@ if not os.path.exists('static/game_data'):
 RIOT_AGENT = RiotAgent(RIOT_API_KEY, RIOT_AUTH_URL, RIOT_TOKEN_URL, REDIRECT_URI)
 RIOT_AGENT.__enter__()
 
+
+##############
+# MAIL AGENT #
+##############
+MAIL_AGENT = WuBotAgent()
+MAIL_AGENT.__enter__()
 
 ###########
 # LOGGING #
@@ -309,6 +316,52 @@ def account():
         app.logger.error(f"[!][APP][account][{session.get('username')}] {str(e)}")
         flash('An unexpected error occurred. Please try again.', 'danger')
         return redirect(url_for('uhoh', error_code=500))
+
+
+# ACTION: Request password reset
+@app.route('/forgot_password', methods=['POST'])
+def forgot_password():
+    user_email = request.form.get('email')
+
+    if not user_email or not CUSTOMS_DB.check_if_user_email_exists(None, user_email):
+        flash('Invalid email address.', 'danger')
+        return redirect(url_for('forgot_password_page'))
+
+    token = MAIL_AGENT.generate_token(user_email, app.secret_key, salt=RESET_PASSWORD_SALT)
+    reset_url = url_for('reset_password', token=token, _external=True)
+
+    MAIL_AGENT.send_reset_password_email(user_email, token)
+
+    flash('Password reset email sent. Please check your inbox.', 'info')
+    return redirect(url_for('index'))
+
+
+# ACTION: Reset password
+@app.route('/reset_password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    email = MAIL_AGENT.verify_token(token, app.secret_key, salt=RESET_PASSWORD_SALT)
+
+    if not email:
+        flash('Invalid or expired token.', 'danger')
+        return redirect(url_for('index'))
+
+    if request.method == 'POST':
+        new_password = request.form.get('new_password')
+        confirm_password = request.form.get('confirm_password')
+
+        if new_password != confirm_password:
+            flash('Passwords do not match.', 'danger')
+        elif len(new_password) < 10:
+            flash('Password must be at least 10 characters long.', 'danger')
+        else:
+            new_password_hash = generate_password_hash(new_password)
+            if CUSTOMS_DB.update_user_password_by_email(email, new_password_hash):
+                flash('Password reset successfully!', 'success')
+                return redirect(url_for('login'))
+            else:
+                flash('Failed to reset password.', 'danger')
+
+    return render_template('reset_password.html', token=token)
 
 # ACTION: User Registration
 @app.route('/register', methods=['GET','POST'])
@@ -1160,8 +1213,10 @@ def player_stats():
 						'deaths': 0,
 						'wins': 0,
 						'losses': 0,
-						'gold_earned': 0,
-						'damage_dealt': 0,
+						'total_gold_earned': 0,
+						'avg_gold_earned': 0,
+						'total_damage_dealt': 0, 
+						'avg_damage_dealt': 0,
 						'score': 0,
 						'games_played': 0,
 						'champions': {}
@@ -1170,8 +1225,8 @@ def player_stats():
 				players_info[summoner_name]['kills'] += player['kills']
 				players_info[summoner_name]['assists'] += player['assists']
 				players_info[summoner_name]['deaths'] += player['deaths']
-				players_info[summoner_name]['gold_earned'] += player['goldEarned']
-				players_info[summoner_name]['damage_dealt'] += player['totalDamageDealtToChampions']
+				players_info[summoner_name]['total_gold_earned'] += player['goldEarned']
+				players_info[summoner_name]['total_damage_dealt'] += player['totalDamageDealtToChampions']
 				players_info[summoner_name]['games_played'] += 1
 				
 				if player['win']:
@@ -1187,17 +1242,22 @@ def player_stats():
 		for summoner_name, stats in players_info.items():
 			# VERY IMPORTANT AND DYNAMIC
 			total_games = stats['games_played']
+			stats['avg_gold_earned'] = round(stats['total_gold_earned'] / total_games) if total_games > 0 else 0
+			stats['avg_damage_dealt'] = round(stats['total_damage_dealt'] / total_games) if total_games > 0 else 0
 			score = (
 				((stats['wins'] * STAT_WEIGHTS['wins'] +
 				stats['losses'] * STAT_WEIGHTS['losses'] +
 				stats['kills'] * STAT_WEIGHTS['kills'] +
 				stats['deaths'] * STAT_WEIGHTS['deaths'] +
 				stats['assists'] * STAT_WEIGHTS['assists'] +
-				stats['gold_earned'] * STAT_WEIGHTS['gold_earned'] +
-				stats['damage_dealt'] * STAT_WEIGHTS['damage_dealt']) / total_games) + 500
+				stats['total_gold_earned'] * STAT_WEIGHTS['gold_earned'] +
+				stats['total_damage_dealt'] * STAT_WEIGHTS['damage_dealt']) / total_games) + 500
 			)
 			players_info[summoner_name]['score'] = score
+			players_info[summoner_name]['winrate'] = f"{float(stats['wins']/(stats['wins'] + stats['losses']) * 100.0):.2f}%"
 			players_info[summoner_name]['kda'] = (stats['kills'] + stats['assists']) / stats['deaths'] if stats['deaths'] > 0 else stats['kills'] + stats['assists']
+			players_info[summoner_name]['avg_gold_earned'] = stats['avg_gold_earned'] 
+			players_info[summoner_name]['avg_damage_dealt'] = stats['avg_damage_dealt'] 
 
 			# Determine the most played champions
 			max_games = max(players_info[summoner_name]['champions'].values())

@@ -18,14 +18,15 @@
                     <th>Summoner Name</th>
                     <th>Most Played Champions</th>
                     <th>Total Games</th>
+                    <th>Winrate %</th>
                     <th>Wins</th>
                     <th>Losses</th>
                     <th>Total Kills</th>
                     <th>Total Deaths</th>
                     <th>Total Assists</th>
                     <th>KDA</th>
-                    <th>Total Gold Earned</th>
-                    <th>Total Champion Damage Dealt</th>
+                    <th>Avg Gold Earned</th>
+                    <th>Avg Damage Dealt</th>
                 </tr>
             </thead>
             <tbody>
@@ -52,14 +53,15 @@
                         {% endfor %}
                     </td>
                     <td>{{ stats.wins + stats.losses }}</td>
+                    <td>{{ stats.winrate }}</td>
                     <td>{{ stats.wins }}</td>
                     <td>{{ stats.losses }}</td>
                     <td>{{ stats.kills }}</td>
                     <td>{{ stats.deaths }}</td>
                     <td>{{ stats.assists }}</td>
                     <td>{{ stats.kda | round(3) }}</td>
-                    <td>{{ stats.gold_earned }}</td>
-                    <td>{{ stats.damage_dealt }}</td>
+                    <td>{{ stats.avg_gold_earned }}</td>
+                    <td>{{ stats.avg_damage_dealt }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -80,42 +82,50 @@
 {% block scripts %}
 <script>
 	$(document).ready(function() {
+        let table_init = false;
+
         var columnDefs = [
-            { className: "text-start", targets: [0, 8] },
-            { className: "text-center", targets: [ 1, 2, 3, 4, 5, 6, 7 ] },
-            { className: "text-end", targets: [] }
+            { className: "text-start", targets: [0, ] },
+            { className: "text-center", targets: [ 1, 2,  4, 5, 6, 7, 8 ] },
+            { className: "text-end", targets: [3, 9, 10, 11] }
         ]
 
         {% if session.get('user_uuid') | get_player_score_setting %}
         columnDefs = [
-            { className: "text-start", targets: [2, 10] },
-            { className: "text-center", targets: [0, 3, 4, 5, 6, 7, 8, 9 ] },
-            { className: "text-end", targets: [1, 11, 12] }
+            { className: "text-start", targets: [2 ] },
+            { className: "text-center", targets: [0, 3, 4, 6, 7, 8, 9, 10 ] },
+            { className: "text-end", targets: [1, 5, 11, 12, 13] }
         ]
         {% endif %}
 
-		$('#playerStatsTable').DataTable({
-			order: [[0, 'asc']],
-            layout: {
-				topStart: {
-					pageLength: {
-						menu: [ 5, 10, 15, 20 ]
-					}
-				},
-				topEnd: {
-					search: {
-						placeholder: 'Search whatever here!'
-					}
-				},
-				bottomEnd: {
-					paging: {
-						buttons: 3
-					}
-				}
-			},
-			responsive: true,
-            columnDefs:  columnDefs,
-		});
+        if (!table_init) {
+            console.log('[PLAYER_STATS][JS] Initializing DataTable for player stats table...');
+            $('#playerStatsTable').DataTable({
+                order: [[0, 'asc']],
+                layout: {
+                    topStart: {
+                        pageLength: {
+                            menu: [ 5, 10, 15, 20 ]
+                        }
+                    },
+                    topEnd: {
+                        search: {
+                            placeholder: 'Search whatever here!'
+                        }
+                    },
+                    bottomEnd: {
+                        paging: {
+                            buttons: 3
+                        }
+                    }
+                },
+                responsive: true,
+                columnDefs:  columnDefs,
+            });
+
+            console.log('[PLAYER_STATS][JS] DataTable initialized successfully.');
+            table_init = true;
+        }
 	});
 </script>
 {% endblock %}

@@ -37,7 +37,7 @@
                         {% endfor %}
                     </td>
                     <td>{{ game['date_played'] }}</td>
-                    <td>{{ game['game_result'] }}</td>
+                    <td class="team-{{ game['game_result'] | lower }}">{{ game['game_result'] }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -57,27 +57,33 @@
 {% block scripts %}
 <script>
 	$(document).ready(function() {
-		$('#gameHistoryTable').DataTable({
-            order: [[3, 'desc']],
-			layout: {
-				topStart: {
-					pageLength: {
-						menu: [ 5, 10, 15, 20 ]
-					}
-				},
-				topEnd: {
-					search: {
-						placeholder: 'Search whatever here!'
-					}
-				},
-				bottomEnd: {
-					paging: {
-						buttons: 3
-					}
-				}
-			},
-			responsive: true
-		});
+        let table_init = false;
+        if (!table_init) {
+            console.log('[GAME_HISTORY][JS] Initializing DataTable for game history...');
+            $('#gameHistoryTable').DataTable({
+                order: [[3, 'desc']],
+                layout: {
+                    topStart: {
+                        pageLength: {
+                            menu: [ 5, 10, 15, 20 ]
+                        }
+                    },
+                    topEnd: {
+                        search: {
+                            placeholder: 'Search whatever here!'
+                        }
+                    },
+                    bottomEnd: {
+                        paging: {
+                            buttons: 3
+                        }
+                    }
+                },
+                responsive: true
+            });
+            console.log('[GAME_HISTORY][JS] DataTable initialized successfully.');
+            table_init = true;
+        }
 	});
 </script>
 {% endblock %}

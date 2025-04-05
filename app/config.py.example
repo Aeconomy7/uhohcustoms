@@ -64,7 +64,6 @@ elif DB_TYPE == 'sqlite3':
 MAIL_SERVER = 'mail.example.com'
 MAIL_PORT = 587 
 MAIL_USE_TLS = True
-MAIL_USE_SSL = False
 MAIL_USERNAME = 'mailbot@mail.example.com'
 MAIL_PASSWORD = 'PASSWORD'
 MAIL_DEFAULT_SENDER = ('UhOhCustoms Mail Bot', 'mailbot@mail.example.com')
@@ -86,3 +85,6 @@ USERS = {
 		"role": "admin"
 	}
 }
+
+# SALT N PEPPER!
+RESET_PASSWORD_SALT = "<SALT_HERE>"
