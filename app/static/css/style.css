@@ -117,28 +117,107 @@ li a:hover {
 	color: rgb(255, 120, 230) !important;
 }
 
-.rank-1, .rank-1 td {
+.rank-10, .rank-10 td {
     color: white !important;
-    text-shadow: 0 0 3px #FFD700, 0 0 5px #FFD700;
+    text-shadow: 0 0 3px #615959, 0 0 5px #3a3a3a;
 }
-.rank-1 img {
-	filter: drop-shadow(0 0 1px #FFD700) drop-shadow(0 0 3px #FFD700);
+.rank-10 img {
+    filter: drop-shadow(0 0 1px #615959) drop-shadow(0 0 3px #3a3a3a);
+}
+
+.rank-9, .rank-9 td {
+    color: white !important;
+    text-shadow: 0 0 3px #8c5223, 0 0 5px #aa7039;
+}
+.rank-9 img {
+    filter: drop-shadow(0 0 1px #8c5223) drop-shadow(0 0 3px #aa7039);
+}
+
+.rank-8, .rank-8 td {
+    color: white !important;
+    text-shadow: 0 0 3px #a1a1a1, 0 0 5px #cccccc;
+}
+.rank-8 img {
+    filter: drop-shadow(0 0 1px #a1a1a1) drop-shadow(0 0 3px #cccccc);
+}
+
+.rank-7, .rank-7 td {
+    color: white !important;
+    text-shadow: 0 0 3px #FFD700, 0 0 5px #ffaa00;
+}
+.rank-7 img {
+    filter: drop-shadow(0 0 1px #FFD700) drop-shadow(0 0 3px #ffaa00);
+}
+
+.rank-6, .rank-6 td {
+    color: white !important;
+    text-shadow: 0 0 3px #1FAF9B, 0 0 5px #1abc9c;
+}
+.rank-6 img {
+    filter: drop-shadow(0 0 1px #27e2a4) drop-shadow(0 0 3px #1abc9c);
+}
+
+.rank-5, .rank-5 td {
+    color: white !important;
+    text-shadow: 0 0 3px #21d07a, 0 0 5px #38ef7d;
+}
+.rank-5 img {
+    filter: drop-shadow(0 0 1px #21d07a) drop-shadow(0 0 3px #38ef7d);
+}
+
+.rank-4, .rank-4 td {
+    color: white !important;
+    text-shadow: 0 0 3px #47c3ff, 0 0 5px #00bfff;
+}
+.rank-4 img {
+    filter: drop-shadow(0 0 1px #47c3ff) drop-shadow(0 0 3px #00bfff);
+}
+
+/* Animated glowing ranks with increased intensity */
+@keyframes glow-master {
+  0%   { text-shadow: 0 0 3px #aa00ff, 0 0 5px #ff55ff; }
+  50%  { text-shadow: 0 0 7px #ff55ff, 0 0 10px #aa00ff; }
+  100% { text-shadow: 0 0 3px #aa00ff, 0 0 5px #ff55ff; }
+}
+
+@keyframes glow-grandmaster {
+  0%   { text-shadow: 0 0 3px #ff1e1e, 0 0 7px #ff4d4d; }
+  50%  { text-shadow: 0 0 7px #ff4d4d, 0 0 12px #ff1e1e; }
+  100% { text-shadow: 0 0 3px #ff1e1e, 0 0 7px #ff4d4d; }
+}
+
+@keyframes glow-challenger {
+  0%   { text-shadow: 0 0 3px #00ffff, 0 0 9px #ffd700; }
+  50%  { text-shadow: 0 0 7px #ffd700, 0 0 14px #00ffff; }
+  100% { text-shadow: 0 0 3px #00ffff, 0 0 9px #ffd700; }
+}
+
+/* Ranks with increasing glow intensity */
+.rank-3, .rank-3 td {
+    color: white !important;
+    animation: glow-master 2s infinite;
+}
+.rank-3 img {
+    animation: glow-master 2s infinite;
+    filter: drop-shadow(0 0 1px #aa00ff) drop-shadow(0 0 3px #ff55ff);
 }
 
 .rank-2, .rank-2 td {
     color: white !important;
-    text-shadow: 0 0 3px #C0C0C0, 0 0 5px #C0C0C0;
+    animation: glow-grandmaster 2s infinite;
 }
 .rank-2 img {
-	filter: drop-shadow(0 0 1px #C0C0C0) drop-shadow(0 0 3px #C0C0C0);
+    animation: glow-grandmaster 2s infinite;
+    filter: drop-shadow(0 0 1px #ff1e1e) drop-shadow(0 0 3px #ff4d4d);
 }
 
-.rank-3, .rank-3 td {
+.rank-1, .rank-1 td {
     color: white !important;
-    text-shadow: 0 0 3px #CD7F32, 0 0 5px #CD7F32;
+    animation: glow-challenger 2s infinite;
 }
-.rank-3 img {
-	filter: drop-shadow(0 0 1px #CD7F32) drop-shadow(0 0 3px #CD7F32);
+.rank-1 img {
+    animation: glow-challenger 2s infinite;
+    filter: drop-shadow(0 0 1px #00ffff) drop-shadow(0 0 3px #ffd700);
 }
 
 .funcolor {

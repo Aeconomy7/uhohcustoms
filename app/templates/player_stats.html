@@ -32,14 +32,8 @@
             <tbody>
                 {% for rank, (summoner_name, stats) in enumerate(players_info.items(), start=1) %}
                 {% if session.get('user_uuid') | get_player_score_setting %}
-                    {% if rank == 1 %}
-                    <tr class="rank-1">
-                    {% elif rank == 2 %}
-                    <tr class="rank-2">
-                    {% elif rank == 3 %}
-                    <tr class="rank-3">
-                    {% else %}
-                    <tr>
+                    {% if rank <= 10 %}
+                    <tr class="{{ 'rank-' ~ rank}}">
                     {% endif %} 
                 {% endif %}
                 {% if session.get('user_uuid') | get_player_score_setting %}
