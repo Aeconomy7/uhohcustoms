@@ -96,10 +96,12 @@
             console.log('[PLAYER_STATS][JS] Initializing DataTable for player stats table...');
             $('#playerStatsTable').DataTable({
                 order: [[0, 'asc']],
+                pageLength: -1,
+                lengthMenu: [[5, 10, 25, 50, 100], ["All", 10, 25, 50, 100]],
                 layout: {
                     topStart: {
                         pageLength: {
-                            menu: [ 5, 10, 15, 20 ]
+                            menu: [5, 10, 25, 50, 100]
                         }
                     },
                     topEnd: {
