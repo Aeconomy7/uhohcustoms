@@ -412,7 +412,7 @@ def register():
 # AUTH: RSO Login
 @app.route('/login_rso')
 def login_rso():
-	riot_auth_url = f"{RIOT_AUTH_URL}?response_type=code&client_id={RIOT_CLIENT_ID}&redirect_uri={REDIRECT_URI}&scope=openid"
+	riot_auth_url = f"{RIOT_AUTH_URL}?response_type=code&client_id={RIOT_CLIENT_ID}&redirect_uri={REDIRECT_URI}&scope={OAUTH2_SCOPE}"
 	return redirect(riot_auth_url)
 
 
@@ -483,6 +483,7 @@ def callback():
 
 	if token_response.status_code == 200:
 		token_data = token_response.json()
+		print(f"token_data: {token_data}")
 		session['access_token'] = token_data['access_token']
 		return redirect(url_for('dashboard', team_uuid=str(session['active_team_uuid'])))
 	else:

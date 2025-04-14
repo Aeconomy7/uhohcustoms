@@ -25,6 +25,7 @@ RIOT_TOKEN_URL		= "https://auth.riotgames.com/token"
 REDIRECT_URL		= "https://example.com/callback"
 MATCH_REGION		= "AMERICAS"
 SERVER_REGION		= "NA1"
+OAUTH2_SCOPE		= "cpid,offline_access"
 
 # NETWORK INFO
 # THESE ARE OUTDATED, uses an agent on someone's computer
