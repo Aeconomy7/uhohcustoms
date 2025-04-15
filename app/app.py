@@ -14,6 +14,8 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from werkzeug.security import generate_password_hash, check_password_hash
 from urllib.parse import unquote
+import logging
+import http.client as http_client
 import psutil
 import uuid
 import requests
@@ -110,6 +112,18 @@ MAIL_AGENT.__enter__()
 ###########
 # LOGGING #
 ###########
+if DEBUG_VERBOSE:
+	http_client.HTTPConnection.debuglevel = 1
+
+	logging.basicConfig(level=logging.DEBUG)
+	logging.getLogger("http.client").setLevel(logging.DEBUG)
+	logging.getLogger("urllib3").setLevel(logging.DEBUG)
+	logging.getLogger("requests").setLevel(logging.DEBUG)
+
+	logging.getLogger("chardet").setLevel(logging.INFO)
+	logging.getLogger("charset_normalizer").setLevel(logging.INFO)
+	logging.getLogger("urllib3.connectionpool").setLevel(logging.INFO)
+
 if not os.path.exists('logs'):
 	os.makedirs('logs')
 log_handler = RotatingFileHandler('./logs/app.log', maxBytes=500000, backupCount=1)
@@ -226,34 +240,35 @@ def add_header(response):
 ##########
 # ROUTES #
 ##########
+@limiter.exempt
 @app.route('/')
 def index():
 	return render_template('index.html')
 
 
+@limiter.exempt
 @app.route('/about')
 def about():
 	return render_template('about.html')
 
+@limiter.exempt
 @app.route('/terms')
 def terms():
 	return render_template('terms.html')
 
+@limiter.exempt
 @app.route('/privacy')
 def privacy():
 	return render_template('privacy.html')
 
+@limiter.exempt
 @app.route('/health', methods=['GET'])
 def health():
 	return jsonify(status="UP"), 200
 
 
-# for riot site verification
-@app.route('/riot.txt')
-def riot_app_verification():
-	return send_from_directory('static', 'riot.txt')
-
 # serve static routes
+@limiter.exempt
 @app.route('/static/js/<path:filename>')
 def custom_static(filename):
 	return send_from_directory(os.path.join(app.root_path, 'static', 'js'), filename)
