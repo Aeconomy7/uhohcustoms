@@ -13,6 +13,7 @@ from flask_socketio import SocketIO, emit
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from werkzeug.security import generate_password_hash, check_password_hash
+from urllib.parse import unquote
 import psutil
 import uuid
 import requests
@@ -244,7 +245,7 @@ def privacy():
 
 @app.route('/health', methods=['GET'])
 def health():
-    return jsonify(status="UP"), 200
+	return jsonify(status="UP"), 200
 
 
 # for riot site verification
@@ -262,106 +263,106 @@ def custom_static(filename):
 @app.route('/account', methods=['GET', 'POST'])
 @app_login_required
 def account():
-    try:
-        if 'user_uuid' not in session:
-            return redirect(url_for('uhoh', error_code=401))
+	try:
+		if 'user_uuid' not in session:
+			return redirect(url_for('uhoh', error_code=401))
 
-        user_uuid = session['user_uuid']
-        user_data = CUSTOMS_DB.get_user_by_user_uuid(user_uuid)
+		user_uuid = session['user_uuid']
+		user_data = CUSTOMS_DB.get_user_by_user_uuid(user_uuid)
 
-        if request.method == 'POST':
-            action = request.form.get('action')
+		if request.method == 'POST':
+			action = request.form.get('action')
 
-            # Update email
-            if action == 'update_email':
-                new_email = request.form.get('email')
-                if not re.match(r"^[^\s@]+@[^\s@]+\.[^\s@]+$", new_email):
-                    flash('Invalid email format.', 'danger')
-                elif CUSTOMS_DB.check_if_user_email_exists(None, new_email):
-                    flash('Email is already in use.', 'danger')
-                else:
-                    if CUSTOMS_DB.update_user_email(user_uuid, new_email):
-                        flash('Email updated successfully.', 'success')
-                        session['email'] = new_email
-                    else:
-                        flash('Failed to update email.', 'danger')
+			# Update email
+			if action == 'update_email':
+				new_email = request.form.get('email')
+				if not re.match(r"^[^\s@]+@[^\s@]+\.[^\s@]+$", new_email):
+					flash('Invalid email format.', 'danger')
+				elif CUSTOMS_DB.check_if_user_email_exists(None, new_email):
+					flash('Email is already in use.', 'danger')
+				else:
+					if CUSTOMS_DB.update_user_email(user_uuid, new_email):
+						flash('Email updated successfully.', 'success')
+						session['email'] = new_email
+					else:
+						flash('Failed to update email.', 'danger')
 
-            # Update password
-            elif action == 'update_password':
-                current_password = request.form.get('current_password')
-                new_password = request.form.get('new_password')
-                confirm_password = request.form.get('confirm_password')
+			# Update password
+			elif action == 'update_password':
+				current_password = request.form.get('current_password')
+				new_password = request.form.get('new_password')
+				confirm_password = request.form.get('confirm_password')
 
-                if not check_password_hash(user_data[4], current_password):
-                    flash('Current password is incorrect.', 'danger')
-                elif len(new_password) < 10:
-                    flash('New password must be at least 10 characters long.', 'danger')
-                elif new_password != confirm_password:
-                    flash('New passwords do not match.', 'danger')
-                else:
-                    new_password_hash = generate_password_hash(new_password)
-                    if CUSTOMS_DB.update_user_password(user_uuid, new_password_hash):
-                        flash('Password updated successfully.', 'success')
-                    else:
-                        flash('Failed to update password.', 'danger')
+				if not check_password_hash(user_data[4], current_password):
+					flash('Current password is incorrect.', 'danger')
+				elif len(new_password) < 10:
+					flash('New password must be at least 10 characters long.', 'danger')
+				elif new_password != confirm_password:
+					flash('New passwords do not match.', 'danger')
+				else:
+					new_password_hash = generate_password_hash(new_password)
+					if CUSTOMS_DB.update_user_password(user_uuid, new_password_hash):
+						flash('Password updated successfully.', 'success')
+					else:
+						flash('Failed to update password.', 'danger')
 
-            # Link Riot account
-            elif action == 'link_riot_account':
-                riot_auth_url = f"{RIOT_AUTH_URL}?response_type=code&client_id={RIOT_CLIENT_ID}&redirect_uri={REDIRECT_URI}&scope=openid"
-                return redirect(riot_auth_url)
+			# Link Riot account
+			elif action == 'link_riot_account':
+				riot_auth_url = f"{RIOT_AUTH_URL}?response_type=code&client_id={RIOT_CLIENT_ID}&redirect_uri={REDIRECT_URI}&scope=openid"
+				return redirect(riot_auth_url)
 
-        return render_template('account.html', user_data=user_data)
+		return render_template('account.html', user_data=user_data)
 
-    except Exception as e:
-        app.logger.error(f"[!][APP][account][{session.get('username')}] {str(e)}")
-        flash('An unexpected error occurred. Please try again.', 'danger')
-        return redirect(url_for('uhoh', error_code=500))
+	except Exception as e:
+		app.logger.error(f"[!][APP][account][{session.get('username')}] {str(e)}")
+		flash('An unexpected error occurred. Please try again.', 'danger')
+		return redirect(url_for('uhoh', error_code=500))
 
 
 # ACTION: Request password reset
 @app.route('/forgot_password', methods=['POST'])
 def forgot_password():
-    user_email = request.form.get('email')
+	user_email = request.form.get('email')
 
-    if not user_email or not CUSTOMS_DB.check_if_user_email_exists(None, user_email):
-        flash('Invalid email address.', 'danger')
-        return redirect(url_for('forgot_password_page'))
+	if not user_email or not CUSTOMS_DB.check_if_user_email_exists(None, user_email):
+		flash('Invalid email address.', 'danger')
+		return redirect(url_for('forgot_password_page'))
 
-    token = MAIL_AGENT.generate_token(user_email, app.secret_key, salt=RESET_PASSWORD_SALT)
-    reset_url = url_for('reset_password', token=token, _external=True)
+	token = MAIL_AGENT.generate_token(user_email, app.secret_key, salt=RESET_PASSWORD_SALT)
+	reset_url = url_for('reset_password', token=token, _external=True)
 
-    MAIL_AGENT.send_reset_password_email(user_email, token)
+	MAIL_AGENT.send_reset_password_email(user_email, token)
 
-    flash('Password reset email sent. Please check your inbox.', 'info')
-    return redirect(url_for('index'))
+	flash('Password reset email sent. Please check your inbox.', 'info')
+	return redirect(url_for('index'))
 
 
 # ACTION: Reset password
 @app.route('/reset_password/<token>', methods=['GET', 'POST'])
 def reset_password(token):
-    email = MAIL_AGENT.verify_token(token, app.secret_key, salt=RESET_PASSWORD_SALT)
+	email = MAIL_AGENT.verify_token(token, app.secret_key, salt=RESET_PASSWORD_SALT)
 
-    if not email:
-        flash('Invalid or expired token.', 'danger')
-        return redirect(url_for('index'))
+	if not email:
+		flash('Invalid or expired token.', 'danger')
+		return redirect(url_for('index'))
 
-    if request.method == 'POST':
-        new_password = request.form.get('new_password')
-        confirm_password = request.form.get('confirm_password')
+	if request.method == 'POST':
+		new_password = request.form.get('new_password')
+		confirm_password = request.form.get('confirm_password')
 
-        if new_password != confirm_password:
-            flash('Passwords do not match.', 'danger')
-        elif len(new_password) < 10:
-            flash('Password must be at least 10 characters long.', 'danger')
-        else:
-            new_password_hash = generate_password_hash(new_password)
-            if CUSTOMS_DB.update_user_password_by_email(email, new_password_hash):
-                flash('Password reset successfully!', 'success')
-                return redirect(url_for('login'))
-            else:
-                flash('Failed to reset password.', 'danger')
+		if new_password != confirm_password:
+			flash('Passwords do not match.', 'danger')
+		elif len(new_password) < 10:
+			flash('Password must be at least 10 characters long.', 'danger')
+		else:
+			new_password_hash = generate_password_hash(new_password)
+			if CUSTOMS_DB.update_user_password_by_email(email, new_password_hash):
+				flash('Password reset successfully!', 'success')
+				return redirect(url_for('login'))
+			else:
+				flash('Failed to reset password.', 'danger')
 
-    return render_template('reset_password.html', token=token)
+	return render_template('reset_password.html', token=token)
 
 # ACTION: User Registration
 @app.route('/register', methods=['GET','POST'])
@@ -412,8 +413,11 @@ def register():
 # AUTH: RSO Login
 @app.route('/login_rso')
 def login_rso():
-	riot_auth_url = f"{RIOT_AUTH_URL}?response_type=code&client_id={RIOT_CLIENT_ID}&redirect_uri={REDIRECT_URI}&scope={OAUTH2_SCOPE}"
-	return redirect(riot_auth_url)
+	if 'user_uuid' not in session:
+		return redirect(url_for('uhoh', error_code=401))
+
+	riot_auth_uri = f"{RIOT_AUTH_URL}?response_type=code&client_id={RIOT_CLIENT_ID}&redirect_uri={REDIRECT_URI}&scope={OAUTH2_SCOPE}"
+	return redirect(riot_auth_uri)
 
 
 # AUTH: Login
@@ -469,22 +473,32 @@ def logout():
 @app.route('/callback')
 def callback():
 	code = request.args.get('code')
+	if code:
+		code = unquote(code)
+	else:
+		return redirect(url_for('login'))
+
+	headers = {
+		"Content-Type": "application/x-www-form-urlencoded"
+	}
+
+	data = {
+		"grant_type": "authorization_code",
+		"code": code,
+		"redirect_url": REDIRECT_URI,
+	}
 
 	token_response = requests.post(
 		RIOT_TOKEN_URL,
-		data = {
-			"grant_type": "authorization_code",
-			"code": code,
-			"redirect_url": REDIRECT_URI,
-			"client_id": RIOT_CLIENT_ID,
-			"client_secret": RIOT_CLIENT_SECRET
-		}
+		headers=headers,
+		data=data,
+		auth=(RIOT_CLIENT_ID, RIOT_CLIENT_SECRET)
 	)
 
 	if token_response.status_code == 200:
 		token_data = token_response.json()
-		print(f"token_data: {token_data}")
 		session['access_token'] = token_data['access_token']
+		session['refresh_token'] = token_data['refresh_token']
 		return redirect(url_for('dashboard', team_uuid=str(session['active_team_uuid'])))
 	else:
 		return f"[!][APP][callback] Error fetching token: {token_response.text}", 400
