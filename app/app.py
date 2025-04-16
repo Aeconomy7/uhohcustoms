@@ -507,7 +507,7 @@ def callback():
 		RIOT_TOKEN_URL,
 		headers=headers,
 		data=data,
-		auth=(RIOT_CLIENT_ID, RIOT_CLIENT_SECRET)
+		auth=HTTPBasicAuth(RIOT_CLIENT_ID, RIOT_CLIENT_SECRET)
 	)
 
 	if token_response.status_code == 200:
