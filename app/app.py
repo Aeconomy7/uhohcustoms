@@ -510,9 +510,10 @@ def callback():
 		token_data = token_response.json()
 		session['access_token'] = token_data['access_token']
 		session['refresh_token'] = token_data['refresh_token']
-		return redirect(url_for('dashboard', team_uuid=str(session['active_team_uuid'])))
+		return redirect(url_for('manage_teams'))
 	else:
-		return f"[!][APP][callback] Error fetching token: {token_response.text}", 400
+		flash(f"Error requesting RSO token. Response code {token_response.status_code}", 'danger')
+		return redirect(url_for('login'))
 
 
 # STATIC: Set active team
@@ -998,7 +999,7 @@ def add_game():
 
 			# if not, attempt to fetch from riot api
 			if game_data == None:	
-				game_data = RIOT_AGENT.fetch_match_data(game_code, get_match_region(game_region))
+				game_data = RIOT_AGENT.fetch_match_data(game_code, get_match_region(game_region), session.get('access_token', None))
 				# if game_data:
 				# 	flash(f"Game {game_code} successfully added!", 'success')
 				# 	with open(file_path, 'w') as f:
