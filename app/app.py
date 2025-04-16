@@ -8,7 +8,9 @@
 ###########
 from functools import wraps
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session, send_from_directory
-from flask_httpauth import HTTPBasicAuth
+# from flask_httpauth import HTTPBasicAuth
+# from requests.auth import HTTPBasicAuth
+import base64
 from flask_socketio import SocketIO, emit
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -61,16 +63,16 @@ app.config['PERMANENT_SESSION_LIFETIME'] = datetime.timedelta(days=1)
 ##############
 # BASIC AUTH #
 ##############
-auth = HTTPBasicAuth()
+# auth = HTTPBasicAuth()
 
-@auth.verify_password
-def verify_password(username, password):
-	if username in USERS and check_password_hash(USERS[username]["password"], password):
-		return username
+# @auth.verify_password
+# def verify_password(username, password):
+# 	if username in USERS and check_password_hash(USERS[username]["password"], password):
+# 		return username
 
-@auth.get_user_roles
-def get_user_roles(username):
-	return USERS[username]["role"] if username in USERS else None
+# @auth.get_user_roles
+# def get_user_roles(username):
+# 	return USERS[username]["role"] if username in USERS else None
 
 
 
@@ -476,14 +478,6 @@ def logout():
 	return redirect(url_for('login'))
 
 
-# # STATIC: Account page:
-# @app.route('/account', methods=['GET'])
-# #@auth.login_required
-# @app_login_required
-# def account():
-# 	return render_template('account.html')
-
-
 # AUTH: RSO Callback
 @app.route('/callback')
 def callback():
@@ -493,8 +487,11 @@ def callback():
 	else:
 		return redirect(url_for('login'))
 
+	credentials = f"{RIOT_CLIENT_ID}:{RIOT_CLIENT_SECRET}"
+	encoded_credentials = base64.b64encode(credentials.encode('utf-8')).decode('utf-8')
 	headers = {
-		"Content-Type": "application/x-www-form-urlencoded"
+		"Content-Type": "application/x-www-form-urlencoded",
+		"Authorization": f"Basic {encoded_credentials}"
 	}
 
 	data = {
@@ -506,8 +503,7 @@ def callback():
 	token_response = requests.post(
 		RIOT_TOKEN_URL,
 		headers=headers,
-		data=data,
-		auth=HTTPBasicAuth(RIOT_CLIENT_ID, RIOT_CLIENT_SECRET)
+		data=data
 	)
 
 	if token_response.status_code == 200:
