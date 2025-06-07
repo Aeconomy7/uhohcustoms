@@ -10,7 +10,10 @@
         <p>This will unlink your UhOhCustoms account from your Riot Account. You will no longer be able to pull custom games from your history.</p>
         <button type="submit" class="btn btn-danger mt-2" name="action" value="unlink_riot_account">Unlink Account</button>
             {% if session.get('access_token') | is_rso_session_active %}
+                <p class="text-success">Your Riot Account is currently linked and the session is active.</p>
             {% else %}
+                <p class="text-warning">Your Riot Account is linked, but the session is not active. You may need to re-link to refresh the session.</p>
+                <button type="submit" class="btn btn-primary mt-2" name="action" value="link_riot_account">Refresh Session</button>
             {% endif %}
         {% else %}
         <h4>Link your Riot Account via Riot RSO!</h4>
