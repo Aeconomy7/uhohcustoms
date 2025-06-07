@@ -54,7 +54,7 @@ class RiotAgent:
 		url = f"{base_riot_api_url}{self.__riot_account_api_url}"
 		
 		headers = {
-			"Authorization": f"Bearer {self.token}"
+			"Authorization": f"Bearer {token}"
 		}
 	
 		for attempt in range(retries):
