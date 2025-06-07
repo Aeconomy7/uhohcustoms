@@ -328,6 +328,16 @@ def account():
 			elif action == 'link_riot_account':
 				riot_auth_url = f"{RIOT_AUTH_URL}?response_type=code&client_id={RIOT_CLIENT_ID}&redirect_uri={REDIRECT_URI}&scope=openid"
 				return redirect(riot_auth_url)
+			
+			elif action == 'unlink_riot_account':
+				if CUSTOMS_DB.unlink_rso_account_from_user(user_uuid):
+					session.pop('riot_id', None)
+					session.pop('riot_puuid', None)
+					session.pop('access_token', None)
+					session.pop('refresh_token', None)
+					flash('Riot account unlinked successfully.', 'success')
+				else:
+					flash('Failed to unlink Riot account.', 'danger')
 
 		return render_template('account.html', user_data=user_data)
 
@@ -1060,7 +1070,8 @@ def seasons():
 #@auth.login_required
 @app_login_required
 def add_game():
-	if 'user_uuid' not in session:
+	if 'user_uuid' not in session or 'access_token' not in session:
+		flash("You must be logged in and link your Riot account to add a game. You can do this in the Account tab in the upper right corner dropdown.", "warning")
 		return redirect(url_for('uhoh', error_code=401))
 
 	if session.get('active_team_uuid','None') == 'None':

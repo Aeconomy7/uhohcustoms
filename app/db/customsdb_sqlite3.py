@@ -732,6 +732,22 @@ class CustomsDbHandler:
 		except Error as e:
 			print(f"[!][CUSTOMS_DB][link_rso_account_to_user] ERROR: {e}")
 			return False
+		
+	def unlink_rso_account_from_user(self, user_uuid):
+		sql_query = """UPDATE users 
+					   SET riot_id = NULL, riot_puuid = NULL, access_token = NULL, refresh_token = NULL 
+					   WHERE user_uuid = ?;"""
+
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query, (str(user_uuid),))
+			self.__conn.commit()
+			if self.__DEBUG:
+				print(f"[+][CUSTOMS_DB][unlink_rso_account_from_user] Successfully unlinked RSO account from user {str(user_uuid)} :D")
+			return True
+		except Error as e:
+			print(f"[!][CUSTOMS_DB][unlink_rso_account_from_user] ERROR: {e}")
+			return False
 
 	###########
 	# CONTENT #
