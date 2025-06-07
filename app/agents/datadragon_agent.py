@@ -247,6 +247,8 @@ class DataDragonAgent:
 
 	def get_single_image(self, category, image_name):
 		if category == 'champion':
+			if image_name == 'FiddleSticks':
+				image_name = 'Fiddlesticks' 
 			champion = None
 			try:
 				champion = self.__champions_data['data'][image_name]
@@ -313,8 +315,8 @@ class DataDragonAgent:
 		self.update_current_patch()
 
 	def start_scheduler(self):
-		schedule.every(10).minutes.do(self.check_for_updates)  # Every 10 minutes
-		# schedule.every().hour.do(self.check_for_updates)  # Hourly
+		# schedule.every(10).minutes.do(self.check_for_updates)  # Every 10 minutes
+		schedule.every().hour.do(self.check_for_updates)  # Hourly
 		# schedule.every().day.at("00:00").do(self.check_for_updates)  # Daily at midnight
 		# schedule.every().wednesday.at("03:15").do(self.check_for_updates)  # 15 minutes after standard Riot patch release time
 

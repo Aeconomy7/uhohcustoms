@@ -12,8 +12,8 @@ from flask import Flask, render_template, request, redirect, url_for, flash, jso
 # from requests.auth import HTTPBasicAuth
 import base64
 from flask_socketio import SocketIO, emit
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
+#from flask_limiter import Limiter
+#from flask_limiter.util import get_remote_address
 from werkzeug.security import generate_password_hash, check_password_hash
 from urllib.parse import unquote
 import logging
@@ -52,11 +52,11 @@ from agents.wu_bot_agent import WuBotAgent
 app = Flask(__name__)
 app.secret_key = FLASK_SECRET_KEY
 
-limiter = Limiter(
-	get_remote_address,
-	app=app,
-	default_limits=["200 per day", "50 per hour"]
-)
+# limiter = Limiter(
+# 	get_remote_address,
+# 	app=app,
+# 	default_limits=["200 per day", "50 per hour"]
+# )
 
 app.config['PERMANENT_SESSION_LIFETIME'] = datetime.timedelta(days=1)
 
@@ -224,12 +224,12 @@ def inject_enumerate():
 # REQUEST PROCESSING #
 ######################
 # BEFORE #
-@app.before_request
-def limit_post_requests():
-	if request.method == 'POST':
-		if request.path == '/login' or request.path == '/register' or request.path == '/add_game' or request.path == 'manual_game_upload':
-			if request.endpoint == 'login' or request.endpoint == 'register':
-				limiter.limit("10 per minute")(lambda: None)()
+# @app.before_request
+# def limit_post_requests():
+# 	if request.method == 'POST':
+# 		if request.path == '/login' or request.path == '/register' or request.path == '/add_game' or request.path == 'manual_game_upload':
+# 			if request.endpoint == 'login' or request.endpoint == 'register':
+# 				limiter.limit("10 per minute")(lambda: None)()
 
 # AFTER #
 @app.after_request
@@ -242,35 +242,35 @@ def add_header(response):
 ##########
 # ROUTES #
 ##########
-@limiter.exempt
+#@limiter.exempt
 @app.route('/')
 def index():
 	return render_template('index.html')
 
 
-@limiter.exempt
+#@limiter.exempt
 @app.route('/about')
 def about():
 	return render_template('about.html')
 
-@limiter.exempt
+#@limiter.exempt
 @app.route('/terms')
 def terms():
 	return render_template('terms.html')
 
-@limiter.exempt
+#@limiter.exempt
 @app.route('/privacy')
 def privacy():
 	return render_template('privacy.html')
 
-@limiter.exempt
+#@limiter.exempt
 @app.route('/health', methods=['GET'])
 def health():
 	return jsonify(status="UP"), 200
 
 
 # serve static routes
-@limiter.exempt
+#@limiter.exempt
 @app.route('/static/js/<path:filename>')
 def custom_static(filename):
 	return send_from_directory(os.path.join(app.root_path, 'static', 'js'), filename)
@@ -291,21 +291,22 @@ def account():
 			action = request.form.get('action')
 
 			# Update email
-			if action == 'update_email':
-				new_email = request.form.get('email')
-				if not re.match(r"^[^\s@]+@[^\s@]+\.[^\s@]+$", new_email):
-					flash('Invalid email format.', 'danger')
-				elif CUSTOMS_DB.check_if_user_email_exists(None, new_email):
-					flash('Email is already in use.', 'danger')
-				else:
-					if CUSTOMS_DB.update_user_email(user_uuid, new_email):
-						flash('Email updated successfully.', 'success')
-						session['email'] = new_email
-					else:
-						flash('Failed to update email.', 'danger')
+			# if action == 'update_email':
+			# 	new_email = request.form.get('email')
+			# 	if not re.match(r"^[^\s@]+@[^\s@]+\.[^\s@]+$", new_email):
+			# 		flash('Invalid email format.', 'danger')
+			# 	elif CUSTOMS_DB.check_if_user_email_exists(None, new_email):
+			# 		flash('Email is already in use.', 'danger')
+			# 	else:
+			# 		if CUSTOMS_DB.update_user_email(user_uuid, new_email):
+			# 			flash('Email updated successfully.', 'success')
+			# 			session['email'] = new_email
+			# 		else:
+			# 			flash('Failed to update email.', 'danger')
 
 			# Update password
-			elif action == 'update_password':
+			# elif action == 'update_password':
+			if action == 'update_password':
 				current_password = request.form.get('current_password')
 				new_password = request.form.get('new_password')
 				confirm_password = request.form.get('confirm_password')
@@ -355,7 +356,7 @@ def forgot_password():
 
 
 # ACTION: Reset password
-@app.route('/reset_password/<token>', methods=['GET', 'POST'])
+# @app.route('/reset_password/<token>', methods=['GET', 'POST'])
 def reset_password(token):
 	email = MAIL_AGENT.verify_token(token, app.secret_key, salt=RESET_PASSWORD_SALT)
 
@@ -380,6 +381,27 @@ def reset_password(token):
 				flash('Failed to reset password.', 'danger')
 
 	return render_template('reset_password.html', token=token)
+
+# STATIC : Verify email page
+# ACTION : request email verification
+# @app.route('/verify_email', methods=['GET'])
+# @app_login_required
+# def verify_email_page():
+# 	if 'user_uuid' not in session:
+# 		return redirect(url_for('uhoh', error_code=401))
+
+# 	user_uuid = session['user_uuid']
+# 	user_data = CUSTOMS_DB.get_user_by_user_uuid(user_uuid)
+
+# 	if user_data[9] == 1:
+# 		flash('Your email is already verified or does not exist.', 'info')
+# 		return redirect(request.args.get('next', url_for('manage_teams')))
+
+# # ACTION: Verify email
+# @app.route('/verify_email/<user_uuid>/<token_uuid>', methods=['GET'])
+# def verify_email(user_uuid, token_uuid):
+# 	if not user_uuid or not token_uuid:
+# 		flash('Invalid verification link.', 'danger')
 
 # ACTION: User Registration
 @app.route('/register', methods=['GET','POST'])
@@ -431,7 +453,9 @@ def register():
 @app.route('/login_rso')
 def login_rso():
 	if 'user_uuid' not in session:
-		return redirect(url_for('uhoh', error_code=401))
+		flash('You must be logged in to use this feature.', 'danger')
+		#return redirect(url_for('uhoh', error_code=401))
+		return redirect(url_for('login'))
 
 	riot_auth_uri = f"{RIOT_AUTH_URL}?response_type=code&client_id={RIOT_CLIENT_ID}&redirect_uri={REDIRECT_URI}&scope={OAUTH2_SCOPE}"
 	return redirect(riot_auth_uri)
@@ -465,6 +489,11 @@ def login():
 				app.logger.debug(f"[?][APP][login][{session['username']}] active_team_uuid: {str(session['active_team_uuid'])}")
 
 			return redirect(request.args.get('next', url_for('manage_teams')))
+			# if user[9] == 0:
+			# 	flash('Please verify your email before logging in.', 'warning')
+			# 	return redirect(url_for('verify_email'))
+			# else:
+			# 	return redirect(request.args.get('next', url_for('manage_teams')))
 		else:
 			flash('Invalid email or password.', 'danger')
 
@@ -489,6 +518,15 @@ def callback():
 
 	credentials = f"{RIOT_CLIENT_ID}:{RIOT_CLIENT_SECRET}"
 	encoded_credentials = base64.b64encode(credentials.encode('utf-8')).decode('utf-8')
+	
+	http_proxy = None
+	https_proxy = None
+
+	proxies = {
+		"http": http_proxy,
+		"https": https_proxy
+	}
+	
 	headers = {
 		"Content-Type": "application/x-www-form-urlencoded",
 		"Authorization": f"Basic {encoded_credentials}"
@@ -503,14 +541,40 @@ def callback():
 	token_response = requests.post(
 		RIOT_TOKEN_URL,
 		headers=headers,
-		data=data
+		data=data,
+		proxies=proxies
 	)
 
 	if token_response.status_code == 200:
 		token_data = token_response.json()
 		session['access_token'] = token_data['access_token']
 		session['refresh_token'] = token_data['refresh_token']
-		return redirect(url_for('manage_teams'))
+		summoner_data = RIOT_AGENT.fetch_account_data(
+			token=session['access_token']
+		)
+		if not summoner_data:
+			flash('Failed to fetch summoner data. Please try again.', 'danger')
+			return redirect(url_for('account'))
+		if DEBUG:
+			app.logger.debug(f"[?][APP][callback][{session.get('username')}] summoner_data: {summoner_data}")
+		if not CUSTOMS_DB.link_rso_account_to_user(
+			user_uuid=session['user_uuid'],
+			riot_id=f"{summoner_data['gameName']}#{summoner_data['tagLine']}",
+			riot_puuid=summoner_data['puuid'],
+			access_token=session['access_token'],
+			refresh_token=session['refresh_token']
+		):
+			flash('Failed to link RSO account. Please try again.', 'danger')
+			session.pop('access_token', None)
+			session.pop('refresh_token', None)
+			return redirect(url_for('account'))
+		else:
+			flash('Successfully linked RSO account!', 'success')
+			# Update the session with the new RSO data
+			session['riot_id'] = f"{summoner_data['gameName']}#{summoner_data['tagLine']}"
+			session['riot_puuid'] = summoner_data['puuid']
+			# Redirect to manage teams or account page
+			return redirect(url_for('account'))
 	else:
 		flash(f"Error requesting RSO token. Response code {token_response.status_code}", 'danger')
 		return redirect(url_for('login'))
@@ -944,6 +1008,51 @@ def team_captain():
 		flash('An unexpected error occurred. Please try again.', 'danger')
 
 	return render_template('team_captain.html')
+
+
+# ACTION: Create a season
+# STATIC: List all seasons
+@app.route('/seasons', methods=['GET', 'POST'])
+@app_login_required
+def seasons():
+	try:
+		if 'user_uuid' not in session:
+			return redirect(url_for('uhoh', error_code=401))
+
+		if request.method == 'POST':
+			season_name = request.form.get('season_name')
+			end_date = request.form.get('end_date')
+
+			if not season_name:
+				flash('Season name cannot be empty.', 'danger')
+				return redirect(url_for('seasons'))
+
+			if not re.match(r"^[a-zA-Z0-9 ]{1,32}$", season_name):
+				flash('Season name must be alphanumeric, spaces only, and no more than 32 characters.', 'danger')
+				return redirect(url_for('seasons'))
+
+			season_uuid = uuid.uuid4()
+			end_date_timestamp = None
+			if end_date:
+				try:
+					end_date_timestamp = datetime.datetime.strptime(end_date, '%Y-%m-%d')
+				except ValueError:
+					flash('Invalid end date format. Please use YYYY-MM-DD.', 'danger')
+					return redirect(url_for('seasons'))
+
+			if CUSTOMS_DB.create_season(session['active_team_uuid'], season_uuid, season_name, end_date_timestamp):
+				flash('Season created successfully.', 'success')
+			else:
+				flash('Failed to create season.', 'danger')
+
+		seasons = CUSTOMS_DB.get_team_seasons()
+		return render_template('seasons.html', seasons=seasons)
+
+	except Exception as e:
+		app.logger.error(f"[!][APP][seasons][{session.get('username')}] {str(e)}")
+		flash('An unexpected error occurred. Please try again.', 'danger')
+
+	return render_template('seasons.html')
 
 
 # ACTION: New Game Upload - manual and file upload
@@ -1547,6 +1656,12 @@ def get_champion_image_base64(value):
 	image_data = DD_AGENT.get_single_image('champion', value)['image_base64']
 	return f"data:image/png;base64,{image_data}"
 
+@app.template_filter('is_user_verified')
+def is_user_verified(value):
+	if CUSTOMS_DB.is_user_verified(value):
+		return True
+	else:
+		return False
 
 @app.template_filter('is_team_captain')
 def is_team_captain(value):
@@ -1562,6 +1677,20 @@ def is_team_member(value):
 		result = True
 	#print(f"[?][APP][is_team_member] result for user {session.get('user_uuid')} member of {value}: {result}")
 	return result
+
+@app.template_filter('is_rso_account_linked')
+def is_rso_account_linked(value):
+	if CUSTOMS_DB.is_rso_account_linked(value): 
+		return True
+	else:
+		return False
+
+@app.template_filter('is_rso_session_active')
+def is_rso_session_active(value):
+	if RIOT_AGENT.fetch_summoner_data(token=value) != None:
+		return True
+	else:
+		return False
 
 @app.template_filter('get_player_score_setting')
 def get_player_score_setting(value):

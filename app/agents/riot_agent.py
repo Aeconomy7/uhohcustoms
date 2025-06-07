@@ -9,7 +9,8 @@ class RiotAgent:
 	def __init__(self, api_key, riot_auth_url, riot_token_url, redirect_uri):
 
 		#self.__base_riot_api_url = f"https://{self.__match_region}.api.riotgames.com"
-		self.__summoner_api_url = f"/lol/summoner/v4/summoners"
+		self.__summoner_api_url = f"/lol/summoner/v4/summoners/me" # for fetching summoner puuid
+		self.__riot_account_api_url = f"/riot/account/v1/accounts/me" # for fetching account data
 		self.__match_api_url = f"/lol/match/v5/matches"
 		self.__rso_match_api_url = f"/lol/rso-match/v1/matches"
 		
@@ -44,13 +45,16 @@ class RiotAgent:
 
 	# UTILITY FUNCTIONS
 	# fetch summoner data
-	def fetch_summoner_data(self, summoner_name, match_region, retries=3, timeout=10):
-		base_riot_api_url = f"https://{match_region}.api.riotgames.com"
+	def fetch_account_data(self, summoner_region='americas', token=None, retries=3, timeout=10):
+		if(token is None or token == ""):
+			return None
+		# https://na1.api.riotgames.com/lol/summoner/v4/summoners/me
+		base_riot_api_url = f"https://{summoner_region}.api.riotgames.com"
 		
-		url = f"{base_riot_api_url}{self.__summoner_api_url}/by-name/{quote(summoner_name)}"
+		url = f"{base_riot_api_url}{self.__riot_account_api_url}"
 		
 		headers = {
-			"X-Riot-Token": self.__api_key
+			"Authorization": f"Bearer {self.token}"
 		}
 	
 		for attempt in range(retries):
@@ -68,7 +72,6 @@ class RiotAgent:
 				
 		return None
 
-
 	# fetch match data
 	def fetch_match_data(self, match_id, match_region, token=None, retries=3, timeout=10):
 		base_riot_api_url = f"https://{match_region}.api.riotgames.com"
@@ -84,7 +87,6 @@ class RiotAgent:
 		else:
 			url = f"{base_riot_api_url}{self.__rso_match_api_url}/{match_id}"
 			headers = {
-				"X-Riot-Token": self.__api_key,
 				"Authorization": f"Bearer {token}"
 			}
 	
@@ -102,11 +104,9 @@ class RiotAgent:
 					raise
 				
 		return None
+	
+	def refresh_token(self, r_token, retries=3, timeout=10):
+		# https://auth.riotgames.com/api/v1/authorization
 
-	# def fetch_match_data(self, game_id):
-	# 	try:
-	# 			match = self.__lol_watcher.match.by_id(self.__match_region, game_id)
-	# 			return match
-	# 	except ApiError as e:
-	# 			print(f"Error fetching match details: {e}")
-	# 			return None
+		return
+

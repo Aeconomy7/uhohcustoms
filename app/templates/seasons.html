@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex flex-column flex-remaining-height w-100 m-3">
+    <h1>Seasons</h1>
+
+    <div>
+    <h2>Create a Season</h2>
+        <form method="POST">
+            <input type="hidden" name="action" value="create_season">
+            <input type="text" name="season_name" placeholder="Season Name" required>
+            <input type="date" name="end_date" placeholder="End Date" required>
+            <button type="submit">Create Season</button>
+        </form>
+    </div>
+    
+    <select id="season-dropdown" class="form-select">
+    {% for season in seasons %}
+        <option value="{{ season.season_uuid }}">
+            {{ season.season_name }} (Ends: {{ season.end_date }}){% if season.status %} [Active]{% else %} [Ended]{% endif %}
+        </option>
+    {% endfor %}
+</select>
+</div>
+{% endblock %}

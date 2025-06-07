@@ -37,6 +37,9 @@ class CustomsDbHandler:
 		self.__create_daily_score_snapshots_table()
 		self.__create_current_patch_table()
 		self.__create_summoner_data_privacy_table()
+		self.__create_seasons_table()
+		#self.__create_season_games_table()
+		#self.__create_tasks_table()
 		print("[+][CUSTOMS_DB][__init__] Successfully initiated Customs database tables!")
 
 		# Close connection
@@ -95,7 +98,7 @@ class CustomsDbHandler:
 			self.__conn.commit()
 			return True
 		except Error as e:
-			print(f"[!][CUSTOMS_DB][__create_users_table] ERROR:  {e}")
+			print(f"[!][CUSTOMS_DB][__create_teams_table] ERROR:  {e}")
 			return False
 
 
@@ -309,8 +312,10 @@ class CustomsDbHandler:
 				user_uuid TEXT NOT NULL UNIQUE,
 				password_hash TEXT NOT NULL,
 				riot_id TEXT,
-				riot_access_token,
-				riot_refresh_token
+				riot_puuid TEXT UNIQUE,
+				access_token TEXT,
+				refresh_token TEXT,
+				is_verified BOOLEAN DEFAULT 0
 			);"""
 		try:
 			cursor = self.__conn.cursor()
@@ -673,6 +678,60 @@ class CustomsDbHandler:
 		except Error as e:
 			print(f"[!][CUSTOMS_DB][update_user_password] ERROR: {e}")
 			return False	
+		
+	def is_user_verified(self, user_uuid):
+		sql_query = "SELECT 1 FROM users WHERE user_uuid = ? AND is_verified = 1;"
+
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query, (str(user_uuid),))
+			row = cursor.fetchone()
+			if row is None:
+				if self.__DEBUG:
+					print(f"[-][CUSTOMS_DB][is_user_verified] User {str(user_uuid)} is not verified")
+				return False
+			else:
+				if self.__DEBUG:
+					print(f"[+][CUSTOMS_DB][is_user_verified] User {str(user_uuid)} is verified :)")
+				return True
+		except Error as e:
+			print(f"[!][CUSTOMS_DB][is_user_verified] ERROR: {e}")
+			return False
+		
+	def is_rso_account_linked(self, user_uuid):
+		sql_query = "SELECT 1 FROM users WHERE user_uuid = ? AND riot_puuid IS NOT NULL;"
+
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query, (str(user_uuid),))
+			row = cursor.fetchone()
+			if row is None:
+				if self.__DEBUG:
+					print(f"[-][CUSTOMS_DB][is_rso_account_linked] User {str(user_uuid)} does not have a linked RSO account")
+				return False
+			else:
+				if self.__DEBUG:
+					print(f"[+][CUSTOMS_DB][is_rso_account_linked] User {str(user_uuid)} has a linked RSO account :)")
+				return True
+		except Error as e:
+			print(f"[!][CUSTOMS_DB][is_rso_account_linked] ERROR: {e}")
+			return False
+		
+	def link_rso_account_to_user(self, user_uuid, riot_id, riot_puuid, access_token, refresh_token):
+		sql_query = """UPDATE users 
+					   SET riot_id = ?, riot_puuid = ?, access_token = ?, refresh_token = ? 
+					   WHERE user_uuid = ?;"""
+
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query, (riot_id, riot_puuid, access_token, refresh_token, str(user_uuid)))
+			self.__conn.commit()
+			if self.__DEBUG:
+				print(f"[+][CUSTOMS_DB][link_rso_account_to_user] Successfully linked RSO account to user {str(user_uuid)} :D")
+			return True
+		except Error as e:
+			print(f"[!][CUSTOMS_DB][link_rso_account_to_user] ERROR: {e}")
+			return False
 
 	###########
 	# CONTENT #
@@ -689,7 +748,7 @@ class CustomsDbHandler:
 	# 		cursor = self.__conn.cursor()
 	# 		cursor.execute(sql_query)
 	# 		self.__conn.commit()
-	# 		return True
+	# 		return True 
 	# 	except Error as e:
 	# 		print(f"[!][CUSTOMS_DB][__create_content_table] ERROR: {e}")
 	# 		return False
@@ -966,8 +1025,10 @@ class CustomsDbHandler:
 				id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
 				team_uuid TEXT NOT NULL,
 				game_id TEXT NOT NULL,
+				season_uuid TEXT NOT NULL,
 				FOREIGN KEY(team_uuid) REFERENCES teams(team_uuid),
 				FOREIGN KEY(game_id) REFERENCES game_data(game_id)
+				FOREIGN KEY(season_uuid) REFERENCES seasons(season_uuid)
 			);"""
 
 		try:
@@ -1301,3 +1362,112 @@ class CustomsDbHandler:
 		except Error as e:
 			print(f"[!][CUSTOMS_DB][remove_user_from_removed_data] ERROR: {e}")
 			return False
+
+	###########
+	# SEASONS #
+	###########
+	def __create_seasons_table(self):
+		sql_query = """ CREATE TABLE IF NOT EXISTS seasons (
+				id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+				team_uuid TEXT NOT NULL,
+				season_uuid TEXT NOT NULL UNIQUE,
+				season_name TEXT NOT NULL,
+				start_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+				end_date TIMESTAMP NOT NULL,
+				status BOOLEAN DEFAULT FALSE
+			);"""
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query)
+			self.__conn.commit()
+			return True
+		except Error as e:
+			print(f"[!][CUSTOMS_DB][__create_seasons_table] ERROR: {e}")
+			return False
+		
+	def create_season(self, team_uuid, season_uuid, season_name, end_date):
+		sql_query = "INSERT INTO seasons (team_uuid, season_uuid, season_name, end_date) VALUES (?, ?, ?, ?);"
+		
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query, (str(team_uuid), str(season_uuid), season_name, end_date))
+			self.__conn.commit()
+			return True
+		
+		except Error as e:
+			print(f"[!][CUSTOMS_DB][create_season] ERROR: {e}")
+			return False
+		
+	def get_team_seasons(self, team_uuid):
+		sql_query = "SELECT * FROM seasons WHERE team_uuid = ?;"
+
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query, (str(team_uuid),))
+			row = cursor.fetchall()
+			if row is None:
+				if self.__DEBUG:
+					print(f"[-][CUSTOMS_DB][get_team_seasons] Could not find any seasons for team {team_uuid} :(")
+				return None
+			else:
+				if self.__DEBUG:
+					print(f"[+][CUSTOMS_DB][get_team_seasons] Found {str(len(row))} seasons for team {team_uuid} :D")
+				return row
+		except Error as e:
+			print(f"[!][CUSTOMS_DB][get_team_seasons] ERROR: {e}")
+			return None
+		
+	def get_active_team_season(self, team_uuid):
+		sql_query = """SELECT * FROM seasons WHERE team_uuid = ? AND status = 'active';"""
+		
+		try:
+			cursor = self.__conn.cursor()
+			cursor.execute(sql_query, (str(team_uuid),))
+			row = cursor.fetchone()
+			if row is None:
+				if self.__DEBUG:
+					print(f"[-][CUSTOMS_DB][get_active_team_season] Could not find any active season for team {team_uuid} :(")
+				return None
+			else:
+				if self.__DEBUG:
+					print(f"[+][CUSTOMS_DB][get_active_team_season] Found active season for team {team_uuid} :D")
+				return row
+		except Error as e:
+			print(f"[!][CUSTOMS_DB][get_active_team_season] ERROR: {e}")
+			return None
+			
+
+	# def __create_season_games_table(self):
+	# 	sql_query = """ CREATE TABLE IF NOT EXISTS season_games (
+	# 			season_id INT NOT NULL,
+	# 			game_code VARCHAR(255) NOT NULL,
+	# 			FOREIGN KEY (season_id) REFERENCES seasons(season_id),
+	# 			FOREIGN KEY (game_code) REFERENCES games(game_code)
+	# 		);"""
+	# 	try:
+	# 		cursor = self.__conn.cursor()
+	# 		cursor.execute(sql_query)
+	# 		self.__conn.commit()
+	# 		return True
+	# 	except Error as e:
+	# 		print(f"[!][CUSTOMS_DB][__create_season_games_table] ERROR: {e}")
+	# 		return False
+
+	# def __create_tasks_table(self):
+	# 	sql_query = """ CREATE TABLE IF NOT EXISTS tasks (
+	# 			id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+	# 			user_uuid TEXT NOT NULL,
+	# 			task_uuid TEXT NOT NULL UNIQUE,
+	# 			task_type TEXT NOT NULL,
+	# 			task_end_data TIMESTAMP NOT NULL,
+	# 			task_creation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	# 			status TEXT DEFAULT 'PENDING'
+	# 		);"""
+	# 	try:
+	# 		cursor = self.__conn.cursor()
+	# 		cursor.execute(sql_query)
+	# 		self.__conn.commit()
+	# 		return True
+	# 	except Error as e:
+	# 		print(f"[!][CUSTOMS_DB][__create_pending_tasks_table] ERROR: {e}")
+	# 		return False

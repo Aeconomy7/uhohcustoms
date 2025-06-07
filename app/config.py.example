@@ -34,6 +34,15 @@ LOCAL_HOST		= "127.0.0.1"
 LOCAL_PORT		= 2999
 LC_EVENT_URL		= f"https://{LOCAL_HOST}:{LOCAL_PORT}/liveclientdata"
 
+# Use server proxy? helpful for debugging RSO, DONT DO THIS IN PROD
+USE_PROXY		= False
+PROXY_HTTP_PROXY	= None
+PROXY_HTTPS_PROXY	= None
+REQUESTS_PROXY		= {
+	"http": PROXY_HTTP_PROXY,
+	"https": PROXY_HTTPS_PROXY
+}
+
 CUSTOMS_HOST		= "127.0.0.1"
 CUSTOMS_PORT		= 8000
 CUSTOMS_DATA_CALLBACK	= f"http://{CUSTOMS_HOST}:{CUSTOMS_PORT}/data_callback"
