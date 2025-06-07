@@ -1,11 +1,14 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="d-flex flex-column flex-remaining-height w-100 m-3 px-bg-inverted" style="border-bottom: 1px solid cyan; padding: 10px; overflow-y: auto;">
+<div class="d-flex flex-column flex-remaining-height w-100 m-3">
     <h2>Account Settings</h2>
 
     <form method="POST" class="mt-4">
         {% if session.get('user_uuid') | is_rso_account_linked %}
+        <h4>Riot Account Linked</h4>
+        <p>Your Riot Account is currently linked to your UhOhCustoms account. You can unlink it or refresh the session.</p>
+        <p>Riot ID: {{ session.get('riot_id') }}</p>
         <h4>Unlink Riot Account</h4>
         <p>This will unlink your UhOhCustoms account from your Riot Account. You will no longer be able to pull custom games from your history.</p>
         <button type="submit" class="btn btn-danger mt-2" name="action" value="unlink_riot_account">Unlink Account</button>
@@ -18,8 +21,8 @@
         {% else %}
         <h4>Link your Riot Account via Riot RSO!</h4>
         <p>This will allow you to strongly link your UhOhCustoms account to your Riot Account and actuall pull custom games from your history.</p>
-        {% endif %}
         <button type="submit" class="btn btn-primary mt-2" name="action" value="link_riot_account">Link Account</button>
+        {% endif %}
     </form>
 
     <!-- <form method="POST" class="mt-4">
