@@ -1698,7 +1698,7 @@ def is_rso_account_linked(value):
 
 @app.template_filter('is_rso_session_active')
 def is_rso_session_active(value):
-	if RIOT_AGENT.fetch_summoner_data(token=value) != None:
+	if RIOT_AGENT.fetch_account_data(token=value) != None:
 		return True
 	else:
 		return False
