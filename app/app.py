@@ -594,7 +594,7 @@ def callback():
 		return redirect(url_for('login'))
 
 # ACTION: refresh RSO token
-@app.route('/refresh', methods=['POST'])
+@app.route('/refresh', methods=['GET'])
 def refresh():
 	if 'user_uuid' not in session:
 		return redirect(url_for('login'))
