@@ -33,7 +33,7 @@
                                     {% if session.get('riot_id') %}
                                     <li class="nav-item">
                                         <a class="nav-link" href="{{ url_for('account') }}" role="button" style="border-left: 1px solid cyan; color: white;">
-                                            Linked Riot Account: <span style="color: yellow; padding-left: 10px;">{{ session.get('username', 'None') }}</span>
+                                            Linked Riot Account: <span style="color: yellow; padding-left: 10px;">{{ session.get('riot_id', 'None') }}</span>
                                         </a>
                                     </li>
                                     {% endif %}
