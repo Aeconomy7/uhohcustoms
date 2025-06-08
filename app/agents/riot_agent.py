@@ -60,6 +60,8 @@ class RiotAgent:
 		for attempt in range(retries):
 			try:
 				response = requests.get(url, headers=headers, timeout=timeout)
+				if response.status_code == 401:
+					return "Unauthorized"
 				response.raise_for_status()
 				return response.json()
 			except requests.exceptions.RequestException as e:
@@ -107,6 +109,8 @@ class RiotAgent:
 	
 	def refresh_token(self, r_token, retries=3, timeout=10):
 		# https://auth.riotgames.com/api/v1/authorization
+
+
 
 		return
 

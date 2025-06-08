@@ -30,6 +30,11 @@
                                 
                                 {% if session.get('user_uuid') %}
                                     <!-- USER ACCOUNT THINGS AND STUFF -->
+                                    {% if session.get('riot_id') %}
+                                    <li class="nav-item">
+                                        Riot Account: <span style="color: yellow; padding-left: 10px;">{{ session.get('riot_id', 'None') }}</span>
+                                    </li>
+                                    {% endif %}
                                     <li class="nav-item dropdown">
                                         <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="border-left: 1px solid cyan; color: white;">
                                             Logged in as: <span style="color: yellow; padding-left: 10px;">{{ session.get('username', 'None') }}</span>

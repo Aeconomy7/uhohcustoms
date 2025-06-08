@@ -329,6 +329,13 @@ def account():
 				riot_auth_url = f"{RIOT_AUTH_URL}?response_type=code&client_id={RIOT_CLIENT_ID}&redirect_uri={REDIRECT_URI}&scope=openid"
 				return redirect(riot_auth_url)
 			
+			elif action == 'refresh_rso_session':
+				if 'refresh_token' not in session:
+					flash('No refresh token found. Please link account again.', 'warning')
+					return redirect(url_for('account'))
+
+				return redirect(url_for('refresh'))
+			
 			elif action == 'unlink_riot_account':
 				if CUSTOMS_DB.unlink_rso_account_from_user(user_uuid):
 					session.pop('riot_id', None)
@@ -460,15 +467,15 @@ def register():
 
 
 # AUTH: RSO Login
-@app.route('/login_rso')
-def login_rso():
-	if 'user_uuid' not in session:
-		flash('You must be logged in to use this feature.', 'danger')
-		#return redirect(url_for('uhoh', error_code=401))
-		return redirect(url_for('login'))
+# @app.route('/login_rso')
+# def login_rso():
+# 	if 'user_uuid' not in session:
+# 		flash('You must be logged in to use this feature.', 'danger')
+# 		#return redirect(url_for('uhoh', error_code=401))
+# 		return redirect(url_for('login'))
 
-	riot_auth_uri = f"{RIOT_AUTH_URL}?response_type=code&client_id={RIOT_CLIENT_ID}&redirect_uri={REDIRECT_URI}&scope={OAUTH2_SCOPE}"
-	return redirect(riot_auth_uri)
+# 	riot_auth_uri = f"{RIOT_AUTH_URL}?response_type=code&client_id={RIOT_CLIENT_ID}&redirect_uri={REDIRECT_URI}&scope={OAUTH2_SCOPE}"
+# 	return redirect(riot_auth_uri)
 
 
 # AUTH: Login
@@ -489,10 +496,16 @@ def login():
 
 			user_teams = CUSTOMS_DB.get_teams_for_user(session['user_uuid'])
 
+			# uhohcustoms session data
 			session['user_teams'] = [{'team_uuid': team[0], 'team_name': team[1]} for team in user_teams]
 			session['active_team_uuid'] = str(user_teams[0][0]) if user_teams else 'None'
 			session['active_team_name'] = str(user_teams[0][1]) if user_teams else 'None'
 			session['role'] = 'admin' if user[1] in ADMINS else 'user'
+			# RSO Session data
+			session['riot_id'] = user[5] if user[5] else None
+			session['riot_puuid'] = user[6] if user[6] else None
+			session['access_token'] = user[7] if user[7] else None
+			session['refresh_token'] = user[8] if user[8] else None
 
 			if DEBUG:
 				app.logger.debug(f"[?][APP][login][{session['username']}] user_teams: {str(session['user_teams'])}")
@@ -529,14 +542,6 @@ def callback():
 	credentials = f"{RIOT_CLIENT_ID}:{RIOT_CLIENT_SECRET}"
 	encoded_credentials = base64.b64encode(credentials.encode('utf-8')).decode('utf-8')
 	
-	http_proxy = None
-	https_proxy = None
-
-	proxies = {
-		"http": http_proxy,
-		"https": https_proxy
-	}
-	
 	headers = {
 		"Content-Type": "application/x-www-form-urlencoded",
 		"Authorization": f"Basic {encoded_credentials}"
@@ -551,8 +556,7 @@ def callback():
 	token_response = requests.post(
 		RIOT_TOKEN_URL,
 		headers=headers,
-		data=data,
-		proxies=proxies
+		data=data
 	)
 
 	if token_response.status_code == 200:
@@ -589,6 +593,68 @@ def callback():
 		flash(f"Error requesting RSO token. Response code {token_response.status_code}", 'danger')
 		return redirect(url_for('login'))
 
+# ACTION: refresh RSO token
+@app.route('/refresh', methods=['POST'])
+def refresh():
+	if 'user_uuid' not in session:
+		return redirect(url_for('login'))
+	
+	if 'refresh_token' not in session:
+		flash('No refresh token found. Please link account again.', 'warning')	
+		return redirect(url_for('account'))
+
+	credentials = f"{RIOT_CLIENT_ID}:{RIOT_CLIENT_SECRET}"
+	encoded_credentials = base64.b64encode(credentials.encode('utf-8')).decode('utf-8')
+	
+	headers = {
+		"Content-Type": "application/x-www-form-urlencoded",
+		"Authorization": f"Basic {encoded_credentials}"
+	}
+
+	data = {
+		"grant_type": "refresh_token",
+		"refresh_token": session['refresh_token']
+	}
+
+	token_response = requests.post(
+		RIOT_TOKEN_URL,
+		headers=headers,
+		data=data
+	)
+
+	if token_response.status_code == 200:
+		token_data = token_response.json()
+		session['access_token'] = token_data['access_token']
+		session['refresh_token'] = token_data['refresh_token']
+		summoner_data = RIOT_AGENT.fetch_account_data(
+			token=session['access_token']
+		)
+		if not summoner_data:
+			flash('Failed to fetch summoner data. Please try again.', 'danger')
+			return redirect(url_for('account'))
+		if DEBUG:
+			app.logger.debug(f"[?][APP][callback][{session.get('username')}] summoner_data: {summoner_data}")
+		if not CUSTOMS_DB.link_rso_account_to_user(
+			user_uuid=session['user_uuid'],
+			riot_id=f"{summoner_data['gameName']}#{summoner_data['tagLine']}",
+			riot_puuid=summoner_data['puuid'],
+			access_token=session['access_token'],
+			refresh_token=session['refresh_token']
+		):
+			flash('Failed to link RSO account. Please try again.', 'danger')
+			session.pop('access_token', None)
+			session.pop('refresh_token', None)
+			return redirect(url_for('account'))
+		else:
+			flash('Successfully refreshed RSO session!', 'success')
+			# Update the session with the new RSO data
+			session['riot_id'] = f"{summoner_data['gameName']}#{summoner_data['tagLine']}"
+			session['riot_puuid'] = summoner_data['puuid']
+			# Redirect to manage teams or account page
+			return redirect(url_for('account'))
+	else:
+		flash(f"Error refreshing RSO token.", 'danger')
+		return redirect(url_for('login'))
 
 # STATIC: Set active team
 @app.route('/set_active_team/<team_uuid>', methods=['GET', 'POST'])
@@ -1698,7 +1764,10 @@ def is_rso_account_linked(value):
 
 @app.template_filter('is_rso_session_active')
 def is_rso_session_active(value):
-	if RIOT_AGENT.fetch_account_data(token=value) != None:
+	response = RIOT_AGENT.fetch_account_data(token=value)
+	if response != None:
+		if response == "Unauthorized":
+			return False
 		return True
 	else:
 		return False
